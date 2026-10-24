@@ -1,0 +1,11 @@
+.git
+.agents
+.codex
+downloads
+docs
+metafiles
+posts
+tests
+**/.env
+**/share-codes.json
+**/__pycache__

@@ -14,7 +14,7 @@ Examples:
   # Single share (zip root)
   python src/downloader/MinasDownloader.py \
     --url "https://minas.mihoyo.com/d/97936e3e62a949b2930d/" \
-    --password "zzzbz2025" \
+    --password "<share-access-code>" \
     --out ./downloads \
     --zip --path "/"
 
@@ -60,7 +60,7 @@ REPORT_FILE = Path(os.getenv("MINAS_REPORT_FILE", "metafiles/last-update.json"))
 
 # --- Defaults (override via CLI or env) ---
 DEFAULT_URL = os.getenv("MINAS_URL", "https://minas.mihoyo.com/d/97936e3e62a949b2930d/")
-DEFAULT_PASSWORD = os.getenv("MINAS_PASSWORD", "zzzbz2025")
+DEFAULT_PASSWORD = os.getenv('MINAS_PASSWORD', "")
 DEFAULT_OUTDIR = os.getenv("MINAS_OUTDIR", "./downloads")
 
 USER_AGENT = (

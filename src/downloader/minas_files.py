@@ -135,7 +135,7 @@ class FileUpdater:
                     size = entry.get("size")
                     if isinstance(size, bool) or not isinstance(size, int) or size < 0:
                         raise ValueError("Invalid listing size")
-                    if size > limit("MINAS_MAX_FILE_BYTES", 256 * 1024 ** 2):
+                    if size > getattr(self, "listing_max_file_bytes", limit("MINAS_MAX_FILE_BYTES", 256 * 1024 ** 2)):
                         raise ValueError("Remote file exceeds size limit")
                     files[path] = {"size": size, "last_modified": entry.get("last_modified")}
         return files

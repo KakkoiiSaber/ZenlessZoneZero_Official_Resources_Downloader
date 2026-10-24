@@ -163,6 +163,22 @@ class CheckpointTests(unittest.TestCase):
         result=checkpoint_update.checkpoint(self.repo,True,"129-1")
         self.assertEqual("recovery",result["mode"]);self.assertEqual(before,self.remote_sha())
 
+    def test_post_index_is_checkpointed_and_cannot_drop_history(self):
+        folder=self.repo/"posts";folder.mkdir()
+        path=folder/"official.csv"
+        path.write_text("post_url,title\nhttps://example.com/one,one\n")
+        first=checkpoint_update.checkpoint(self.repo,True,"131-1")
+        self.assertEqual("main",first["mode"])
+        self.assertIn("https://example.com/one",self.g("show","HEAD:posts/official.csv"))
+        path.write_text("post_url,title\nhttps://example.com/one,one\nhttps://example.com/two,two\n")
+        second=checkpoint_update.checkpoint(self.repo,True,"132-1")
+        self.assertEqual("main",second["mode"])
+        self.assertEqual("unchanged",checkpoint_update.checkpoint(self.repo,True,"132-1")["mode"])
+        path.write_text("post_url,title\nhttps://example.com/two,two\n")
+        third=checkpoint_update.checkpoint(self.repo,True,"133-1")
+        self.assertEqual("recovery",third["mode"])
+        self.assertEqual(second["commit"],self.remote_sha())
+
     def test_partial_download_gallery_and_checkpoint_preserve_success(self):
         from PIL import Image
         from tools import build_gallery

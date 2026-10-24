@@ -1,11 +1,10 @@
-name: Asset Update
+name: Metadata Update
 
 on:
   workflow_dispatch:
 
 permissions:
   contents: write
-  pages: write
 
 concurrency:
   group: asset-update
@@ -13,113 +12,39 @@ concurrency:
 
 env:
   GIT_LFS_SKIP_SMUDGE: "1"
-  MINAS_FILE_VERIFY_DAYS: ${{ vars.MINAS_FILE_VERIFY_DAYS || '7' }}
-  MINAS_FILE_RUN_VERIFY_FILES: ${{ vars.MINAS_FILE_RUN_VERIFY_FILES || '4' }}
-  MINAS_FILE_RUN_MAX_DOWNLOADS: ${{ vars.MINAS_FILE_RUN_MAX_DOWNLOADS || '32' }}
-  MINAS_FILE_RUN_MAX_BYTES: ${{ vars.MINAS_FILE_RUN_MAX_BYTES || '536870912' }}
 
 jobs:
-  run-and-commit:
+  metadata:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 35
     steps:
-      - name: Check out current main
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 1
           lfs: false
-
-      - name: Verify base and record gallery baseline
-        run: |
-          test "$(git rev-parse HEAD)" = "$(git ls-remote origin refs/heads/main | cut -f1)"
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          data = json.loads(Path('docs/meta.json').read_text(encoding='utf8'))
-          (Path(os.environ['RUNNER_TEMP']) / 'gallery-before.json').write_text(json.dumps([x['identity'] for x in data['items']]))
-          PY
-
-      - name: Enable Git LFS
-        run: git lfs install --local
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/downloads/
+            !/docs/thumbs/
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install Playwright browsers
+      - name: Install metadata and test dependencies
+        run: pip install -r requirements-metadata.txt
+      - name: Install browser for offline regression fixtures
         run: python -m playwright install --with-deps chromium
-
-      - name: Run regression tests
-        id: tests
+      - name: Regression tests
         run: python -m unittest discover -s tests -v
-
-      - name: Run scraper and incremental asset checks
-        id: update
+      - name: Refresh public catalog without media transfers
+        id: catalog
         continue-on-error: true
-        timeout-minutes: 35
-        run: python -u src/main.py
-
-      - name: Deduplicate exact image copies
-        id: deduplicate
-        run: python tools/deduplicate_images.py --apply
-
-      - name: Build gallery page
-        id: gallery
-        run: python tools/build_gallery.py
-
-      - name: Commit completed output or preserve recovery branch
-        id: checkpoint
-        if: ${{ !cancelled() && steps.tests.outcome == 'success' && steps.update.outcome != 'skipped' }}
-        env:
-          ALLOW_MAIN: ${{ steps.deduplicate.outcome == 'success' && steps.gallery.outcome == 'success' }}
+        run: python -u tools/collect_metadata.py --refresh-posts
+      - name: Checkpoint public metadata only
+        run: python tools/checkpoint_metadata.py
+      - name: Report incomplete sources
+        if: ${{ steps.catalog.outcome != 'success' }}
         run: |
-          if [ "$ALLOW_MAIN" = true ]; then
-            python tools/checkpoint_update.py --allow-main
-          else
-            python tools/checkpoint_update.py
-          fi
-
-      - name: Publish and verify exact Pages commit
-        id: pages
-        if: ${{ !cancelled() && steps.gallery.outcome == 'success' && steps.checkpoint.outcome == 'success' && steps.checkpoint.outputs.mode != 'recovery' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: python tools/publish_pages.py --commit "${{ steps.checkpoint.outputs.commit }}"
-
-      - name: Report partial failures and retained progress
-        if: ${{ !cancelled() && steps.tests.outcome == 'success' }}
-        env:
-          UPDATE_OUTCOME: ${{ steps.update.outcome }}
-          CHECKPOINT_OUTCOME: ${{ steps.checkpoint.outcome }}
-          CHECKPOINT_MODE: ${{ steps.checkpoint.outputs.mode }}
-          CHECKPOINT_COMMIT: ${{ steps.checkpoint.outputs.commit }}
-          RECOVERY_BRANCH: ${{ steps.checkpoint.outputs.branch }}
-          PAGES_OUTCOME: ${{ steps.pages.outcome }}
-        run: |
-          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
-          import json, os
-          from pathlib import Path
-          print('Update outcome:', os.environ['UPDATE_OUTCOME'])
-          print('Checkpoint:', os.environ['CHECKPOINT_MODE'], os.environ['CHECKPOINT_COMMIT'])
-          print('Branch:', os.environ['RECOVERY_BRANCH'])
-          report = Path('metafiles/last-update.json')
-          if report.exists():
-              print('```json\n' + report.read_text(encoding='utf8') + '\n```')
-          baseline = Path(os.environ['RUNNER_TEMP']) / 'gallery-before.json'
-          current = Path('docs/meta.json')
-          if baseline.exists() and current.exists():
-              old = set(json.loads(baseline.read_text()))
-              new = {x['identity'] for x in json.loads(current.read_text(encoding='utf8'))['items']}
-              print(f'Unique images: {len(old)} -> {len(new)}; added {len(new-old)}; missing {len(old-new)}')
-          PY
-          if [ "$UPDATE_OUTCOME" != success ] || [ "$CHECKPOINT_OUTCOME" != success ] || [ "$CHECKPOINT_MODE" = recovery ] || [ "$PAGES_OUTCOME" != success ]; then
-            echo 'Update has failures or recovery-only output; completed progress was retained where possible.'
-            exit 1
-          fi
+          echo 'Some metadata sources failed; inspect catalog-status.json. Existing gallery and media are unchanged.'
+          exit 1
