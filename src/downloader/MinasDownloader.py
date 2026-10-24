@@ -1,12 +1,10 @@
 """
 MinasDownloader.py — ZIP-first downloader for Seafile/Minas shares.
 
-What it does (batch mode):
-- Read metafiles/米游社-官方资讯-minas.csv
-- Columns used: post_name, minas_link, minas_pwd
-- For each row:
-    - If ./downloads/米游社-官方资讯-minas/<post_name> exists -> SKIP (no network)
-    - Else: open share, click ZIP, print progress, download, unzip to <post_name>, delete .zip
+Batch mode compares CSV row fingerprints with metafiles/asset-state.json.
+Only new/changed rows are downloaded, validated in staging, and merged.
+Existing folders alone do not imply completion. Historical records are seeded
+from the repository's tracked assets; LFS originals need not be hydrated.
 
 Quick start:
   pip install playwright requests bs4
@@ -37,13 +35,27 @@ import re
 import shutil
 import sys
 import zipfile
+import json
+import tempfile
 from pathlib import Path
 from typing import List, Tuple
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import urllib.parse
 
 import requests
 from bs4 import BeautifulSoup
+
+try:
+    from .asset_io import atomic_json, fingerprint, download_zip, extract_zip, install_tree, check_space
+except ImportError:
+    from asset_io import atomic_json, fingerprint, download_zip, extract_zip, install_tree, check_space
+
+try:
+    from .minas_files import CATEGORY, FileUpdater
+except ImportError:
+    from minas_files import CATEGORY, FileUpdater
+
+STATE_FILE = Path(os.getenv("MINAS_STATE_FILE", "metafiles/asset-state.json"))
 
 # --- Defaults (override via CLI or env) ---
 DEFAULT_URL = os.getenv("MINAS_URL", "https://minas.mihoyo.com/d/97936e3e62a949b2930d/")
@@ -99,7 +111,9 @@ def authenticate_with_password(session: requests.Session, url: str, password: st
     if not form:
         raise RuntimeError("Password form not found in static HTML (site likely JS-driven).")
 
-    action = form.get("action") or url
+    action = urljoin(r.url, form.get("action") or r.url)
+    if urlparse(action).scheme != "https" or urlparse(action).netloc != urlparse(url).netloc:
+        raise RuntimeError("Password form leaves share origin")
     method = (form.get("method") or "post").lower()
 
     payload = {}
@@ -125,244 +139,56 @@ def authenticate_with_password(session: requests.Session, url: str, password: st
 # --------------------- ZIP via browser (Playwright) ---------------------
 
 async def _zip_current_path(
-    url: str,
-    password: str,
-    path: str,
-    out_dir: Path,
+    url: str, password: str, path: str, out_dir: Path,
     force_extract_dir: Path | None = None
 ) -> Path:
-    """
-    Open {url} with ?p={path}, click the green ZIP button, and save the archive.
-    While zipping, print progress if the site emits /api/v2.1/query-zip-progress/?token=...
-    Then unzip to force_extract_dir (if provided) or out_dir, flatten if needed, and delete the .zip.
-    """
     from playwright.async_api import async_playwright
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    # Normalize '/.../'
-    if not path.startswith('/'):
-        path = '/' + path
-    if not path.endswith('/'):
-        path = path + '/'
-
-    print(f"Zipping {path}…")
-    q = urllib.parse.urlencode({"p": path, "mode": "list"})
-    target = f"{url.rstrip('/')}/?{q}"
-
-    async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True)
-        context = await browser.new_context(user_agent=USER_AGENT, accept_downloads=True)
-        page = await context.new_page()
-        await page.goto(target, wait_until="domcontentloaded")
-        print(f"  page: {page.url}")
-
-        # Password gate if present (tolerant + patient)
-        pwd = await page.query_selector('input[type="password"]')
-        if pwd:
-            await pwd.fill(password)
-            try:
+    check_space(out_dir)
+    path = "/" + path.strip("/") + "/" if path.strip("/") else "/"
+    target_url = f"{url.rstrip('/')}/?{urllib.parse.urlencode({'p': path, 'mode': 'list'})}"
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
+        try:
+            context = await browser.new_context(user_agent=USER_AGENT, accept_downloads=True)
+            page = await context.new_page()
+            await page.goto(target_url, wait_until="domcontentloaded")
+            pwd = await page.query_selector('input[type="password"]')
+            if pwd:
+                await pwd.fill(password)
                 await pwd.press("Enter")
-            except Exception:
-                pass
-            for sel in ('button[type="submit"]', 'button.btn-success', 'button.btn-primary',
-                        'input[type="submit"]', '.modal-footer .btn-primary'):
-                try:
-                    btn = await page.query_selector(sel)
-                    if btn:
-                        await btn.click()
+                for selector in ('button[type="submit"]', 'button.btn-success',
+                                 'button.btn-primary', 'input[type="submit"]'):
+                    button = await page.query_selector(selector)
+                    if button:
+                        await button.click()
                         break
-                except Exception:
-                    pass
-            try:
-                await page.wait_for_selector('.shared-dir-view-main, h2.h3.text-truncate', timeout=20000)
-            except Exception:
-                await page.wait_for_timeout(2000)
-
-        # Ensure the main content is mounted
-        try:
             await page.wait_for_selector('.shared-dir-view-main', timeout=30000)
-        except Exception:
-            await page.wait_for_timeout(2000)
-
-        # Hook: capture progress token from any response
-        progress_token_holder = {"token": None}
-        async def _extract_token(u: str) -> str | None:
-            try:
-                return await page.evaluate(
-                    "(u)=>{ try{ const x=new URL(u); return x.searchParams.get('token'); }catch{ return null; } }",
-                    u
-                )
-            except Exception:
-                return None
-
-        def _on_response(resp):
-            try:
-                u = resp.url
-                if ("/api/v2.1/query-zip-progress/" in u) and ("token=" in u) and resp.request.method.upper() == "GET":
-                    # schedule async extraction
-                    async def _grab():
-                        tok = await _extract_token(u)
-                        if tok and not progress_token_holder["token"]:
-                            progress_token_holder["token"] = tok
-                    asyncio.create_task(_grab())
-            except Exception:
-                pass
-
-        page.on("response", _on_response)
-
-        # Locate ZIP button (class is stable; text may be localized)
-        zip_btn = page.locator('button.shared-dir-op-btn')
-        try:
-            await zip_btn.first.wait_for(state='visible', timeout=30000)
-            zip_btn = zip_btn.first
-        except Exception:
-            await page.wait_for_timeout(1000)
-            await page.reload(wait_until='domcontentloaded')
-            await page.wait_for_selector('.shared-dir-view-main', timeout=15000)
-            await page.wait_for_timeout(500)
-            zip_btn = page.locator('button.shared-dir-op-btn').first
-            await zip_btn.wait_for(state='visible', timeout=15000)
-
-        # Start listening BEFORE clicking
-        download_promise = page.wait_for_event("download")
-        await page.wait_for_timeout(300)  # let handlers bind
-        await zip_btn.click()
-
-        # Try to get the token for up to ~30s
-        progress_token = None
-        waited = 0
-        while not progress_token and waited < 30000:
-            if progress_token_holder["token"]:
-                progress_token = progress_token_holder["token"]
-                print(f"  progress token: {progress_token}")
-                break
-            await page.wait_for_timeout(250)
-            waited += 250
-
-        # Poll progress if we have the token
-        poll_task = None
-        if progress_token:
-            last_pct = -1
-            progress_url = f"{API_BASE}/api/v2.1/query-zip-progress/?token={progress_token}"
-            # Poll until 100% or download finishes
-            async def _poll():
-                nonlocal last_pct
-                try:
-                    while True:
-                        if page.is_closed():
-                            return
-                        try:
-                            got = await page.evaluate(
-                                "(u)=>fetch(u,{credentials:'same-origin'}).then(r=>r.ok?r.json():null)", progress_url
-                            )
-                        except Exception:
-                            return  # page/context likely closed; exit quietly
-                        if not got:
-                            try:
-                                await page.wait_for_timeout(700)
-                            except Exception:
-                                return
-                            continue
-                        zipped = int(got.get("zipped", got.get("done", 0)) or 0)
-                        total = int(got.get("total", got.get("count", 0)) or 0)
-                        failed = int(got.get("failed", 0) or 0)
-                        canceled = int(got.get("canceled", 0) or 0)
-                        reason = got.get("failed_reason") or got.get("error") or ""
-                        pct = int((zipped * 100) / total) if total else 0
-                        if pct != last_pct:
-                            print(f"  progress: {zipped}/{total} ({pct}%)")
-                            last_pct = pct
-                        if canceled:
-                            print("  progress: canceled by server"); return
-                        elif failed:
-                            print(f"  progress: failed ({reason})"); return
-                        elif total and zipped >= total:
-                            print("  progress: 100% (zipped) — waiting for download…"); return
-                        else:
-                            try:
-                                await page.wait_for_timeout(700)
-                            except Exception:
-                                return
-                except Exception:
-                    return
-            # fire-and-forget poller; we’ll still await the actual download
-            poll_task = asyncio.create_task(_poll())
-        else:
-            print("  progress: no token captured; proceeding without live progress…")
-
-        # Await the browser download
-        download = await download_promise
-
-        # Prefer suggested filename; fall back to dirName.zip
-        suggested = download.suggested_filename
-        if suggested and ((suggested.startswith('"') and suggested.endswith('"')) or (suggested.startswith("'") and suggested.endswith("'"))):
-            suggested = suggested[1:-1]
-        if not suggested:
-            try:
-                dir_name = await page.evaluate("window.shared && window.shared.pageOptions && window.shared.pageOptions.dirName || ''")
-            except Exception:
-                dir_name = ""
-            suggested = f"{dir_name}.zip" if dir_name else "archive.zip"
-
-        dest = out_dir / sanitize_filename(suggested)
-        await download.save_as(str(dest))
-        size = dest.stat().st_size if dest.exists() else 0
-        print(f"Saved {dest} (size {size} bytes)")
-
-        # Unzip & clean — flatten when extracting into a forced directory
-        try:
-            with zipfile.ZipFile(dest, 'r') as zip_ref:
-                members = zip_ref.namelist()
-                roots = set()
-                for m in members:
-                    if not m:
-                        continue
-                    parts = m.split('/')
-                    if len(parts) > 1 and parts[0]:
-                        roots.add(parts[0])
-                    else:
-                        roots.add('')  # a file at the archive root
-                has_single_root = ('' not in roots) and (len(roots) == 1)
-
-                # decide extraction target
-                if force_extract_dir is not None:
-                    extract_dir = force_extract_dir
-                    extract_dir.mkdir(parents=True, exist_ok=True)
-                elif has_single_root:
-                    extract_dir = out_dir
-                else:
-                    extract_dir = out_dir / dest.stem
-                    extract_dir.mkdir(parents=True, exist_ok=True)
-
-                zip_ref.extractall(extract_dir)
-
-                # If forced dir and zip had a single top-level folder, flatten it
-                if force_extract_dir is not None and has_single_root:
-                    root_name = next(iter(roots))
-                    inner = extract_dir / root_name
-                    if inner.exists() and inner.is_dir():
-                        for p in inner.iterdir():
-                            shutil.move(str(p), str(extract_dir / p.name))
-                        try:
-                            inner.rmdir()
-                        except Exception:
-                            pass
-
-            dest.unlink()
-            print(f"Extracted to {extract_dir} and removed zip.")
-        except Exception as e:
-            print(f"Failed to extract zip {dest}: {e}")
-
-        if poll_task:
-            try:
-                await poll_task
-            except Exception:
-                pass
-            if not poll_task.done():
-                poll_task.cancel()
-        await context.close()
-        await browser.close()
-        return dest
+            button = page.locator('button.shared-dir-op-btn').first
+            # Cancel the browser transfer immediately; stream it ourselves with hard limits.
+            async with page.expect_download(timeout=ROW_TIMEOUT_SEC * 1000) as pending:
+                await button.click()
+            download = await pending.value
+            download_url = download.url
+            await download.cancel()
+            with requests.Session() as session:
+                session.headers.update({"User-Agent": USER_AGENT, "Referer": page.url})
+                for cookie in await context.cookies():
+                    session.cookies.set(cookie["name"], cookie["value"],
+                                        domain=cookie["domain"], path=cookie["path"])
+                with tempfile.TemporaryDirectory(prefix=".minas-", dir=out_dir) as work:
+                    work = Path(work)
+                    archive = work / "archive.zip"
+                    stage = work / "stage"
+                    stage.mkdir()
+                    download_zip(session, download_url, archive)
+                    extract_zip(archive, stage)
+                    destination = force_extract_dir or out_dir / sanitize_filename(Path(download.suggested_filename).stem)
+                    install_tree(stage, destination)
+                    return destination
+        finally:
+            await browser.close()
 
 # --------------------- Batch from CSV ---------------------
 
@@ -393,12 +219,19 @@ async def _process_csv_row(row: dict, out_root: Path) -> None:
 
     folder_name = f"{norm_post_time} {post_name}" if norm_post_time else post_name
     target_dir = out_root / sanitize_filename(folder_name)
-    if target_dir.exists():
-        print(f"[CSV] SKIP (exists): {target_dir}")
+    if target_dir.name in (".", "..") or target_dir.resolve().parent != out_root.resolve():
+        raise ValueError("Unsafe post directory")
+    state = json.loads(STATE_FILE.read_text(encoding="utf-8")) if STATE_FILE.exists() else {}
+    key = target_dir.name
+    identity = fingerprint(row)
+    refresh = {name.strip() for name in os.getenv("MINAS_REFRESH_POSTS", "").splitlines() if name.strip()}
+    if state.get(key) == identity and key not in refresh:
+        print(f"[CSV] SKIP (unchanged): {target_dir}")
         return
-
-    print(f"[CSV] {folder_name}: {url} / -> {target_dir}")
     await _zip_current_path(url, password, path="/", out_dir=out_root, force_extract_dir=target_dir)
+    state[key] = identity
+    atomic_json(STATE_FILE, state)
+
 
 def run_batch_from_csv(csv_path: Path, out_dir: Path) -> None:
     out_root = out_dir / BATCH_OUT_SUBDIR
@@ -420,10 +253,22 @@ def run_batch_from_csv(csv_path: Path, out_dir: Path) -> None:
         max_rows = None
     row_timeout = ROW_TIMEOUT_SEC if ROW_TIMEOUT_SEC > 0 else None
 
+    failures = []
+    selected_rows = rows[:max_rows] if max_rows is not None else rows
+    category_rows = [row for row in selected_rows if CATEGORY in row.get("post_name", "")
+                     and _norm_cell(row.get("minas_link")) and _norm_cell(row.get("minas_pwd"))]
+    if category_rows:
+        try:
+            FileUpdater(out_dir, authenticate_with_password).run(category_rows)
+        except Exception as error:
+            failures.append("file-level category")
+            print(f"[files] FAILED: {error}")
     for idx, row in enumerate(rows, 1):
         if max_rows is not None and idx > max_rows:
             print(f"[CSV] Reached MINAS_MAX_ROWS={max_rows}; stopping early.")
             break
+        if row in category_rows:
+            continue
         try:
             if row_timeout:
                 asyncio.run(asyncio.wait_for(_process_csv_row(row, out_root), timeout=row_timeout))
@@ -431,12 +276,15 @@ def run_batch_from_csv(csv_path: Path, out_dir: Path) -> None:
                 asyncio.run(_process_csv_row(row, out_root))
             print(f"[CSV] ({idx}/{len(rows)}) done")
         except asyncio.TimeoutError:
+            failures.append(idx)
             print(f"[CSV] ({idx}/{len(rows)}) TIMEOUT after {row_timeout}s; skipping.")
         except KeyboardInterrupt:
-            print("\n[CSV] Aborted by user.")
-            break
+            raise
         except Exception as e:
+            failures.append(idx)
             print(f"[CSV] ({idx}/{len(rows)}) FAILED: {e}")
+    if failures:
+        raise RuntimeError(f"Asset rows failed: {failures}")
 
 # --------------------- Orchestrator ---------------------
 
@@ -481,9 +329,4 @@ def main(argv: List[str] | None = None) -> int:
         return 1
 
 if __name__ == "__main__":
-    # sys.exit(main())
-
-    run_batch_from_csv(
-        Path("metafiles/米游社-官方资讯-minas.csv"),
-        Path("./downloads")
-    )
+    sys.exit(main())

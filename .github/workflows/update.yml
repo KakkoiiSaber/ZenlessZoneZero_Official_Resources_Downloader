@@ -1,22 +1,33 @@
-name: Daily Update
+name: Asset Update
 
 on:
-  schedule:
-    - cron: "0 2 * * *"
   workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: asset-update
+  cancel-in-progress: false
+
+env:
+  GIT_LFS_SKIP_SMUDGE: "1"
+  # Mutable image-archive shares are listed every run, independent of CSV changes.
+  MINAS_FILE_VERIFY_DAYS: ${{ vars.MINAS_FILE_VERIFY_DAYS || '7' }}
+  MINAS_FILE_RUN_VERIFY_FILES: ${{ vars.MINAS_FILE_RUN_VERIFY_FILES || '4' }}
+  MINAS_FILE_RUN_MAX_DOWNLOADS: ${{ vars.MINAS_FILE_RUN_MAX_DOWNLOADS || '32' }}
+  MINAS_FILE_RUN_MAX_BYTES: ${{ vars.MINAS_FILE_RUN_MAX_BYTES || '536870912' }}
+
 jobs:
   run-and-commit:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          lfs: true
+          fetch-depth: 1
+          lfs: false
 
       - name: Enable Git LFS
         run: git lfs install --local
@@ -34,8 +45,14 @@ jobs:
       - name: Install Playwright browsers
         run: python -m playwright install --with-deps chromium
 
-      - name: Run scraper
+      - name: Run regression tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Run scraper and incremental asset checks
         run: python src/main.py
+
+      - name: Deduplicate exact image copies
+        run: python tools/deduplicate_images.py --apply
 
       - name: Build gallery page
         run: python tools/build_gallery.py

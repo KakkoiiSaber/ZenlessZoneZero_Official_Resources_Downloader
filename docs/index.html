@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Downloads Gallery</title>
+  <title>绝区零素材图库</title>
   <style>
     :root {
       --bg: #0a0d12;
@@ -51,82 +51,44 @@
       height: auto;
       border-radius: inherit;
     }
+    .filters { display:flex; flex-wrap:wrap; gap:12px; padding:12px 20px; align-items:end; }
+    .filters label { display:flex; flex-direction:column; gap:6px; color:var(--muted); font-size:13px; }
+    .filters select, .filters input, .filters button { min-height:42px; border:1px solid #344459; border-radius:8px; background:var(--card); color:var(--text); padding:9px 12px; font:inherit; }
+    .filters select { min-width:150px; }
+    .filters .search { flex:1; min-width:190px; }
+    .filters button { cursor:pointer; }
+    .filters :focus-visible { outline:2px solid #81b8ff; outline-offset:3px; }
+    .status { color:var(--muted); font-size:14px; margin:0 20px 16px; }
+    .card a { color:var(--text); text-decoration:none; display:block; }
+    .caption { background:var(--card); padding:10px 12px; font-size:13px; line-height:1.5; }
+    .category-badge { color:#a7cdff; margin-right:8px; }
+    .advanced { flex-basis:100%; color:var(--muted); font-size:13px; }
+    .advanced summary { cursor:pointer; padding:6px 0; }
+    .advanced label { max-width:200px; margin-top:8px; }
+    .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+    .tag { display:inline-block; color:#c9d9ef; background:#1b2b40; border:1px solid #304660; border-radius:5px; padding:2px 7px; font-size:12px; }
+    .tag-inferred { color:#f2ce91; border-style:dashed; border-color:#8c7042; background:#322a1d; }
+    .tag-more { color:var(--muted); font-size:12px; padding:3px; }
+
+    .card-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .empty { padding: 18px; color: var(--muted); text-align: center; }
   </style>
 </head>
 <body>
-  <header>Downloads Gallery<span class="count">0</span></header>
-  <section class="grid" id="grid">
+  <header>绝区零素材图库<span class="count">0</span></header>
+  <form class="filters" id="filters" aria-label="筛选图片">
+    <label>分类<select id="categoryFilter" name="category"><option value="">全部分类</option></select></label>
+    <label class="search">搜索<input id="searchFilter" name="q" type="search" placeholder="搜索角色、标签、主题或版本，如 薇薇安 1.7" /></label>
+    <button id="clearFilters" type="button">显示全部图片</button>
+    <details class="advanced" id="advancedFilters"><summary>更多筛选</summary>
+      <label>明确版本<select id="versionFilter" name="version"><option value="">全部明确版本</option></select></label>
+    </details>
+  </form>
+  <p class="status" id="filterStatus" role="status" aria-live="polite">正在加载图片…</p>
+  <section class="grid" id="grid" aria-label="图片预览">
     <p class="empty" id="loading">Loading…</p>
   </section>
   <div id="sentinel" style="height: 1px;"></div>
-  <script>
-    const PAGE_SIZE = 60;
-    let items = [];
-    let cursor = 0;
-    const gridEl = document.getElementById('grid');
-
-    function setSpan(card, img) {
-      const styles = window.getComputedStyle(gridEl);
-      const rowHeight = parseFloat(styles.gridAutoRows) || 4;
-      const rowGap = parseFloat(styles.rowGap || styles.gap) || 0;
-      const ratio = (img.naturalHeight && img.naturalWidth) ? (img.naturalHeight / img.naturalWidth) : 1;
-      const width = card.getBoundingClientRect().width || (img.naturalWidth || 340);
-      const height = width * ratio;
-      const span = Math.max(1, Math.ceil((height + rowGap) / (rowHeight + rowGap)));
-      card.style.gridRowEnd = `span ${span}`;
-    }
-
-    function renderMore() {
-      if (!items.length) return;
-      const end = Math.min(cursor + PAGE_SIZE, items.length);
-      const frag = document.createDocumentFragment();
-      for (let i = cursor; i < end; i++) {
-        const it = items[i];
-        const art = document.createElement('article');
-        art.className = 'card';
-        const a = document.createElement('a');
-        a.href = `detail.html?i=${i}`;
-        const img = document.createElement('img');
-        img.loading = 'lazy';
-        img.src = it.thumb;
-        img.alt = '';
-        img.addEventListener('load', () => setSpan(art, img));
-        a.appendChild(img);
-        art.appendChild(a);
-        frag.appendChild(art);
-      }
-      if (cursor === 0) gridEl.innerHTML = '';
-      gridEl.appendChild(frag);
-      cursor = end;
-    }
-
-    async function load() {
-      const loading = document.getElementById('loading');
-      try {
-        const res = await fetch('meta.json?_=' + Date.now());
-        const data = await res.json();
-        items = data.items || [];
-        document.querySelector('.count').textContent = `${items.length} images`;
-        if (loading) loading.remove();
-        renderMore();
-      } catch (e) {
-        if (loading) loading.textContent = 'Failed to load gallery.';
-        console.error(e);
-      }
-    }
-
-    const sentinel = document.getElementById('sentinel');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          renderMore();
-        }
-      });
-    }, {rootMargin: '200px'});
-    observer.observe(sentinel);
-
-    load();
-  </script>
+  <script src="gallery.js" defer></script>
 </body>
 </html>
