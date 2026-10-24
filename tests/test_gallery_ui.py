@@ -48,9 +48,13 @@ class GalleryBrowserTests(unittest.TestCase):
             Image.new("RGB",(720,420 if i%2 else 540),["#425f87","#6862a0","#3c7c78","#8a6852","#375674"][i]).save(root/image)
             versions=[version,"2.9"] if i==2 else [version]
             tags=[{"kind":"version","value":value,"label":"版本 "+value,"confidence":"explicit"} for value in versions if value!="未分类"]
-            if i==0:tags.append({"kind":"source_type","value":"PV","label":"PV","confidence":"explicit"})
+            if i==0:
+                tags += [{"kind":"source_type","value":"PV","label":"PV","confidence":"explicit"},
+                         {"kind":"associated_version","value":"2.3","version_name":"可曾记得梦","label":"版本 2.3 · 可曾记得梦","confidence":"rule_supported",
+                          "evidence":[{"scope":"debut_title_rule","rule_id":"official-wallpaper-debut-v1","asset_path":"fixture/角色展示/a.jpg",
+                                       "source_url":"https://www.miyoushe.com/zzz/article/123","mapping_source_url":"https://zenless.hoyoverse.com/en-us/news/159945"}]}]
             if i==1:tags += [{"kind":"character","value":"薇薇安","label":"薇薇安","confidence":"explicit"},
-                             {"kind":"associated_version","value":"1.7","label":"关联版本 1.7 · 推断","confidence":"inferred",
+                             {"kind":"associated_version","value":"1.7","label":"关联版本 1.7 · 将眼泪与过往一同埋葬 · 推断","version_name":"将眼泪与过往一同埋葬","confidence":"inferred",
                               "evidence":[{"source_url":"https://zzz.mihoyo.com/news/155465","scope":"character_debut"}]}]
             fixture.append({"tags":tags,"download":"https://example.com/original/"+str(i),"identity":"sha256:"+str(i)*64,"name":name,"folder":"2025.1.7 fixture","thumb":image,"full":image,
                             "versions":[version,"2.9"] if i==2 else [version],"categories":[category],
@@ -85,7 +89,7 @@ class GalleryBrowserTests(unittest.TestCase):
     def test_numeric_order_combined_filters_reset_and_detail_indices(self):
         page=self.page
         page.locator("#advancedFilters").evaluate("element=>element.open=true")
-        self.assertEqual(["","3.0","2.10","2.9","未分类"],page.locator("#versionFilter option").evaluate_all("nodes=>nodes.map(node=>node.value)"))
+        self.assertEqual(["","3.0","2.10","2.9","2.3","未分类"],page.locator("#versionFilter option").evaluate_all("nodes=>nodes.map(node=>node.value)"))
         page.select_option("#versionFilter","2.10")
         self.assertEqual(2,page.locator(".card").count())
         page.select_option("#categoryFilter","影像档案")
@@ -137,6 +141,35 @@ class GalleryBrowserTests(unittest.TestCase):
         page.wait_for_function("document.querySelectorAll('.card').length===1")
         self.assertEqual("1.7",page.locator("#searchFilter").input_value())
         self.assertEqual([],self.errors)
+
+    def test_merged_version_name_search_supported_chip_and_mobile_detail(self):
+        page=self.page
+        page.fill("#searchFilter","2.3 可曾记得梦")
+        self.assertEqual(1,page.locator(".card").count())
+        self.assertIn("版本 2.3 · 可曾记得梦",page.locator(".card .tags").inner_text())
+        self.assertEqual(0,page.locator(".tag-inferred").count())
+        page.locator("#advancedFilters").evaluate("element=>element.open=true")
+        page.select_option("#versionFilter","2.3")
+        self.assertEqual("版本 2.3 · 可曾记得梦",page.locator('#versionFilter option[value="2.3"]').inner_text())
+        page.select_option("#categoryFilter","角色图片")
+        self.assertEqual(1,page.locator(".card").count())
+        page.set_viewport_size({"width":390,"height":844})
+        self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"),390)
+        self.capture("debut-tags-mobile.png")
+        page.locator(".card a").click()
+        page.wait_for_function("document.querySelector('#tags').textContent.includes('可曾记得梦')")
+        self.assertEqual(0,page.locator(".tag-inferred").count())
+        page.locator("#tagEvidence summary").click()
+        self.assertIn("official-wallpaper-debut-v1",page.locator("#tagEvidenceList").inner_text())
+        self.assertIn("首登场内容关联",page.locator("#tagEvidenceList").inner_text())
+        self.assertEqual("https://example.com/original/0",page.locator("#originalLink").get_attribute("href"))
+        self.assertLessEqual(page.evaluate("document.documentElement.scrollWidth"),390)
+        self.assertEqual([],self.errors)
+        page.goto(self.base)
+        page.wait_for_function("document.querySelectorAll('.card').length===5")
+        page.fill("#searchFilter","1.7 将眼泪与过往一同埋葬")
+        self.assertEqual(1,page.locator(".card").count())
+        self.assertEqual(1,page.locator(".tag-inferred").count())
 
     def test_mobile_layout_and_unknown_version(self):
         page=self.page;page.set_viewport_size({"width":390,"height":844})
