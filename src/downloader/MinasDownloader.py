@@ -39,7 +39,7 @@ import json
 import tempfile
 from pathlib import Path
 from typing import List, Tuple
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import urllib.parse
 
 import requests
@@ -49,6 +49,11 @@ try:
     from .asset_io import atomic_json, fingerprint, download_zip, extract_zip, install_tree, check_space
 except ImportError:
     from asset_io import atomic_json, fingerprint, download_zip, extract_zip, install_tree, check_space
+
+try:
+    from .minas_files import CATEGORY, FileUpdater
+except ImportError:
+    from minas_files import CATEGORY, FileUpdater
 
 STATE_FILE = Path(os.getenv("MINAS_STATE_FILE", "metafiles/asset-state.json"))
 
@@ -106,7 +111,9 @@ def authenticate_with_password(session: requests.Session, url: str, password: st
     if not form:
         raise RuntimeError("Password form not found in static HTML (site likely JS-driven).")
 
-    action = form.get("action") or url
+    action = urljoin(r.url, form.get("action") or r.url)
+    if urlparse(action).scheme != "https" or urlparse(action).netloc != urlparse(url).netloc:
+        raise RuntimeError("Password form leaves share origin")
     method = (form.get("method") or "post").lower()
 
     payload = {}
@@ -247,10 +254,21 @@ def run_batch_from_csv(csv_path: Path, out_dir: Path) -> None:
     row_timeout = ROW_TIMEOUT_SEC if ROW_TIMEOUT_SEC > 0 else None
 
     failures = []
+    selected_rows = rows[:max_rows] if max_rows is not None else rows
+    category_rows = [row for row in selected_rows if CATEGORY in row.get("post_name", "")
+                     and _norm_cell(row.get("minas_link")) and _norm_cell(row.get("minas_pwd"))]
+    if category_rows:
+        try:
+            FileUpdater(out_dir, authenticate_with_password).run(category_rows)
+        except Exception as error:
+            failures.append("file-level category")
+            print(f"[files] FAILED: {error}")
     for idx, row in enumerate(rows, 1):
         if max_rows is not None and idx > max_rows:
             print(f"[CSV] Reached MINAS_MAX_ROWS={max_rows}; stopping early.")
             break
+        if row in category_rows:
+            continue
         try:
             if row_timeout:
                 asyncio.run(asyncio.wait_for(_process_csv_row(row, out_root), timeout=row_timeout))

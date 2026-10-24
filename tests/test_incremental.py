@@ -64,7 +64,7 @@ class GalleryTests(Workspace):
         self.assertNotEqual(before[1], Path("docs/cached.json").read_bytes())
         self.image("downloads/source/2025.02.01 post/b.png")
         self.build()
-        self.assertEqual(2, len(json.loads(Path("docs/meta.json").read_text())["items"]))
+        self.assertEqual(2, len(json.loads(Path("docs/meta.json").read_text(encoding="utf-8"))["items"]))
 
     def test_pointer_and_absent_original_preserve_preview_metadata(self):
         original = self.image()

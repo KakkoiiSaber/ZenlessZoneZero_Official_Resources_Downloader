@@ -12,10 +12,11 @@ then use MinasDownloader.py to download the minas files.
 
 The update job checks out Git LFS pointers (`lfs: false`, `GIT_LFS_SKIP_SMUDGE=1`)
 and keeps LFS installed so newly added originals still use LFS. It does not fetch
-historical originals. No existing assets or Git history are removed.
+historical originals. No unique image contents or Git history are removed; exact duplicate paths are
+handled by the recoverable deduplication step below.
 
 `metafiles/asset-state.json` records a SHA-256 fingerprint of each completed CSV
-row, including source link/password and any revision fields. Its initial 60 entries
+row for categories other than `影像档案记录分享`, including source link/password and any revision fields. Its initial 60 entries
 were seeded only for posts with assets already tracked in Git. Unchanged rows skip
 all asset network access, even in a pointer-only checkout. New or changed rows fetch
 one post ZIP, validate and extract into temporary staging, then merge new/changed
@@ -23,15 +24,17 @@ files while retaining other files. Identical files are left untouched. The compl
 record is written atomically only after installation succeeds; failures are retried
 and cause a nonzero batch exit so Actions cannot auto-push a failed batch.
 
-Changes inside a remote share at the same URL cannot be discovered from the CSV
-alone. Set `MINAS_REFRESH_POSTS` to newline-separated exact dated folder names to
+For those other categories, changes inside a remote share at the same URL cannot
+be discovered from the CSV alone. Set `MINAS_REFRESH_POSTS` to newline-separated exact dated folder names to
 refresh selected shares, or change a revision field in their CSV rows. A changed
 post currently requires downloading its whole ZIP; file comparisons avoid rewriting
 identical extracted originals. The existing Minas link scraper reuses cached links;
-this change does not add upstream post/share polling.
+this does not add upstream post polling; the category-specific share scans below
+are independent of that scraper cache.
 
 Downloads enforce Content-Length when available and count streamed bytes even
-without it. Browser downloads are canceled as soon as the URL is available, then
+without it. A streaming deadline (`MINAS_DOWNLOAD_MAX_SECONDS`, default 300)
+is checked between chunks, with at most one additional read timeout. Browser downloads are canceled as soon as the URL is available, then
 retried through a bounded authenticated stream. ZIPs are checked for traversal,
 symlinks, duplicate paths, file count, per-file size and total extracted size before
 installation. Extraction checks free disk space as it writes. Temporary work is
@@ -76,3 +79,138 @@ On Windows, some historical asset paths contain characters such as `|` and canno
 be checked out. Use a sparse checkout excluding `downloads/`, `docs/thumbs/` and
 `posts/` for code-only development; the original tracked files remain in Git. Never
 stage deletions caused by an incomplete checkout. Actions runs on Linux.
+
+
+## Mutable image-archive shares
+
+`影像档案记录分享` now uses the share page's observed file-listing API and
+individual-file download route, without a browser or ZIP. Every eligible category
+row participates on every batch run, even if its CSV fingerprint/share URL is unchanged.
+Repeated references to the same normalized share are scanned once per run. Different
+share tokens remain separate sources; identical previous snapshots do not establish
+permanent equivalence. The remaining categories keep the bounded ZIP behavior above.
+
+The scanner traverses every nested folder, validates paths and response shapes,
+and records source path, size, listing `last_modified`, opaque HEAD/GET ETag, actual
+SHA-256, and verification/check timestamps in `metafiles/minas-files.json`.
+The observed endpoint returns `dirent_list` without pagination. A future response
+announcing more pages fails explicitly rather than silently accepting an incomplete
+scan. Per-file HEAD is metadata-only; it does not depend on HTTP 304 support.
+ETags are not SHA-256, and download-response `Last-Modified` is deliberately ignored.
+Metadata or validator changes trigger an individual bounded download. SHA-256 is
+computed from received bytes, and a file checkpoint is written atomically only
+after byte counts, limits and installation succeed. Partial downloads never become
+completed records. Source/scan errors fail the batch and block the workflow's push.
+
+Because unchanged size, timestamps and ETags are imperfect evidence, unchanged files
+become eligible for full byte verification after seven days. At most four such
+verifications and 32 total file downloads occur per run, within a shared 512 MiB
+stream budget. Deferred entries retain their previous checkpoint and are retried;
+this is successful partial progress, not a completed source snapshot. Older checks
+and least-recently-transferred sources are prioritized. The refresh interval is an
+eligibility threshold: actual verification can be later when the bounded queue is
+large, so increase budgets or reduce the interval according to acceptable staleness.
+New paths are discovered by listing on every run, independently of this interval.
+The byte budget includes bytes received by failed downloads. A single listed file
+larger than the run budget requires an explicit configuration increase.
+
+The seed index contains 10 posts, seven shares, 38 content hashes and 357 historical
+paths derived solely from committed LFS pointers. On its first scan, a seeded file
+whose size matches and whose listing timestamp predates the repository snapshot
+establishes a metadata/ETag baseline without hydrating LFS. Newer, unknown-date or
+changed-size entries require download. This bootstrap cannot prove that same-size
+remote contents retained old metadata; periodic verification covers that limitation
+within the configured queue/budgets. No live files were downloaded to prepare the
+seed index. Missing remote entries do not delete historical records or originals.
+
+New content is stored under `downloads/_minas-content/<sha256>.<extension>` and
+continues to use the existing `downloads/**` LFS rule. Same-name replacements retain
+the previous content file and its provenance. Every unique original and Git
+history are preserved; exact duplicate copies may be remapped and removed. Already-known content reuses its existing preview when one
+is locally present; otherwise received bytes can supply one content-addressed local
+copy for preview generation. No historical LFS objects are fetched automatically.
+Deduplication does not claim additional physical LFS storage savings for identical
+OIDs; it avoids repeated gallery work and, through individual selection, unnecessary
+whole-ZIP transfers.
+
+The gallery groups known identical SHA-256 content into one card and reuses one
+preview. Metadata retains every original path under `associations` and all known
+post/source/remote-path relationships under `posts`, explicitly marked
+`included-in-share`; inclusion does not mean an image was featured by each post.
+Different resolutions/content hashes remain separate. Byte-identical duplicate preview files
+may be removed after references are remapped; different preview bytes are retained.
+
+Additional settings (positive integers unless a path):
+
+| Setting | Default |
+| --- | --- |
+| `MINAS_FILE_STATE_FILE` | `metafiles/minas-files.json` |
+| `MINAS_FILE_VERIFY_DAYS` | 7 |
+| `MINAS_FILE_RUN_VERIFY_FILES` | 4 |
+| `MINAS_FILE_RUN_MAX_DOWNLOADS` | 32 |
+| `MINAS_FILE_RUN_MAX_BYTES` | 536870912 (512 MiB) |
+| `MINAS_FILE_MAX_DIRS` | 256 per share |
+| `MINAS_FILE_MAX_DEPTH` | 32 path components |
+| `MINAS_FILE_MAX_LISTING_BYTES` | 2097152 per response |
+| `MINAS_FILE_MAX_METADATA_REQUESTS` | 10000 per run |
+| `MINAS_DOWNLOAD_MAX_SECONDS` | 300 per streamed download |
+
+`MINAS_MAX_FILES`, `MINAS_MAX_FILE_BYTES` and the free-space reserve also apply.
+The workflow exposes refresh/download budgets through matching GitHub repository
+variables and retains its existing daily trigger. Editing this workflow locally does
+not enable a disabled schedule or execute an update. The Actions job has a 45-minute
+timeout. Access codes remain in the existing CSV and are never copied to the new index.
+
+
+## Gallery versions and search
+
+The preview page provides a version selector (newest numeric version first), category
+selector, search, and a reset to all images. Filters compose; filtered cards retain
+correct detail-page links, and returning from a detail preserves the filters.
+Versions come from explicit `1.2版本` or `v1.2` labels in asset paths or source
+metadata. Dates alone never imply a version. For cumulative image archives, the
+image's own version subfolder wins: the enclosing post title is excluded. A shared
+image can belong to multiple explicit versions, and unknowns are labeled `未分类`.
+The metadata also exposes categories, version memberships and provenance; the
+detail page lists associated posts without claiming every included image was featured.
+Existing image previews are reused. In sparse checkouts, the gallery can read tiny
+committed LFS pointer blobs through Git to identify missing originals; it never
+runs LFS fetch/smudge. Browser tests use only local synthetic images;
+optional `GALLERY_SCREENSHOT_DIR` saves desktop/mobile evidence outside the repo.
+
+
+## Recoverable exact-image deduplication
+
+`python tools/deduplicate_images.py` prints a read-only plan. `--apply` applies
+current-tree deletions, remaps the source index, and writes
+`metafiles/image-aliases.json`; run the gallery builder afterward to update preview
+references/cache. Actions performs this after downloads and before gallery generation.
+The tool reads validated LFS SHA-256 pointers rather than hydrating originals, hashes
+ordinary files/previews, and retains one deterministic image per content hash
+(preferring already materialized bytes, then lexical path order). Different hashes,
+resolutions, video, and unrelated files are excluded from duplicate removal.
+
+For the existing snapshot, 1,048 original images become 726 unique images: logical
+by-path original bytes fall from 3,361,887,908 to 2,548,034,385. The 726 exact preview
+contents occupy 104,068,837 bytes instead of 144,560,616 across 1,048 paths. The MP4
+remains untouched. These ordinary tracked deletions are recoverable from earlier Git
+commits. They do not rewrite history, prune LFS objects, reduce already deduplicated
+physical LFS object storage, or erase historical quota usage.
+
+The alias map preserves old original/preview path mappings; source records retain
+historical paths and all post/source/version relationships. Current gallery image
+and cache references point to surviving files. Original-download links use the retained
+path through GitHub media on `main` (`GALLERY_ORIGINAL_BASE` can override this base),
+rather than attempting to serve LFS pointer text from Pages. The detail page separates
+preview viewing from original downloading; it never starts an original download itself. New detail links include content IDs;
+`legacy_indices` resolves the previously published numeric detail links to surviving
+cards. External URLs pointing directly at a removed duplicate file can no longer
+serve that file on static hosting; use the canonical path from the alias map.
+No redirect files pretending to be images are created.
+
+On a sparse Windows development checkout, `--apply --stage-sparse` explicitly stages
+only planned verified image deletions, including paths Windows cannot materialize.
+Normal Actions runs use `--apply` and stage their resulting changes in the existing
+commit step. Never use history rewriting, LFS prune, or remote object deletion for
+this cleanup. Repeated runs leave canonical copies and associations in place rather
+than recreating redundant image files.

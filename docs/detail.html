@@ -64,10 +64,12 @@
   <div class="container" id="container">
     <div class="actions">
       <a class="btn" href="index.html">← Back to gallery</a>
-      <a class="btn" id="fullLink" href="#" target="_blank" rel="noopener">Open original</a>
+      <a class="btn" id="fullLink" href="#" target="_blank" rel="noopener">打开预览</a>
+      <a class="btn" id="originalLink" href="#" target="_blank" rel="noopener" hidden>下载原图</a>
     </div>
     <img id="img" alt="" />
     <div class="meta" id="meta"></div>
+    <details class="meta" id="sources" hidden><summary>查看来源与关联帖子</summary><ul id="sourceList"></ul></details>
   </div>
   <script>
     function getIndex() {
@@ -78,10 +80,11 @@
 
     async function load() {
       const idx = getIndex();
+      const imageId = new URLSearchParams(location.search).get("id");
       const imgEl = document.getElementById('img');
       const metaEl = document.getElementById('meta');
       const linkEl = document.getElementById('fullLink');
-      if (idx < 0) {
+      if (idx < 0 && !imageId) {
         metaEl.textContent = 'Invalid image index.';
         return;
       }
@@ -89,16 +92,35 @@
         const res = await fetch('meta.json?_=' + Date.now());
         const data = await res.json();
         const items = data.items || [];
-        if (idx >= items.length) {
+        const resolvedId = imageId || data.legacy_indices?.[String(idx)];
+        const it = resolvedId ? items.find(item => item.identity === resolvedId) : items[idx];
+        if (!it) {
           metaEl.textContent = 'Image not found.';
           return;
         }
-        const it = items[idx];
         const full = it.full || it.thumb;
         imgEl.src = it.thumb;
+        imgEl.alt = it.name || '图片预览';
         linkEl.href = full;
-        linkEl.textContent = full;
-        metaEl.textContent = it.name || '';
+        linkEl.textContent = '打开预览';
+        if (it.download && /^https:\/\//.test(it.download)) {
+          document.getElementById('originalLink').href = it.download;
+          document.getElementById('originalLink').hidden = false;
+        }
+        metaEl.textContent = [it.name || '', (it.versions || ['未分类']).join(' / ')].filter(Boolean).join(' · ');
+        const params = new URLSearchParams(location.search);
+        params.delete('i');
+        params.delete('id');
+        document.querySelector('.actions a').href = 'index.html' + (params.size ? '?' + params : '');
+        const posts = new Map((it.posts || []).map(post => [post.post_id, post]));
+        for (const post of posts.values()) {
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.textContent = post.title + '（分享目录包含此图片）';
+          if (/^https:\/\//.test(post.post_url)) { a.href = post.post_url; a.target = '_blank'; a.rel = 'noopener'; }
+          li.append(a); document.getElementById('sourceList').append(li);
+        }
+        document.getElementById('sources').hidden = posts.size === 0;
       } catch (e) {
         metaEl.textContent = 'Failed to load image.';
         console.error(e);

@@ -7,6 +7,7 @@ from pathlib import Path, PurePosixPath
 import shutil
 import stat
 import tempfile
+import time
 import zipfile
 
 
@@ -43,28 +44,48 @@ def fingerprint(row):
 
 
 def download_zip(session, url, dest):
-    maximum = limit("MINAS_MAX_ARCHIVE_BYTES", 512 * 1024 ** 2)
+    return download_bounded(session, url, dest, limit("MINAS_MAX_ARCHIVE_BYTES", 512 * 1024 ** 2))
+
+
+def download_bounded(session, url, dest, maximum, expected_size=None, consume=None):
     check_space(dest.parent)
     created = False
+    deadline = time.monotonic() + limit("MINAS_DOWNLOAD_MAX_SECONDS", 300)
     try:
         with session.get(url, stream=True, timeout=(30, 30),
                          headers={"Accept-Encoding": "identity"}) as response:
             response.raise_for_status()
-            length = int(response.headers.get("Content-Length", "0"))
-            if length < 0 or length > maximum:
-                raise ValueError("Archive download exceeds size limit")
-            check_space(dest.parent, length)
+            length_header = response.headers.get("Content-Length")
+            length = int(length_header) if length_header is not None else None
+            if length is not None and (length < 0 or length > maximum):
+                raise ValueError("Download exceeds size limit")
+            if expected_size is not None and length is not None and length != expected_size:
+                raise ValueError("Remote size changed during scan")
+            if expected_size is not None and "text/html" in response.headers.get("Content-Type", "").lower():
+                raise ValueError("Unexpected HTML instead of asset")
+            check_space(dest.parent, length or expected_size or 0)
             total = 0
+            digest = hashlib.sha256()
             with dest.open("xb") as stream:
                 created = True
                 for chunk in response.iter_content(64 * 1024):
+                    if time.monotonic() > deadline:
+                        raise ValueError("Download duration limit exceeded")
                     total += len(chunk)
-                    if total > maximum:
-                        raise ValueError("Archive download exceeds size limit")
+                    if consume is not None:
+                        consume(len(chunk))
+                    if total > maximum or (expected_size is not None and total > expected_size):
+                        raise ValueError("Streamed download exceeds size limit")
                     check_space(dest.parent, len(chunk))
+                    digest.update(chunk)
                     stream.write(chunk)
-            if length and not response.headers.get("Content-Encoding") and total != length:
-                raise ValueError("Incomplete archive download")
+                stream.flush()
+                os.fsync(stream.fileno())
+            if expected_size is not None and total != expected_size:
+                raise ValueError("Incomplete asset download")
+            if length is not None and not response.headers.get("Content-Encoding") and total != length:
+                raise ValueError("Incomplete download")
+            return {"sha256": digest.hexdigest(), "bytes": total, "etag": response.headers.get("ETag")}
     except BaseException:
         if created:
             dest.unlink(missing_ok=True)

@@ -2,3 +2,11 @@
 .DS_store
 *.pyc
 archived
+
+# Interrupted task-owned staging files must never be committed as assets.
+downloads/**/.minas-*/
+downloads/**/.backup-*/
+metafiles/.state-*
+docs/**/.gallery-*
+metafiles/image-aliases.json.tmp
+metafiles/minas-files.json.tmp
