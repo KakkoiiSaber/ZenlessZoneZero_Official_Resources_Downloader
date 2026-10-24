@@ -298,6 +298,8 @@ class FileTests(unittest.TestCase):
         with Path("rows.csv").open("w",encoding="utf8",newline="") as stream:
             writer=csv.DictWriter(stream,fieldnames=list(category));writer.writeheader();writer.writerows([category,other])
         with patch.object(downloader,"FileUpdater") as updater, patch.object(downloader,"_process_csv_row",new_callable=AsyncMock) as zip_row:
+            for name in ("downloads","completed_downloads","used_bytes","pending","failed_sources"):
+                setattr(updater.return_value,name,0)
             downloader.run_batch_from_csv(Path("rows.csv"),Path("downloads"))
             updater.return_value.run.assert_called_once_with([category])
             self.assertEqual(other,zip_row.call_args.args[0])

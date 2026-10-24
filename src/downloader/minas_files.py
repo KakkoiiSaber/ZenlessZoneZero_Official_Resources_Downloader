@@ -74,6 +74,8 @@ class FileUpdater:
         self.refresh_seconds = limit("MINAS_FILE_VERIFY_DAYS", 7) * 86400
         self.used_bytes = 0
         self.downloads = 0
+        self.completed_downloads = 0
+        self.failed_sources = 0
         self.verifications = 0
         self.pending = 0
         self.metadata_requests = 0
@@ -215,9 +217,12 @@ class FileUpdater:
     def scan(self, session, share):
         files = self.listing(session, share)
         source = self.state["sources"][share]
+        print(f"[files] Listing complete: {len(files)} files", flush=True)
         # Resume deferred work ahead of previously checked entries.
         ordered = sorted(files, key=lambda path: (source["files"].get(path, {}).get("checked_at", 0), path))
-        for path in ordered:
+        for index, path in enumerate(ordered, 1):
+            if index % 100 == 0:
+                print(f"[files] Checked {index}/{len(ordered)}; {self.completed_downloads} completed; {self.pending} deferred", flush=True)
             info = files[path]
             old = source["files"].get(path)
             etag = self.head(session, share, path)
@@ -248,6 +253,7 @@ class FileUpdater:
                 source["files"][path] = updated
                 source["last_transfer_at"] = self.now
                 self.save()  # Durable per-file checkpoint, never a partial file.
+                self.completed_downloads += 1
             else:
                 source["files"][path] = {**old, **info, "etag": etag or old.get("etag"),
                                          "checked_at": self.now,
@@ -271,6 +277,7 @@ class FileUpdater:
                     self.scan(session, share)
             except Exception as error:
                 errors.append(share)
+                self.failed_sources += 1
                 reason = str(error) if isinstance(error, (ValueError, RuntimeError)) else type(error).__name__
                 print(f"[files] Failed source {share}: {reason}")
         print(f"[files] {len(groups)} distinct shares; {self.downloads} downloads; {self.used_bytes} bytes; {self.pending} deferred")
