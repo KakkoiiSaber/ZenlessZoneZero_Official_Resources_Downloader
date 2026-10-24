@@ -5,6 +5,11 @@ import json
 from pathlib import Path
 import re
 
+try:
+    from .gallery_tag_rules import VERSION_NAMES, debut_title_evidence, version_label
+except ImportError:
+    from gallery_tag_rules import VERSION_NAMES, debut_title_evidence, version_label
+
 CATEGORY_ORDER = ["角色图片", "月历", "活动壁纸", "测试期素材", "表情包", "影像档案", "未分类"]
 CHARACTER_ALIASES = {
     "伊德海莉": ["伊德海莉"], "狛野真斗": ["狛野真斗"], "奥菲丝": ["奥菲丝"], "鬼火": ["鬼火"],
@@ -163,15 +168,34 @@ def build_tags(entry):
         evidence = [{key: value for key, value in context.items() if key not in ("text", "own_path") and value}
                     for context in contexts if re.search(r"(?<![\d.])" + re.escape(version) + r"(?:\s*版本|(?=[^\d.]|$))", context["text"])]
         for source in evidence or [{"scope": "asset_metadata", "value": version}]:
-            add("version", version, "版本 " + version, "explicit", source, relation="asset_version")
+            add("version", version, version_label(version), "explicit", source, relation="asset_version")
+    supported = set()
+    for version, evidence in debut_title_evidence(entry, contexts, CHARACTER_ALIASES, DEBUT):
+        supported.add(version)
+        kind = "version" if version in explicit else "associated_version"
+        confidence = "explicit" if version in explicit else "rule_supported"
+        add(kind, version, version_label(version), confidence, evidence, relation="debut_content")
     names = [value for kind, value in tags if kind == "character"]
     for name in names:
         mapping = DEBUT.get(name)
-        if mapping and mapping["version"] not in explicit:
+        if mapping and mapping["version"] not in explicit | supported:
             version = mapping["version"]
-            add("associated_version", version, "关联版本 " + version + " · 推断", "inferred",
+            add("associated_version", version, version_label(version, inferred=True), "inferred",
                 {"scope": "character_debut", "character": name, "source_url": mapping["source_url"]},
                 relation="character_debut")
+    # A verified version title belongs on the same chip as its numeric version.
+    # Other story/theme tags remain independent, even inside cumulative archives.
+    version_names = set()
+    for (kind, version), tag in list(tags.items()):
+        if kind not in ("version", "associated_version") or version not in VERSION_NAMES:
+            continue
+        name, url = VERSION_NAMES[version]
+        version_names.add(name)
+        tag["version_name"] = name
+        tag["aliases"] = [name]
+        tag["evidence"].append({"scope": "version_name", "value": name, "source_url": url})
+    for name in version_names:
+        tags.pop(("theme", name), None)
     order = {kind: i for i, kind in enumerate(("character", "version", "associated_version", "theme", "source_type", "calendar"))}
     result = sorted(tags.values(), key=lambda tag: (order[tag["kind"]], tag["value"]))
     for tag in result:

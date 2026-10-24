@@ -120,10 +120,16 @@
           chip.textContent = tag.label; chip.setAttribute('role', 'listitem'); document.getElementById('tags').append(chip);
           for (const evidence of tag.evidence || []) {
             const li = document.createElement('li');
-            li.textContent = tag.label + (tag.confidence === 'inferred' ? '：角色登场关联，非图片首次发布版本。' : '：来源文字明确标注。');
+            li.textContent = tag.label + (tag.confidence === 'inferred' ? '：角色登场关联，非图片首次发布版本。' :
+              tag.confidence === 'rule_supported' ? '：官方角色展示/PV标题与图片目录规则支持的首登场内容关联。' : '：来源文字明确标注。');
+            if (evidence.rule_id) li.append(' 规则：' + evidence.rule_id);
+            if (evidence.asset_path) li.append(' 目录：' + evidence.asset_path);
             if (evidence.source_url && /^https:\/\//.test(evidence.source_url)) {
               const source = document.createElement('a'); source.href = evidence.source_url; source.target = '_blank'; source.rel = 'noopener'; source.textContent = '查看来源'; li.append(' ', source);
             } else if (evidence.value) { li.append(' ', document.createTextNode(evidence.value)); }
+            if (evidence.mapping_source_url && /^https:\/\//.test(evidence.mapping_source_url)) {
+              const mapping = document.createElement('a'); mapping.href = evidence.mapping_source_url; mapping.target = '_blank'; mapping.rel = 'noopener'; mapping.textContent = '角色登场依据'; li.append(' ', mapping);
+            }
             document.getElementById('tagEvidenceList').append(li);
           }
         }

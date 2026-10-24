@@ -2,7 +2,12 @@
 (() => {
   "use strict";
   const PAGE_SIZE = 60;
-  const versionsOf = item => item.versions?.length ? item.versions : ["未分类"];
+  const versionsOf = item => {
+    const explicit = (item.versions || []).filter(value => value !== "未分类");
+    const supported = (item.tags || []).filter(tag => tag.kind === "associated_version" && tag.confidence === "rule_supported").map(tag => tag.value);
+    const values = [...new Set([...explicit, ...supported])];
+    return values.length ? values : ["未分类"];
+  };
   function compareVersions(a, b) {
     if (a === "未分类") return b === a ? 0 : 1;
     if (b === "未分类") return -1;
@@ -66,7 +71,8 @@
       for (const tag of tags.slice(0, 6)) {
         const chip = document.createElement("span"); chip.className = "tag" + (tag.confidence === "inferred" ? " tag-inferred" : "");
         chip.textContent = tag.label; chip.setAttribute("role", "listitem");
-        chip.title = tag.confidence === "inferred" ? "按角色登场版本关联，非图片首次发布版本；依据可在详情中查看。" : "来源文字明确标注；依据可在详情中查看。";
+        chip.title = tag.confidence === "inferred" ? "按角色登场版本关联，非图片首次发布版本；依据可在详情中查看。" :
+          tag.confidence === "rule_supported" ? "官方角色展示/PV标题与图片目录规则支持的首登场内容关联；依据可在详情中查看。" : "来源文字明确标注；依据可在详情中查看。";
         chips.append(chip);
       }
       if (tags.length > 6) { const more = document.createElement("span"); more.className = "tag-more"; more.textContent = `另有 ${tags.length - 6} 个标签，点击查看`; chips.append(more); }
@@ -93,7 +99,13 @@
     history.replaceState(null, "", location.pathname + (params.size ? `?${params}` : ""));
   }
   function options(select, values) {
-    for (const value of values) { const option = document.createElement("option"); option.value = value; option.textContent = value; select.append(option); }
+    const names = new Map(allItems.flatMap(tagsOf).filter(tag => tag.version_name).map(tag => [tag.value, tag.version_name]));
+    for (const value of values) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = select === version && names.has(value) ? `版本 ${value} · ${names.get(value)}` : value;
+      select.append(option);
+    }
   }
   document.getElementById("filters").addEventListener("submit", event => event.preventDefault());
   version.addEventListener("change", applyFilters); category.addEventListener("change", applyFilters);

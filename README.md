@@ -240,20 +240,57 @@ enclosing post month; dates alone never create version labels. Cumulative archiv
 use an image's own subfolder/source path instead of applying an enclosing post's
 character or version to the whole collection.
 
-Only the ten character groups already checked against official announcements get
+Only the character groups already checked against official announcements get
 character-debut association tags: 伊德海莉/狛野真斗 (2.3), 席德/奥菲丝与鬼火 (2.2),
-薇薇安/雨果 (1.7), 零号·安比/扳机 (1.6), 耀嘉音/伊芙琳 (1.5). These are marked
+薇薇安/雨果 (1.7), 零号·安比/扳机 (1.6), 耀嘉音/伊芙琳 (1.5). For generic character art these remain
 `associated_version`, `confidence: inferred`, `relation: character_debut`, visibly
-labeled `关联版本 … · 推断`, and link to their official evidence. They do not replace
-the image's explicitly evidenced `versions`, assert its first publication version,
-or add every later rerun/banner appearance. Other character names can be searchable
-without receiving an unverified version mapping. The registry is deliberately bounded.
+labeled `关联版本 1.7 · 将眼泪与过往一同埋葬 · 推断`. They do not assert
+an image's first upload version or add later rerun appearances. Other characters
+remain searchable without an unverified debut mapping.
 
-The current 726 unique images comprise 606 character images, 46 calendars, 15 event
-wallpapers, five test-period images, 16 emoticons, and 38 image-archive images.
-There are 359 images with verified character-debut association tags. The 38 explicit
-version image memberships remain separate. The detail page displays all tags and
-their evidence; inferred chips have a distinct dashed appearance and explanatory text.
+The bounded rule `official-wallpaper-debut-v1` in `tools/gallery_tag_rules.py`
+recognizes the repository's official-source wallpaper title convention:
+`壁纸分享 | <character>角色PV&角色展示壁纸` (also `丨`, quoted aliases,
+role-only variants, and the observed mixed `角色展示&EP`/`角色展示&MV` forms).
+It requires a matching Miyoushe article association and the same title in that
+image's historical path. A `主题壁纸` post needs a matching named or bare
+`角色展示`/`角色PV` image subfolder. Resolution suffixes are accepted. A role-only
+bundle may use its title when its image paths have no finer source label.
+A mixed EP/MV bundle only promotes an unambiguous role subfolder: its music or
+unknown subfolders retain inferred tags. A character in arbitrary text, a bare
+`PV`, EP/MV alone, rerun/review/fan-edit titles, and enclosing cumulative-archive
+titles are insufficient. No posting dates, bodies or new network requests are used.
+
+This rule combines the observed official title/directory convention with the
+verified character debut map. It emits `confidence: rule_supported`,
+`relation: debut_content`, e.g. `版本 1.7 · 将眼泪与过往一同埋葬`, without
+a generic inference badge. Evidence retains the rule ID, exact title/path,
+source post and official character-version announcement; the detail page explains
+that this is a debut-content association rather than an asserted upload date.
+Direct asset-version evidence still takes precedence, and different version
+associations aggregate into separate tags without losing their provenance.
+
+Actual positive corpus examples include [薇薇安's role-only bundle](https://www.miyoushe.com/zzz/article/65001819),
+[扳机's role-only bundle](https://www.miyoushe.com/zzz/article/64380445), and
+[伊芙琳's mixed showcase/EP bundle](https://www.miyoushe.com/zzz/article/62318049).
+Only its role subfolders qualify. These explicit patterns are deliberately
+maintainable and conservative; new title forms need reviewed examples and tests.
+
+The numeric version and verified official version name share one chip; an identical
+standalone theme chip is removed. `VERSION_NAMES` records official announcement
+URLs for 1.1–1.7 and 2.0–2.3. Unverified numbers retain a numeric-only chip, and
+unclassified images remain `未分类`. Either the number or name is searchable,
+numeric ordering remains numeric (2.10 before 2.9), and the optional version selector
+includes direct and rule-supported versions, excluding purely inferred membership.
+
+The current 726 unique images keep the same categories, original paths, previews,
+and associations: 606 character images, 46 calendars, 15 event wallpapers, five
+test-period images, 16 emoticons, and 38 image-archive images. Of the 359 existing
+character-debut associations, 145 now have rule-supported content evidence and
+214 remain inferred; 38 images retain direct version evidence. One further direct
+version tag gains rule provenance without creating a second chip. There are 1,781
+tags after combining the 38 duplicate version-name themes. The detail page retains
+all evidence; inferred chips keep a distinct dashed appearance.
 
 When MinasScraper already fetches a new public post, it additively records a small
 `metafiles/post-evidence.json` sidecar (`MINAS_POST_EVIDENCE_FILE` overrides the path).
