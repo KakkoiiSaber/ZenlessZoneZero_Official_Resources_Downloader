@@ -22,7 +22,7 @@ all asset network access, even in a pointer-only checkout. New or changed rows f
 one post ZIP, validate and extract into temporary staging, then merge new/changed
 files while retaining other files. Identical files are left untouched. The completion
 record is written atomically only after installation succeeds; failures are retried
-and cause a nonzero batch exit so Actions cannot auto-push a failed batch.
+and cause a nonzero batch exit. The workflow retains verified completed progress even when other rows fail; failed rows remain eligible for retry (see recovery below).
 
 For those other categories, changes inside a remote share at the same URL cannot
 be discovered from the CSV alone. Set `MINAS_REFRESH_POSTS` to newline-separated exact dated folder names to
@@ -300,3 +300,50 @@ lines are excluded. Body mentions have `confidence: unreviewed` and post scope;
 they are not automatically promoted to asset version tags. Evidence capture does
 not add requests or re-fetch cached posts, and an evidence-write failure leaves
 normal link extraction intact. This patch performs no live body backfill.
+
+
+## ZIP handoff, partial failures and Pages publication
+
+The ZIP browser flow intercepts the first same-origin `/seafhttp/zip/…` request
+before Chromium transfers any bytes. It then performs exactly one bounded streaming
+GET with the authenticated cookies and request context. It never starts/cancels a
+browser transfer and replays its URL. A bounded validation against the December
+2025 two-image calendar share reproduced the old flow's HTTP 403; the new flow
+successfully extracted both images (6,390,439 bytes) with an 8 MiB archive cap.
+This verifies the handoff fix, without claiming a particular server-side token
+implementation or guaranteeing every remote share remains available.
+
+`metafiles/last-update.json` records completed/unchanged/missing/failed ZIP rows,
+file-transfer attempts/completions/bytes/deferred records, and sanitized error types
+and HTTP codes. It never stores download tokens, passwords or exception URLs.
+File-level completion counts advance only after a durable per-file state checkpoint.
+Successful rows retain their fingerprints when a later row fails; a retry skips them.
+Deferred source-file records are not unique-image counts. Logs flush immediately and
+include periodic listing progress. Existing size/disk/refresh/transfer budgets remain.
+
+The manual-only workflow checks out current `main` with LFS smudging disabled and
+checks its base before starting. The update step has a 35-minute timeout inside the
+45-minute job, reserving time to validate and retain output. A failed update step
+continues to deduplication and gallery validation. Valid completed output is committed
+and normally pushed to `main`; the run still ends in failure to make incomplete work
+visible. Failed or unfinished rows are never marked complete.
+
+If gallery validation fails, metadata is malformed/truncated, or `main` has advanced,
+`tools/checkpoint_update.py` retains the scoped output on
+`asset-recovery/<run-id>-<attempt>` instead. It never force-pushes or silently merges
+JSON conflicts. Only downloads, metadata and generated previews/cache are staged;
+pre-existing staged work is rejected and task-owned staging directories stay ignored.
+A network error on push is checked against the remote commit before recovery, avoiding
+blind duplicate publication. Recovery-only output is not deployed. A hard runner loss
+before checkpoint publication cannot be made durable by later steps; an overall job
+cancellation or LFS/remote-storage refusal may also prevent a recovery push. The workflow
+reports those failures rather than claiming a checkpoint exists.
+
+GitHub token pushes do not automatically build branch-published Pages. The workflow
+therefore uses its short-lived `pages: write` token permission (alongside existing
+`contents: write`) to request the existing Pages build explicitly. No account settings,
+long-lived credentials or OIDC permission are added. `tools/publish_pages.py` verifies
+current main and the exact built commit, observes an existing matching pending build
+rather than duplicating it, and fails on rejection, build error or timeout. The final
+summary shows checkpoint/recovery references and net unique-image counts. No scheduled
+or push-triggered asset updates are enabled.

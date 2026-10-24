@@ -56,6 +56,7 @@ except ImportError:
     from minas_files import CATEGORY, FileUpdater
 
 STATE_FILE = Path(os.getenv("MINAS_STATE_FILE", "metafiles/asset-state.json"))
+REPORT_FILE = Path(os.getenv("MINAS_REPORT_FILE", "metafiles/last-update.json"))
 
 # --- Defaults (override via CLI or env) ---
 DEFAULT_URL = os.getenv("MINAS_URL", "https://minas.mihoyo.com/d/97936e3e62a949b2930d/")
@@ -138,6 +139,35 @@ def authenticate_with_password(session: requests.Session, url: str, password: st
 
 # --------------------- ZIP via browser (Playwright) ---------------------
 
+async def capture_zip_request(page, button, share_url):
+    """Capture a fresh ZIP URL before any browser transfer consumes it."""
+    result = asyncio.get_running_loop().create_future()
+    pattern = "**/seafhttp/zip/**"
+
+    async def intercept(route):
+        request = route.request
+        parsed, source = urlparse(request.url), urlparse(share_url)
+        invalid = parsed.scheme != "https" or parsed.netloc != source.netloc
+        headers = await request.all_headers() if not invalid else {}
+        headers = {key: value for key, value in headers.items()
+                   if key.lower() not in {"host", "cookie", "content-length", "connection", "accept-encoding"}}
+        await route.abort()  # Finish aborting before returning the fresh URL.
+        if not result.done():
+            if invalid:
+                result.set_exception(ValueError("Cross-origin ZIP request"))
+            else:
+                result.set_result((request.url, headers))
+
+    await page.route(pattern, intercept)
+    try:
+        await button.click(no_wait_after=True)
+        return await asyncio.wait_for(result, timeout=ROW_TIMEOUT_SEC if ROW_TIMEOUT_SEC > 0 else None)
+    except BaseException:
+        await page.unroute(pattern, intercept)
+        raise
+    # Keep blocking browser retries until this dedicated page/context closes.
+
+
 async def _zip_current_path(
     url: str, password: str, path: str, out_dir: Path,
     force_extract_dir: Path | None = None
@@ -166,14 +196,9 @@ async def _zip_current_path(
                         break
             await page.wait_for_selector('.shared-dir-view-main', timeout=30000)
             button = page.locator('button.shared-dir-op-btn').first
-            # Cancel the browser transfer immediately; stream it ourselves with hard limits.
-            async with page.expect_download(timeout=ROW_TIMEOUT_SEC * 1000) as pending:
-                await button.click()
-            download = await pending.value
-            download_url = download.url
-            await download.cancel()
+            download_url, download_headers = await capture_zip_request(page, button, url)
             with requests.Session() as session:
-                session.headers.update({"User-Agent": USER_AGENT, "Referer": page.url})
+                session.headers.update({"User-Agent": USER_AGENT, "Referer": page.url, **download_headers})
                 for cookie in await context.cookies():
                     session.cookies.set(cookie["name"], cookie["value"],
                                         domain=cookie["domain"], path=cookie["path"])
@@ -184,7 +209,7 @@ async def _zip_current_path(
                     stage.mkdir()
                     download_zip(session, download_url, archive)
                     extract_zip(archive, stage)
-                    destination = force_extract_dir or out_dir / sanitize_filename(Path(download.suggested_filename).stem)
+                    destination = force_extract_dir or out_dir / sanitize_filename("share-" + urlparse(url).path.strip("/").split("/")[-1])
                     install_tree(stage, destination)
                     return destination
         finally:
@@ -195,7 +220,7 @@ async def _zip_current_path(
 DEFAULT_CSV = Path("metafiles") / "米游社-官方资讯-minas.csv"
 BATCH_OUT_SUBDIR = "米游社-官方资讯-minas"
 
-async def _process_csv_row(row: dict, out_root: Path) -> None:
+async def _process_csv_row(row: dict, out_root: Path) -> str:
     post_name = _norm_outer_quotes(row.get("post_name") or row.get("title") or row.get("name"))
     url = _norm_cell(row.get("minas_link") or row.get("url") or row.get("link"))
     password = _norm_cell(row.get("minas_pwd") or row.get("password") or row.get("passwd"))
@@ -214,8 +239,8 @@ async def _process_csv_row(row: dict, out_root: Path) -> None:
             norm_post_time = ""
 
     if not url or not password or not post_name:
-        print(f"[CSV] Skip (missing field): post_name='{post_name}' url='{url}' pwd={'yes' if bool(password) else 'no'}")
-        return
+        print(f"[CSV] Skip (missing field): {post_name}", flush=True)
+        return "missing"
 
     folder_name = f"{norm_post_time} {post_name}" if norm_post_time else post_name
     target_dir = out_root / sanitize_filename(folder_name)
@@ -226,11 +251,12 @@ async def _process_csv_row(row: dict, out_root: Path) -> None:
     identity = fingerprint(row)
     refresh = {name.strip() for name in os.getenv("MINAS_REFRESH_POSTS", "").splitlines() if name.strip()}
     if state.get(key) == identity and key not in refresh:
-        print(f"[CSV] SKIP (unchanged): {target_dir}")
-        return
+        print(f"[CSV] SKIP (unchanged): {target_dir}", flush=True)
+        return "unchanged"
     await _zip_current_path(url, password, path="/", out_dir=out_root, force_extract_dir=target_dir)
     state[key] = identity
     atomic_json(STATE_FILE, state)
+    return "completed"
 
 
 def run_batch_from_csv(csv_path: Path, out_dir: Path) -> None:
@@ -253,38 +279,62 @@ def run_batch_from_csv(csv_path: Path, out_dir: Path) -> None:
         max_rows = None
     row_timeout = ROW_TIMEOUT_SEC if ROW_TIMEOUT_SEC > 0 else None
 
+    report = {"version": 1, "run_id": os.getenv("GITHUB_RUN_ID"), "status": "running",
+              "rows": len(rows), "zip": {"completed": 0, "unchanged": 0, "missing": 0, "failed": 0},
+              "files": {"status": "not_started"}, "failures": []}
+    def save_report():
+        atomic_json(REPORT_FILE, report)
+    save_report()
     failures = []
     selected_rows = rows[:max_rows] if max_rows is not None else rows
     category_rows = [row for row in selected_rows if CATEGORY in row.get("post_name", "")
                      and _norm_cell(row.get("minas_link")) and _norm_cell(row.get("minas_pwd"))]
     if category_rows:
+        updater = FileUpdater(out_dir, authenticate_with_password)
+        report["files"]["status"] = "running"
+        save_report()
         try:
-            FileUpdater(out_dir, authenticate_with_password).run(category_rows)
+            updater.run(category_rows)
+            report["files"]["status"] = "completed"
         except Exception as error:
             failures.append("file-level category")
-            print(f"[files] FAILED: {error}")
-    for idx, row in enumerate(rows, 1):
-        if max_rows is not None and idx > max_rows:
-            print(f"[CSV] Reached MINAS_MAX_ROWS={max_rows}; stopping early.")
-            break
+            report["files"]["status"] = "failed"
+            report["failures"].append({"phase": "files", "error": type(error).__name__})
+            print(f"[files] FAILED: {type(error).__name__}", flush=True)
+        finally:
+            report["files"].update({"attempted": updater.downloads, "completed": updater.completed_downloads,
+                                    "bytes": updater.used_bytes, "deferred": updater.pending,
+                                    "failed_sources": updater.failed_sources})
+            save_report()
+    for idx, row in enumerate(selected_rows, 1):
         if row in category_rows:
             continue
         try:
             if row_timeout:
-                asyncio.run(asyncio.wait_for(_process_csv_row(row, out_root), timeout=row_timeout))
+                result = asyncio.run(asyncio.wait_for(_process_csv_row(row, out_root), timeout=row_timeout))
             else:
-                asyncio.run(_process_csv_row(row, out_root))
-            print(f"[CSV] ({idx}/{len(rows)}) done")
-        except asyncio.TimeoutError:
-            failures.append(idx)
-            print(f"[CSV] ({idx}/{len(rows)}) TIMEOUT after {row_timeout}s; skipping.")
+                result = asyncio.run(_process_csv_row(row, out_root))
+            status = result if result in ("completed", "unchanged", "missing") else "completed"
+            report["zip"][status] += 1
+            print(f"[CSV] ({idx}/{len(rows)}) {status}", flush=True)
         except KeyboardInterrupt:
             raise
-        except Exception as e:
+        except Exception as error:
             failures.append(idx)
-            print(f"[CSV] ({idx}/{len(rows)}) FAILED: {e}")
+            report["zip"]["failed"] += 1
+            response = getattr(error, "response", None)
+            code = getattr(response, "status_code", None)
+            report["failures"].append({"phase": "zip", "row": idx, "error": type(error).__name__, "http_status": code})
+            print(f"[CSV] ({idx}/{len(rows)}) FAILED: {type(error).__name__}; HTTP {code}", flush=True)
+        finally:
+            save_report()
+    report["status"] = "partial_failure" if failures else "completed"
+    if max_rows is not None and len(rows) > max_rows:
+        report["deferred_rows"] = len(rows) - max_rows
+    save_report()
     if failures:
         raise RuntimeError(f"Asset rows failed: {failures}")
+    return report
 
 # --------------------- Orchestrator ---------------------
 
