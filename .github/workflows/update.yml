@@ -8,6 +8,13 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: asset-update
+  cancel-in-progress: false
+
+env:
+  GIT_LFS_SKIP_SMUDGE: "1"
+
 jobs:
   run-and-commit:
     runs-on: ubuntu-latest
@@ -15,8 +22,8 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          lfs: true
+          fetch-depth: 1
+          lfs: false
 
       - name: Enable Git LFS
         run: git lfs install --local
@@ -33,6 +40,9 @@ jobs:
 
       - name: Install Playwright browsers
         run: python -m playwright install --with-deps chromium
+
+      - name: Run regression tests
+        run: python -m unittest discover -s tests -v
 
       - name: Run scraper
         run: python src/main.py

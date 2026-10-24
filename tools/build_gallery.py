@@ -13,6 +13,8 @@ Env overrides:
 """
 from __future__ import annotations
 
+import hashlib
+import tempfile
 import html
 import io
 import json
@@ -30,6 +32,30 @@ CACHE_FILE = DOCS_DIR / "cached.json"
 TITLE = os.getenv("GALLERY_TITLE", "Downloads Gallery")
 THUMB_DIR = DOCS_DIR / "thumbs"
 MAX_BYTES = int(os.getenv("GALLERY_MAX_BYTES", "100000"))
+MAX_EDGE = int(os.getenv("GALLERY_MAX_EDGE", "1600"))
+MAX_PIXELS = int(os.getenv("GALLERY_MAX_PIXELS", "50000000"))
+
+
+def atomic_write(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fd, name = tempfile.mkstemp(prefix=".gallery-", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+        os.replace(name, path)
+    finally:
+        Path(name).unlink(missing_ok=True)
+
+
+def source_identity(path):
+    with path.open("rb") as stream:
+        head = stream.read(1024)
+        if head.splitlines()[:1] == [b"version https://git-lfs.github.com/spec/v1"]:
+            match = re.search(rb"oid sha256:([0-9a-f]{64})", head)
+            return ("sha256:" + match[1].decode() if match else None), True
+        stream.seek(0)
+        return "sha256:" + hashlib.file_digest(stream, "sha256").hexdigest(), False
+
 
 
 def _date_from_folder(folder: str, mtime: float) -> float:
@@ -47,110 +73,111 @@ def _date_from_folder(folder: str, mtime: float) -> float:
         return mtime
 
 
-def find_images() -> list[dict[str, str]]:
-    items: list[dict[str, str]] = []
-    if not DOWNLOAD_ROOT.exists():
-        return items
+def find_images() -> list[dict]:
     cache = load_cache()
-    for path in DOWNLOAD_ROOT.rglob("*"):
-        if not path.is_file():
+    # Union with cache: sparse/missing originals must not erase published assets.
+    paths = {p.as_posix(): p for p in DOWNLOAD_ROOT.rglob("*")
+             if p.is_file() and p.suffix.lower() in IMG_EXTS}
+    for key in cache:
+        paths.setdefault(key.replace("\\", "/"), Path(key))
+    items = []
+    for key, path in sorted(paths.items()):
+        cached = cache.get(key, {})
+        try:
+            rel = path.relative_to(DOWNLOAD_ROOT)
+        except ValueError:
             continue
-        if path.suffix.lower() not in IMG_EXTS:
-            continue
-        rel_from_root = path.relative_to(Path("."))
-        web_path = "../" + quote(str(rel_from_root).replace("\\", "/"), safe="/")
-        folder = str(path.parent.relative_to(DOWNLOAD_ROOT)).replace("\\", "/")
-        stat = path.stat()
-        cache_key = str(path)
-        cached = cache.get(cache_key)
-        folder_name = folder if folder else ""
-        items.append(
-            {
-                "src": web_path,  # original path (likely LFS; may 404 on Pages)
-                "fs_path": str(path),
-                "folder": folder if folder != "." else "",
-                "name": path.stem,
-                "mtime": stat.st_mtime,
-                "date_sort": _date_from_folder(folder_name, stat.st_mtime),
-                "cached_thumb": cached["thumb"] if cached and cached.get("mtime") == stat.st_mtime else None,
-                "cache_key": cache_key,
-            }
-        )
-    # newest first by folder date (if present), then mtime
-    return sorted(items, key=lambda x: x["date_sort"], reverse=True)
+        folder = rel.parent.as_posix()
+        folder = "" if folder == "." else folder
+        present = path.is_file()
+        identity, pointer = source_identity(path) if present else (None, True)
+        # Preserve original published timestamps, independent of checkout mtimes.
+        mtime = cached.get("mtime", 0)
+        existing_thumb = cached.get("thumb")
+        reusable = existing_thumb and (DOCS_DIR / existing_thumb).is_file()
+        unchanged = identity == cached.get("identity") and cached.get("settings") == [MAX_BYTES, MAX_EDGE, MAX_PIXELS]
+        items.append({
+            "src": "../" + quote(path.as_posix(), safe="/"),
+            "fs_path": str(path), "folder": folder, "name": path.stem,
+            "mtime": mtime, "date_sort": _date_from_folder(rel.parts[1] if len(rel.parts)>2 else folder, mtime),
+            "cache_key": key,
+            "identity": (cached.get("identity") or identity) if pointer else identity,
+            "settings": cached.get("settings") if pointer else [MAX_BYTES, MAX_EDGE, MAX_PIXELS],
+            "unavailable": pointer, "previous_thumb": existing_thumb if reusable else None,
+            "cached_thumb": existing_thumb if reusable and (pointer or unchanged) else None,
+        })
+    return sorted(items, key=lambda it: (-it["date_sort"], it["cache_key"]))
 
 
-def build_previews(items: list[dict[str, str]]) -> None:
-    try:
-        from PIL import Image
-    except Exception as e:
-        print(f"[gallery] Pillow not available, skipping previews: {e}")
-        return
-
+def build_previews(items: list[dict]) -> None:
+    from PIL import Image
+    if MAX_BYTES <= 0 or MAX_EDGE <= 0 or MAX_PIXELS <= 0:
+        raise ValueError("Gallery limits must be positive")
     THUMB_DIR.mkdir(parents=True, exist_ok=True)
     for it in items:
-        # reuse cached thumbnail if unchanged
-        if it.get("cached_thumb"):
-            it["thumb"] = it["cached_thumb"]
+        if it.get("cached_thumb") or it["unavailable"]:
+            it["thumb"] = it.get("cached_thumb")
             continue
-
         src_path = Path(it["fs_path"])
-        rel = src_path.relative_to(DOWNLOAD_ROOT)
-        preview_path = THUMB_DIR / rel.with_suffix(".jpg")
-        preview_path.parent.mkdir(parents=True, exist_ok=True)
+        preview_path = THUMB_DIR / src_path.relative_to(DOWNLOAD_ROOT).with_suffix(".jpg")
         try:
-            with Image.open(src_path) as img:
-                img = img.convert("RGB")
-                best_bytes = None
-                for q in range(85, 24, -5):
-                    buf = io.BytesIO()
-                    img.save(buf, format="JPEG", quality=q, optimize=True)
-                    best_bytes = buf.getvalue()
-                    if buf.tell() <= MAX_BYTES:
+            with Image.open(src_path) as source:
+                if source.width * source.height > MAX_PIXELS:
+                    raise ValueError("Image exceeds pixel limit")
+                source.thumbnail((MAX_EDGE, MAX_EDGE), Image.Resampling.LANCZOS)
+                img = source.convert("RGB")
+                while True:
+                    for quality in range(85, 24, -10):
+                        buf = io.BytesIO()
+                        img.save(buf, format="JPEG", quality=quality, optimize=True)
+                        data = buf.getvalue()
+                        if len(data) <= MAX_BYTES:
+                            break
+                    if len(data) <= MAX_BYTES:
                         break
-                if best_bytes is None:
-                    it["thumb"] = None
-                    continue
-                preview_path.write_bytes(best_bytes)
-                it["thumb"] = str(preview_path.relative_to(DOCS_DIR)).replace("\\", "/")
-        except Exception as e:
-            print(f"[gallery] preview failed for {src_path}: {e}")
-            it["thumb"] = None
+                    if img.size == (1, 1):
+                        raise ValueError("GALLERY_MAX_BYTES too small for JPEG")
+                    img = img.resize((max(1, img.width * 3 // 4), max(1, img.height * 3 // 4)), Image.Resampling.LANCZOS)
+                atomic_write(preview_path, data)
+                it["thumb"] = preview_path.relative_to(DOCS_DIR).as_posix()
+                it["built"] = True
+        except Exception as error:
+            # Keep published content, but do not mark the failed identity as processed.
+            print(f"[gallery] preview failed for {src_path}: {error}")
+            it["thumb"] = it.get("previous_thumb")
+            it["failed"] = True
 
 
-def write_meta(items: list[dict[str, str]]) -> None:
-    payload = []
+def write_meta(items: list[dict]) -> None:
+    previous = json.loads(META_FILE.read_text(encoding="utf-8")) if META_FILE.exists() else {"items": []}
+    payload = {(it["folder"], it["name"]): it for it in previous.get("items", [])}
     for it in items:
-        thumb = it.get("thumb") or it["src"]  # fall back to original if no preview
-        payload.append(
-            {
-                "thumb": thumb,
-                "full": thumb,  # originals often 404 on Pages; serve preview
-                "name": it["name"],
-                "folder": it["folder"],
-                "mtime": it["mtime"],
+        if it.get("thumb"):
+            payload[(it["folder"], it["name"])] = {
+                "thumb": it["thumb"], "full": it["thumb"], "name": it["name"],
+                "folder": it["folder"], "mtime": it["mtime"],
             }
-        )
-    META_FILE.write_text(json.dumps({"items": payload}, ensure_ascii=False), encoding="utf-8")
+    ordered = sorted(payload.values(), key=lambda it: -_date_from_folder(
+        it["folder"].split("/")[1] if "/" in it["folder"] else it["folder"], it["mtime"]))
+    atomic_write(META_FILE, json.dumps({"items": ordered}, ensure_ascii=False).encode())
     print(f"[gallery] Wrote {META_FILE} with {len(payload)} entries")
 
 
 def load_cache() -> dict:
     if not CACHE_FILE.exists():
         return {}
-    try:
-        return json.loads(CACHE_FILE.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
+    # Corrupt state should stop the build instead of silently discarding it.
+    return {key.replace("\\", "/"): value for key, value in json.loads(CACHE_FILE.read_text(encoding="utf-8")).items()}
 
 
-def save_cache(items: list[dict[str, str]]) -> None:
-    data = {}
+def save_cache(items: list[dict]) -> None:
+    data = load_cache()
     for it in items:
-        if it.get("thumb"):
-            data[it["cache_key"]] = {"thumb": it["thumb"], "mtime": it["mtime"]}
-    CACHE_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-    print(f"[gallery] Wrote cache for {len(data)} items -> {CACHE_FILE}")
+        if it.get("thumb") and not it.get("failed"):
+            entry = {"thumb": it["thumb"], "mtime": it["mtime"], "identity": it["identity"],
+                     "settings": it["settings"]}
+            data[it["cache_key"]] = entry
+    atomic_write(CACHE_FILE, json.dumps(data, ensure_ascii=False).encode())
 
 
 def render_base(count: int) -> str:
@@ -322,6 +349,8 @@ def main() -> None:
     DOCS_DIR.mkdir(parents=True, exist_ok=True)
     write_meta(items)
     save_cache(items)
+    if any(it.get("failed") for it in items):
+        raise RuntimeError("Gallery preview failures; existing previews preserved")
     print(f"[gallery] Previews + meta ready for manual index (items: {len(items)})")
 
 
