@@ -1,0 +1,30 @@
+services:
+  media-sync:
+    build:
+      context: ../..
+      dockerfile: deploy/synology/Dockerfile
+    user: "${NAS_UID:?Set existing NAS user UID}:${NAS_GID:?Set existing NAS group GID}"
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    environment:
+      NAS_MANIFEST_URL: "${NAS_MANIFEST_URL:-https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/main/metafiles/catalog.json}"
+      NAS_CODES_FILE: /config/share-codes.json
+      NAS_RUN_MAX_SOURCES: "${NAS_RUN_MAX_SOURCES:-32}"
+      NAS_RUN_MAX_FILES: "${NAS_RUN_MAX_FILES:-128}"
+      NAS_RUN_MAX_BYTES: "${NAS_RUN_MAX_BYTES:-2147483648}"
+      NAS_IMAGE_MAX_BYTES: "${NAS_IMAGE_MAX_BYTES:-268435456}"
+      NAS_VIDEO_MAX_BYTES: "${NAS_VIDEO_MAX_BYTES:-1073741824}"
+      NAS_VERIFY_DAYS: "${NAS_VERIFY_DAYS:-7}"
+      NAS_RUN_VERIFY_FILES: "${NAS_RUN_VERIFY_FILES:-4}"
+      MINAS_MIN_FREE_BYTES: "5368709120"
+      MINAS_DOWNLOAD_MAX_SECONDS: "1800"
+    command: ["--interval", "${NAS_INTERVAL_SECONDS:-21600}"]
+    volumes:
+      - "${NAS_DATA_DIR:?Set NAS data directory}:/data"
+      - "${NAS_CONFIG_DIR:?Set NAS private config directory}:/config:ro"
+    tmpfs: ["/tmp:size=64m"]
+    logging:
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}

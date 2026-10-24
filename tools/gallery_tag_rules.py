@@ -63,7 +63,10 @@ def debut_title_evidence(entry, contexts, aliases, debut):
         declared_types = set(matched["types"].upper().split("&"))
         role_bundle = bool(declared_types & ROLE_TYPES) and not (declared_types & OTHER_TYPES)
         for context in contexts:
-            if context["scope"] != "asset_path" or normalized(title) not in normalized(context["value"]):
+            asset_bound = context["scope"] == "asset_path" and normalized(title) in normalized(context["value"])
+            source_bound = (bool(post.get("share")) and context["scope"] == "source_path" and context.get("source_url") == post.get("share")
+                            and context["value"] == post.get("remote_path"))
+            if not asset_bound and not source_bound:
                 continue
             own = context.get("own_path", "")
             # An EP/MV folder cannot inherit a role type from the enclosing post.
@@ -81,14 +84,14 @@ def debut_title_evidence(entry, contexts, aliases, debut):
             has_other_context = any(word in own for word in ("复刻", "返场", "回顾", "混剪", "二创", "同人"))
             if has_other_context:
                 continue
-            if not own_roles and role_bundle and not re.search(r"角色PV|角色展示|(?<![a-zA-Z])PV(?![a-zA-Z])", own, re.I):
+            if not own_roles and asset_bound and role_bundle and not re.search(r"角色PV|角色展示|(?<![a-zA-Z])PV(?![a-zA-Z])", own, re.I):
                 own_roles = names
             for name in sorted(set(own_roles)):
                 mapping = debut.get(name)
                 if not mapping:
                     continue
                 evidence = {"scope": "debut_title_rule", "rule_id": DEBUT_TITLE_RULE,
-                            "character": name, "value": title, "asset_path": context["value"],
+                            "character": name, "value": title, "asset_path" if asset_bound else "source_path": context["value"],
                             "source_url": url, "mapping_source_url": mapping["source_url"]}
                 pair = (mapping["version"], evidence)
                 if pair not in results:

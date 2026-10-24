@@ -9,7 +9,7 @@ from pathlib import Path
 import re
 import subprocess
 
-SCOPES = ("downloads", "metafiles", "docs/meta.json", "docs/cached.json", "docs/thumbs")
+SCOPES = ("downloads", "posts", "metafiles", "docs/meta.json", "docs/cached.json", "docs/thumbs")
 
 
 def git(repo, *args, check=True):
@@ -18,14 +18,14 @@ def git(repo, *args, check=True):
                           env={**os.environ, "GIT_LFS_SKIP_SMUDGE": "1"})
 
 
-def checkpoint(repo, allow_main, run_key):
+def checkpoint(repo, allow_main, run_key, scopes=SCOPES):
     repo = Path(repo)
     if not re.fullmatch(r"\d+-\d+", run_key):
         raise ValueError("Invalid recovery run identity")
     if git(repo, "diff", "--cached", "--name-only").stdout.strip():
         raise RuntimeError("Refusing to include pre-existing staged changes")
     base = git(repo, "rev-parse", "HEAD").stdout.strip()
-    scopes = [p for p in SCOPES if (repo / p).exists() or git(repo, "ls-files", "--", p).stdout]
+    scopes = [p for p in scopes if (repo / p).exists() or git(repo, "ls-files", "--", p).stdout]
     if scopes:
         git(repo, "add", "-A", "--", *scopes)
     if git(repo, "diff", "--cached", "--quiet", check=False).returncode == 0:
@@ -36,7 +36,7 @@ def checkpoint(repo, allow_main, run_key):
             json.loads(path.read_text(encoding="utf-8"))
         except (ValueError, OSError):
             allow_main = False
-    for path in (repo / "metafiles").glob("*.csv"):
+    for path in [*(repo / "metafiles").glob("*.csv"), *(repo / "posts").glob("*.csv")]:
         relative = path.relative_to(repo).as_posix()
         old = git(repo, "show", base + ":" + relative, check=False)
         if old.returncode == 0:

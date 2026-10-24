@@ -1,3 +1,5 @@
+> GitHub Actions only updates public metadata; a user-operated NAS downloads media. See [NAS_SETUP.md](docs/NAS_SETUP.md). Existing originals, history and gallery are retained; older download instructions below are historical.
+
 # zzz_scraper
 
 to get post, run PostScraper.py, this will get all posts in to csv.
@@ -347,3 +349,7 @@ current main and the exact built commit, observes an existing matching pending b
 rather than duplicating it, and fails on rejection, build error or timeout. The final
 summary shows checkpoint/recovery references and net unique-image counts. No scheduled
 or push-triggered asset updates are enabled.
+
+### NAS 元数据与下载分离方案
+
+新方案将 Action 改为只更新公开元数据清单，由 NAS 主动拉取并逐文件下载图片/视频；保留现有 LFS、图库和历史。配置步骤、持久化目录、预算与尚未验证的事项见 [NAS_SETUP.md](docs/NAS_SETUP.md)。元数据工作流仅手动触发；此仓库不会连接用户 NAS 或替用户启用计划任务。

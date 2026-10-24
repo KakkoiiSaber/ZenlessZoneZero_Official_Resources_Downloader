@@ -10,3 +10,8 @@ metafiles/.state-*
 docs/**/.gallery-*
 metafiles/image-aliases.json.tmp
 metafiles/minas-files.json.tmp
+
+# NAS-only private configuration and local media state.
+deploy/synology/.env
+**/share-codes.json
+nas-data/
