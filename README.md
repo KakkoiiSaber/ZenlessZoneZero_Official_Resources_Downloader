@@ -157,15 +157,17 @@ Additional settings (positive integers unless a path):
 
 `MINAS_MAX_FILES`, `MINAS_MAX_FILE_BYTES` and the free-space reserve also apply.
 The workflow exposes refresh/download budgets through matching GitHub repository
-variables and retains its existing daily trigger. Editing this workflow locally does
-not enable a disabled schedule or execute an update. The Actions job has a 45-minute
+variables. The workflow is manual-only (`workflow_dispatch`); it contains no schedule
+or push trigger. Enabling this workflow for an explicitly approved update therefore
+does not resume recurring downloads. The Actions job has a 45-minute
 timeout. Access codes remain in the existing CSV and are never copied to the new index.
 
 
 ## Gallery versions and search
 
-The preview page provides a version selector (newest numeric version first), category
-selector, search, and a reset to all images. Filters compose; filtered cards retain
+The preview page uses broad content categories and searchable tags as its primary
+controls, with an optional explicit-version selector under More filters and a reset
+to all images. Filters compose; filtered cards retain
 correct detail-page links, and returning from a detail preserves the filters.
 Versions come from explicit `1.2版本` or `v1.2` labels in asset paths or source
 metadata. Dates alone never imply a version. For cumulative image archives, the
@@ -214,3 +216,50 @@ Normal Actions runs use `--apply` and stage their resulting changes in the exist
 commit step. Never use history rewriting, LFS prune, or remote object deletion for
 this cleanup. Repeated runs leave canonical copies and associations in place rather
 than recreating redundant image files.
+
+
+## Content categories and searchable tags
+
+The primary categories are `角色图片`, `月历`, `活动壁纸`, `测试期素材`, `表情包`,
+`影像档案`, and `未分类`. Deduplicated images keep all applicable categories/tags
+from their retained historical paths and post/source associations. The keyword field
+matches tags, character aliases, titles, paths, and associated post titles; multiple
+space-separated keywords compose with AND. Bare version keywords such as `1.7`
+match explicit/associated version tags rather than coincidental posting dates.
+Category and keyword filters compose. Existing content-ID/numeric detail links,
+original downloads, reset behavior, and optional explicit-version URLs remain supported.
+
+`tags` contains typed records with `kind`, `value`, `label`, `confidence`, and
+`evidence`. Tags cover characters, literal themes, PV/EP/MV source types, explicitly
+labeled versions and calendar year/month. Evidence retains the original path/post
+or an official announcement URL. Per-image source subfolders take priority over mixed
+post captions (e.g. a role-showcase image is not automatically labeled PV just because
+the enclosing post bundles both). When only a post-level source caption is available,
+source-type chips say `来源帖` and carry contextual rather than asset-level evidence. Calendar filenames take precedence over a mismatched
+enclosing post month; dates alone never create version labels. Cumulative archives
+use an image's own subfolder/source path instead of applying an enclosing post's
+character or version to the whole collection.
+
+Only the ten character groups already checked against official announcements get
+character-debut association tags: 伊德海莉/狛野真斗 (2.3), 席德/奥菲丝与鬼火 (2.2),
+薇薇安/雨果 (1.7), 零号·安比/扳机 (1.6), 耀嘉音/伊芙琳 (1.5). These are marked
+`associated_version`, `confidence: inferred`, `relation: character_debut`, visibly
+labeled `关联版本 … · 推断`, and link to their official evidence. They do not replace
+the image's explicitly evidenced `versions`, assert its first publication version,
+or add every later rerun/banner appearance. Other character names can be searchable
+without receiving an unverified version mapping. The registry is deliberately bounded.
+
+The current 726 unique images comprise 606 character images, 46 calendars, 15 event
+wallpapers, five test-period images, 16 emoticons, and 38 image-archive images.
+There are 359 images with verified character-debut association tags. The 38 explicit
+version image memberships remain separate. The detail page displays all tags and
+their evidence; inferred chips have a distinct dashed appearance and explanatory text.
+
+When MinasScraper already fetches a new public post, it additively records a small
+`metafiles/post-evidence.json` sidecar (`MINAS_POST_EVIDENCE_FILE` overrides the path).
+It stores at most five bounded version-mention excerpts and 20 source topic names,
+not full post bodies, access codes or share-download URLs. Sensitive/link-containing
+lines are excluded. Body mentions have `confidence: unreviewed` and post scope;
+they are not automatically promoted to asset version tags. Evidence capture does
+not add requests or re-fetch cached posts, and an evidence-write failure leaves
+normal link extraction intact. This patch performs no live body backfill.

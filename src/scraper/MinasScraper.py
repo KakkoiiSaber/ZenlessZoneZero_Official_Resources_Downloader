@@ -20,6 +20,9 @@ except Exception:  # pragma: no cover
         from base.BaseScraper import BaseScraper
 
 
+from src.utils.post_evidence import capture_post_evidence
+
+
 class MinasScraper(BaseScraper):
     """
     Scan posts from a CSV under /posts and append Minas link/password.
@@ -300,6 +303,14 @@ class MinasScraper(BaseScraper):
 
         big_text = "\n".join(blobs)
         link, pwd = self._extract_from_text(big_text)
+        try:
+            wrapper = ((data or {}).get("data") or {}).get("post") or {}
+            capture_post_evidence(f"https://www.miyoushe.com/zzz/article/{post_id}",
+                                  post.get("subject", ""), html_content, struct_raw,
+                                  topics=wrapper.get("topics"), protected_values=(pwd,))
+        except (OSError, ValueError, TypeError) as error:
+            # Additive evidence must not break an otherwise successful link extraction.
+            self.log.warning(f"Post evidence not saved: {type(error).__name__}")
         return link, pwd
 
     # --------------------- IO helpers ---------------------

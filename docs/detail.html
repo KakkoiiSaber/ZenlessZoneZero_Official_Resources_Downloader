@@ -58,6 +58,11 @@
       font-weight: 600;
     }
     .btn:hover { border-color: var(--text); }
+    .tags { display:flex; flex-wrap:wrap; gap:7px; margin:12px 0; }
+    .tag { padding:4px 8px; border:1px solid #304660; border-radius:6px; background:#1b2b40; color:#c9d9ef; font-size:13px; }
+    .tag-inferred { color:#f2ce91; border-style:dashed; border-color:#8c7042; background:#322a1d; }
+    .actions { flex-wrap:wrap; }
+
   </style>
 </head>
 <body>
@@ -69,6 +74,8 @@
     </div>
     <img id="img" alt="" />
     <div class="meta" id="meta"></div>
+    <div class="tags" id="tags" role="list" aria-label="图片标签"></div>
+    <details class="meta" id="tagEvidence" hidden><summary>查看标签依据</summary><ul id="tagEvidenceList"></ul></details>
     <details class="meta" id="sources" hidden><summary>查看来源与关联帖子</summary><ul id="sourceList"></ul></details>
   </div>
   <script>
@@ -107,7 +114,20 @@
           document.getElementById('originalLink').href = it.download;
           document.getElementById('originalLink').hidden = false;
         }
-        metaEl.textContent = [it.name || '', (it.versions || ['未分类']).join(' / ')].filter(Boolean).join(' · ');
+        metaEl.textContent = [it.name || '', (it.categories || ['未分类']).join(' / ')].filter(Boolean).join(' · ');
+        for (const tag of it.tags || []) {
+          const chip = document.createElement('span'); chip.className = 'tag' + (tag.confidence === 'inferred' ? ' tag-inferred' : '');
+          chip.textContent = tag.label; chip.setAttribute('role', 'listitem'); document.getElementById('tags').append(chip);
+          for (const evidence of tag.evidence || []) {
+            const li = document.createElement('li');
+            li.textContent = tag.label + (tag.confidence === 'inferred' ? '：角色登场关联，非图片首次发布版本。' : '：来源文字明确标注。');
+            if (evidence.source_url && /^https:\/\//.test(evidence.source_url)) {
+              const source = document.createElement('a'); source.href = evidence.source_url; source.target = '_blank'; source.rel = 'noopener'; source.textContent = '查看来源'; li.append(' ', source);
+            } else if (evidence.value) { li.append(' ', document.createTextNode(evidence.value)); }
+            document.getElementById('tagEvidenceList').append(li);
+          }
+        }
+        document.getElementById('tagEvidence').hidden = !document.getElementById('tagEvidenceList').children.length;
         const params = new URLSearchParams(location.search);
         params.delete('i');
         params.delete('id');

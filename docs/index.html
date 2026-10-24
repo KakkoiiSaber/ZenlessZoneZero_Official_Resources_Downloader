@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Downloads Gallery</title>
+  <title>绝区零素材图库</title>
   <style>
     :root {
       --bg: #0a0d12;
@@ -61,18 +61,28 @@
     .status { color:var(--muted); font-size:14px; margin:0 20px 16px; }
     .card a { color:var(--text); text-decoration:none; display:block; }
     .caption { background:var(--card); padding:10px 12px; font-size:13px; line-height:1.5; }
-    .version-badge { color:#a7cdff; margin-right:8px; }
+    .category-badge { color:#a7cdff; margin-right:8px; }
+    .advanced { flex-basis:100%; color:var(--muted); font-size:13px; }
+    .advanced summary { cursor:pointer; padding:6px 0; }
+    .advanced label { max-width:200px; margin-top:8px; }
+    .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:8px; }
+    .tag { display:inline-block; color:#c9d9ef; background:#1b2b40; border:1px solid #304660; border-radius:5px; padding:2px 7px; font-size:12px; }
+    .tag-inferred { color:#f2ce91; border-style:dashed; border-color:#8c7042; background:#322a1d; }
+    .tag-more { color:var(--muted); font-size:12px; padding:3px; }
+
     .card-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .empty { padding: 18px; color: var(--muted); text-align: center; }
   </style>
 </head>
 <body>
-  <header>Downloads Gallery<span class="count">0</span></header>
+  <header>绝区零素材图库<span class="count">0</span></header>
   <form class="filters" id="filters" aria-label="筛选图片">
-    <label>版本<select id="versionFilter" name="version"><option value="">全部版本</option></select></label>
     <label>分类<select id="categoryFilter" name="category"><option value="">全部分类</option></select></label>
-    <label class="search">搜索<input id="searchFilter" name="q" type="search" placeholder="文件名、帖子或目录" /></label>
+    <label class="search">搜索<input id="searchFilter" name="q" type="search" placeholder="搜索角色、标签、主题或版本，如 薇薇安 1.7" /></label>
     <button id="clearFilters" type="button">显示全部图片</button>
+    <details class="advanced" id="advancedFilters"><summary>更多筛选</summary>
+      <label>明确版本<select id="versionFilter" name="version"><option value="">全部明确版本</option></select></label>
+    </details>
   </form>
   <p class="status" id="filterStatus" role="status" aria-live="polite">正在加载图片…</p>
   <section class="grid" id="grid" aria-label="图片预览">

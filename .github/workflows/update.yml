@@ -1,8 +1,6 @@
-name: Daily Update
+name: Asset Update
 
 on:
-  schedule:
-    - cron: "0 2 * * *"
   workflow_dispatch:
 
 permissions:

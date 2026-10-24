@@ -27,8 +27,10 @@ from urllib.parse import quote
 
 try:
     from .deduplicate_images import load_aliases, resolve
+    from .gallery_tags import broad_categories, build_tags, enrich_posts, post_contexts
 except ImportError:
     from deduplicate_images import load_aliases, resolve
+    from gallery_tags import broad_categories, build_tags, enrich_posts, post_contexts
 
 IMG_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"}
 DOWNLOAD_ROOT = Path(os.getenv("GALLERY_DOWNLOADS", "downloads"))
@@ -115,19 +117,7 @@ def image_versions(entry):
 
 
 def image_categories(entry):
-    texts = [alias.get("folder", "") for alias in entry.get("associations", [])]
-    texts += [post.get("title", "") for post in entry.get("posts", [])]
-    categories = set()
-    for text in texts:
-        if "影像档案" in text:
-            categories.add("影像档案")
-        elif "月历" in text:
-            categories.add("月历壁纸")
-        elif "表情" in text:
-            categories.add("表情包")
-        elif "壁纸" in text:
-            categories.add("壁纸")
-    return sorted(categories) or ["其他"]
+    return broad_categories(entry)
 
 
 def git_pointer_identities(wanted):
@@ -343,9 +333,12 @@ def write_meta(items: list[dict]) -> None:
     ordered = sorted(groups.values(), key=lambda it: (-_date_from_folder(
         it["folder"].split("/")[1] if "/" in it["folder"] else it["folder"], it["mtime"]),
         str(it.get("identity") or (it["folder"], it["name"]))))
+    contexts = post_contexts()
     for entry in ordered:
+        entry["posts"] = enrich_posts(entry, contexts)
         entry["versions"] = image_versions(entry)
         entry["categories"] = image_categories(entry)
+        entry["tags"] = build_tags(entry)
         for field in ("associations", "posts"):
             entry[field].sort(key=lambda value: json.dumps(value, sort_keys=True))
     atomic_write(META_FILE, json.dumps({"items": ordered, "legacy_indices": legacy_indices}, ensure_ascii=False).encode())
