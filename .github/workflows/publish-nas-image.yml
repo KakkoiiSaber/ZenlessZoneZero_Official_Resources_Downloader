@@ -1,0 +1,109 @@
+name: Publish NAS Image
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nas-image-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      packages: write
+    env:
+      GIT_LFS_SKIP_SMUDGE: '1'
+      IMAGE: ghcr.io/kakkoiisaber/zzz-scraper-nas
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            /requirements*.txt
+            /.dockerignore
+            /.gitignore
+            /.github
+            src
+            tools
+            tests
+            deploy
+            docs/index.html
+            docs/detail.html
+            docs/gallery.js
+            docs/NAS_SETUP.md
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Offline regressions
+        run: |
+          python -m pip install -r requirements-metadata.txt
+          python -m playwright install --with-deps chromium
+          python -m unittest discover -s tests -v
+          python -m compileall -q src tools tests
+          git diff --check
+      - name: Build program-only Linux amd64 image
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="sha-${GITHUB_SHA}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "TAG=$TAG" >> "$GITHUB_ENV"
+          python tools/prepare_image_context.py "$RUNNER_TEMP/nas-image-context"
+          docker build --platform linux/amd64 \
+            --file "$RUNNER_TEMP/nas-image-context/deploy/synology/Dockerfile" \
+            --label "org.opencontainers.image.source=https://github.com/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --label "org.opencontainers.image.version=$TAG" \
+            --tag "$IMAGE:$TAG" "$RUNNER_TEMP/nas-image-context"
+      - name: Test built image without network or persistent media
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(docker inspect --format '{{.Architecture}}' "$IMAGE:$TAG")" = amd64
+          test "$(docker inspect --format '{{.Os}}' "$IMAGE:$TAG")" = linux
+          docker run --rm --network none --read-only "$IMAGE:$TAG" --help
+          docker run --rm --network none --read-only \
+            --tmpfs /data:uid=10001,gid=10001,mode=0700 \
+            --tmpfs /tmp:uid=10001,gid=10001,mode=0700 \
+            --mount "type=bind,src=$PWD/tools/check_nas_image.py,dst=/check_nas_image.py,readonly" \
+            --env PYTHONPATH=/app --entrypoint python "$IMAGE:$TAG" /check_nas_image.py
+          docker history --no-trunc "$IMAGE:$TAG" > "$RUNNER_TEMP/nas-image-history.txt"
+      - name: Publish using this job's temporary token
+        shell: bash
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          trap 'docker logout ghcr.io >/dev/null 2>&1 || true' EXIT
+          docker push "$IMAGE:$TAG"
+          PINNED="$(docker inspect --format '{{index .RepoDigests 0}}' "$IMAGE:$TAG")"
+          test -n "$PINNED"
+          docker pull "$PINNED"
+          echo "PINNED=$PINNED" >> "$GITHUB_ENV"
+          {
+            echo '### Program-only NAS image'
+            echo "- Tag: \`$IMAGE:$TAG\`"
+            echo "- Recommended NAS_IMAGE: \`$PINNED\`"
+            echo '- Platform: linux/amd64; offline container smoke test passed before push.'
+            echo '- NAS is not deployed or changed by this workflow.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Check anonymous access separately
+        shell: bash
+        run: |
+          set -euo pipefail
+          export DOCKER_CONFIG="$(mktemp -d)"
+          if docker manifest inspect "$PINNED" > /dev/null 2>&1; then
+            echo '- Anonymous pull: verified.' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo '- Anonymous pull: unavailable. New GHCR packages default to private. Package visibility must be approved and set to Public before credential-free NAS use.' >> "$GITHUB_STEP_SUMMARY"
+          fi

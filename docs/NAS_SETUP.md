@@ -48,14 +48,26 @@ The worker first uses an explicit private mapping, otherwise inspects up to eigh
 
 ## First sample, after approval
 
-1. Make the reviewed code available to the NAS and copy `.env.example` to an untracked `.env` beside the Compose files. Fill the verified runtime UID/primary GID and the two project paths. Do not add an administrator supplemental group by default.
+1. Copy the Compose files and `.env.example` to a dedicated project directory on the NAS; rename the latter to an untracked `.env`. No source checkout or ZIP of application code is needed. Fill the verified runtime UID/primary GID and the two project paths. Set `NAS_IMAGE` to the exact published image digest from a successful `Publish NAS Image` run. Do not add an administrator supplemental group by default.
 2. Confirm the catalog URL is accessible and current. An uninitialized or failed metadata update can leave it unavailable; do not start blind repeated retries.
-3. In Container Manager Project, use the code's `deploy/synology` directory and import **compose.first-run.yaml**. It is a complete single-file configuration: at most two transfer attempts, a 50 MiB run budget, no interval and restart disabled. Its relative build context must still point to the code root.
-4. Only after explicit approval, build and run that sample. Check `data/state/last-sync.json`, the completed files and source associations. Larger files may be deferred by the sample budget; this does not justify removing all limits.
+3. In Container Manager Project, use that dedicated project directory and import **compose.first-run.yaml**. It pulls the pinned Linux amd64 image without building on the NAS. It is a complete single-file configuration: at most two transfer attempts, a 50 MiB run budget, no interval and restart disabled.
+4. Only after explicit approval, run that sample. Check `data/state/last-sync.json`, the completed files and source associations. Larger files may be deferred by the sample budget; this does not justify removing all limits.
 5. The viewer only checks read access. Runtime write access must be checked using the chosen downloader identity, without changing unrelated ACLs or overwriting user files.
 6. Only after the sample succeeds and the user chooses to proceed, use `compose.yaml` for normal polling. This repository never connects to the NAS or enables a schedule on the user's behalf.
 
 The Docker image copies only application code/dependencies, not `.git`, original assets, previews, CSV caches, personal `.env` files or repository configuration. The root filesystem and config mount are read-only; only data and temporary storage are writable. No ports, host networking, privileged mode or Docker socket are configured.
+
+## Program image publication and manual upgrades
+
+`Publish NAS Image` is a separate **manual-only** GitHub workflow, restricted to `main`. It runs offline regressions, prepares an allowlisted program-only build context, builds Linux amd64, and tests the actual non-root container with networking disabled and an empty local catalog. It publishes to `ghcr.io/kakkoiisaber/zzz-scraper-nas` using only that job's short-lived `GITHUB_TOKEN` (`contents: read`, `packages: write`). It never runs metadata collection or transfers original media. Image publication does not deploy anything to the NAS.
+
+Each run uses a unique `sha-<full-commit>-<run-id>-<attempt>` tag and reports the digest. There is no moving `latest` tag, push-triggered build, automatic NAS updater or new credential. Prefer `ghcr.io/kakkoiisaber/zzz-scraper-nas@sha256:<published-digest>` in private `NAS_IMAGE`. Keep the previous reference for rollback. A tag includes a full source commit and a unique run/attempt; no existing release tag is intentionally overwritten.
+
+New GHCR packages default to private even for public source repositories. The workflow checks anonymous access after publication and clearly reports if it is unavailable. Before credential-free NAS use, an owner must explicitly approve and set **only this package's** visibility to Public in its package settings. Do not add a PAT, broaden account permissions or claim the image is publicly usable until anonymous manifest access has been verified. Official guidance: https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry
+
+To upgrade after reviewing a release, stop the worker and let an active transfer exit, retain the previous image reference, change only `NAS_IMAGE` in the private `.env`, then use Container Manager's pull/recreate operation (or `docker compose pull` followed by `docker compose up -d`). Retain the same config/data mounts and account IDs. Do not select volume deletion, overwrite private config, reset state or start a second worker. To roll back, restore the previous image reference and recreate using the same persistent directories. This image-only release does not change the state schema; future releases must document any incompatible migration before promising rollback.
+
+Ordinary catalog changes require no image upgrade: the worker reads the configured catalog on its next normal poll. New remote paths still require a metadata workflow update first. Publication of an image does not repair existing source-listing errors in a catalog.
 
 ## Defaults and recovery
 
@@ -73,6 +85,6 @@ Minas files: JPG/JPEG, PNG, GIF, WebP, BMP, AVIF, TIF/TIFF; MP4, WebM, MOV, MKV,
 
 This is a downloader plus a JSON content index, not a NAS gallery website. New NAS files do not automatically update the existing public Pages gallery or inherit DSM web login. Do not expose NAS ports just to use the downloader.
 
-Offline tests cover catalog stability/privacy, cumulative additions, nested media, source changes, multi-source dedup, replacement history, budgets, interrupted streams, pointer recovery and locking. Container builds, Linux/DSM behavior and live NAS transfers require a separately authorized sample on the actual device; do not interpret local tests as deployment verification.
+Offline tests cover catalog stability/privacy, cumulative additions, nested media, source changes, multi-source dedup, replacement history, budgets, interrupted streams, pointer recovery, locking and program-only build boundaries. Each image publication additionally tests its built Linux container offline. DSM integration, actual bind-mount ACLs and live NAS transfers remain unverified until a separately authorized sample on the device; CI tests do not confirm NAS deployment.
 
 Official Container Manager Project documentation: https://kb.synology.com/en-global/DSM/help/ContainerManager/docker_project?version=7
