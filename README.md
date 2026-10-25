@@ -353,3 +353,7 @@ or push-triggered asset updates are enabled.
 ### NAS 元数据与下载分离方案
 
 新方案将 Action 改为只更新公开元数据清单，由 NAS 主动拉取并逐文件下载图片/视频；保留现有 LFS、图库和历史。配置步骤、持久化目录、预算与尚未验证的事项见 [NAS_SETUP.md](docs/NAS_SETUP.md)。元数据工作流仅手动触发；此仓库不会连接用户 NAS 或替用户启用计划任务。
+
+### Wiki-first metadata and NAS direct sources
+
+The new resource directory preserves the existing image gallery and links each indexed work to its Wiki, official match and original post. Detail coverage is budgeted and shown explicitly; an indexed entry is not a claim that its media has been resolved. Dynamic sourced character/version data replaces the fixed name table, without inferring asset versions from dates or generic character mentions. See [NAS_SETUP.md](docs/NAS_SETUP.md) for v2/v1 compatibility, source/quality evidence, limits, logs and rollback. No NAS deployment, full media transfer or history deletion is performed by metadata/image workflows.

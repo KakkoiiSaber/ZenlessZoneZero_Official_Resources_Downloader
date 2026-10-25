@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import re
+import time
 from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup
@@ -20,11 +21,24 @@ def share_url(value):
     return normalize_share(value)
 
 
-def bounded_json(session, url, maximum=32 * 1024 ** 2, **kwargs):
-    with session.get(url, stream=True, timeout=(20, 30), **kwargs) as response:
+class PublicPostUnavailable(RuntimeError):
+    """Actionable public metadata failure without response bodies or secret URLs."""
+    def __init__(self, reason, api_code=None):
+        self.reason = reason
+        self.api_code = api_code if isinstance(api_code, int) and not isinstance(api_code, bool) else None
+        super().__init__(reason)
+
+
+def bounded_json(session, url, maximum=32 * 1024 ** 2, deadline=None, **kwargs):
+    remaining = deadline - time.monotonic() if deadline is not None else 30
+    if remaining <= 0:
+        raise TimeoutError('Metadata deadline exceeded')
+    with session.get(url, stream=True, timeout=(min(20, remaining), min(30, remaining)), **kwargs) as response:
         response.raise_for_status()
         body = bytearray()
         for chunk in response.iter_content(65536):
+            if deadline is not None and time.monotonic() > deadline:
+                raise TimeoutError('Metadata deadline exceeded')
             body.extend(chunk)
             if len(body) > maximum:
                 raise ValueError('Metadata exceeds size limit')
@@ -48,18 +62,31 @@ class MetadataSession(MinasSession):
         return super().send(request,**kwargs)
 
 
-def public_access_code(source, session_factory=requests.Session):
+def public_access_code(source, session_factory=requests.Session, deadline=None):
     """Read only the matching official post; never guess a code or mix shares."""
+    failures = []
     for post in source['posts'][:8]:
         match = re.fullmatch(r'https://(?:www\.)?miyoushe\.com/zzz/article/(\d+)', post['post_url'])
         if not match:
             continue
-        with session_factory() as session:
-            data = bounded_json(session, 'https://bbs-api.miyoushe.com/post/wapi/getPostFull',
-                                maximum=2 * 1024 ** 2,
-                                params={'gids': 8, 'post_id': match[1], 'read': 1},
-                                headers={'Referer': 'https://www.miyoushe.com/'})
-        content = data.get('data', {}).get('post', {}).get('post', {})
+        try:
+            with session_factory() as session:
+                data = bounded_json(session, 'https://bbs-api.miyoushe.com/post/wapi/getPostFull',
+                                    maximum=2 * 1024 ** 2, deadline=deadline,
+                                    params={'gids': 8, 'post_id': match[1], 'read': 1},
+                                    headers={'Referer': 'https://www.miyoushe.com/'})
+        except (requests.RequestException, ValueError):
+            failures.append(PublicPostUnavailable('public_post_request_failed'))
+            continue
+        if not isinstance(data, dict) or data.get('retcode', 0) != 0:
+            failures.append(PublicPostUnavailable('public_post_api_error', data.get('retcode') if isinstance(data, dict) else None))
+            continue
+        wrapper = data.get('data')
+        post_wrapper = wrapper.get('post') if isinstance(wrapper, dict) else None
+        content = post_wrapper.get('post') if isinstance(post_wrapper, dict) else None
+        if not isinstance(content, dict):
+            failures.append(PublicPostUnavailable('public_post_invalid_payload'))
+            continue
         chunks = [str(content.get('content') or '')]
         try:operations = json.loads(content.get('structured_content') or '[]')
         except (ValueError,TypeError):operations=[]
@@ -81,4 +108,6 @@ def public_access_code(source, session_factory=requests.Session):
             return next(iter(codes))
         if not codes:
             return ''  # Matching public post; the share may not require a code.
+    if failures:
+        raise failures[-1]
     return None

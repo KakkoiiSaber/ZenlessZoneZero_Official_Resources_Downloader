@@ -2,6 +2,11 @@ name: Metadata Update
 
 on:
   workflow_dispatch:
+    inputs:
+      refresh_legacy:
+        description: Also refresh preserved post/Minas metadata (never download media)
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -39,12 +44,17 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Refresh public catalog without media transfers
         id: catalog
+        if: ${{ inputs.refresh_legacy }}
         continue-on-error: true
         run: python -u tools/collect_metadata.py --refresh-posts
+      - name: Update Wiki index, knowledge and cached-preview classification
+        id: resources
+        continue-on-error: true
+        run: python -u tools/collect_resources.py --max-details 12
       - name: Checkpoint public metadata only
         run: python tools/checkpoint_metadata.py
       - name: Report incomplete sources
-        if: ${{ steps.catalog.outcome != 'success' }}
+        if: ${{ steps.resources.outcome != 'success' || (inputs.refresh_legacy && steps.catalog.outcome != 'success') }}
         run: |
-          echo 'Some metadata sources failed; inspect catalog-status.json. Existing gallery and media are unchanged.'
+          echo 'Some metadata sources failed; inspect resource-status.json and catalog-status.json. Previous successful entries and all media are retained.'
           exit 1

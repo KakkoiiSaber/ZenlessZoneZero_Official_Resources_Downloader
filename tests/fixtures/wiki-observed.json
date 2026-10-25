@@ -1,0 +1,1514 @@
+{
+  "provenance": {
+    "source": "https://baike.mihoyo.com/zzz/wiki/channel/map/13/73",
+    "note": "Selected fields from actual public metadata; no media was fetched."
+  },
+  "tree": {
+    "retcode": 0,
+    "message": "OK",
+    "data": {
+      "channel_id": 0,
+      "name": "root",
+      "parent_id": 0,
+      "depth": 0,
+      "ch_ext": "",
+      "children": [
+        {
+          "channel_id": 2,
+          "name": "游戏图鉴",
+          "parent_id": 0,
+          "depth": 1,
+          "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"filter\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/05/14/76099754/ebf86ad48aa7007cbb5642efcce81cbf_4612838929724013352.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[{\\\"label\\\":\\\"阵容选择\\\",\\\"children\\\":[{\\\"label\\\":\\\"狡兔屋\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"白祇重工\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"维多利亚家政\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"对空洞特别行动部六科\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"奥波勒斯小队\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"新艾利都治安局\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"特性选择\\\",\\\"children\\\":[{\\\"label\\\":\\\"强攻\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"击破\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"异常\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"支援\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"防护\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"属性选择\\\",\\\"children\\\":[{\\\"label\\\":\\\"物理属性\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"以太属性\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"电属性\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"冰属性\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"火属性\\\",\\\"children\\\":[]}]}]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2?bbs_presentation_style=no_header\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+          "children": [
+            {
+              "channel_id": 43,
+              "name": "代理人",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"avatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/06/01/76099754/1e8d488828fed5c9caba7eb393d18a52_7714098887489724504.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[{\\\"label\\\":\\\"稀有度\\\",\\\"children\\\":[{\\\"label\\\":\\\"S\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"A\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"属性\\\",\\\"children\\\":[{\\\"label\\\":\\\"电\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"火\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"冰\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"风\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"以太\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"烈霜\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"物理\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"玄墨\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"凛刃\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"流明\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"特性\\\",\\\"children\\\":[{\\\"label\\\":\\\"异常\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"强攻\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"防护\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"击破\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"支援\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"命破\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"锋御\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"阵营\\\",\\\"children\\\":[{\\\"label\\\":\\\"狡兔屋\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"刑侦特勤组\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"H.S.O.S.6\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"白祇重工\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"维多利亚家政\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"卡吕冬之子\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"天琴座\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"奥波勒斯小队\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"防卫军·白银小队\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"反舌鸟\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"云岿山\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"怪啖屋\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"坎卜斯黑枝\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"妄想天使\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"都市秩序部\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"法厄同\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"罗斯凯利法\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"外务筹策局\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"达识结社\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"空域巡戍局\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"弗林特工坊\\\",\\\"children\\\":[]}]}]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/43?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 43,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 45,
+              "name": "音擎",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"smallAvatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/06/01/76099754/3593482e8866f0529e8a247772e02cf4_691015907261342842.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[{\\\"label\\\":\\\"稀有度\\\",\\\"children\\\":[{\\\"label\\\":\\\"S\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"A\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"B\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"特性\\\",\\\"children\\\":[{\\\"label\\\":\\\"异常\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"强攻\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"防护\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"击破\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"支援\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"命破\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"锋御\\\",\\\"children\\\":[]}]}]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/45?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 45,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 44,
+              "name": "邦布",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"avatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/06/01/76099754/0ce86ee140a04fd833f948a637af2283_2634423302554872654.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[{\\\"label\\\":\\\"稀有度\\\",\\\"children\\\":[{\\\"label\\\":\\\"S\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"A\\\",\\\"children\\\":[]}]}]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/44?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 44,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 46,
+              "name": "驱动盘",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"driverDiskCard\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/06/01/76099754/222103265483a5389ab8e589a81b8f29_2537412505703962234.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/46?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 46,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 102,
+              "name": "小游戏",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"smallAvatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/102?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 102,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 65,
+              "name": "敌人",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"cardFilter\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/06/01/76099754/39e69fa36571347e9300cb88dedea782_3411117653489293246.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[{\\\"label\\\":\\\"敌人类型\\\",\\\"children\\\":[{\\\"label\\\":\\\"以太异形\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"暴徒\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"侵蚀体\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"叛军\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"特殊\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"敌人品阶\\\",\\\"children\\\":[{\\\"label\\\":\\\"BOSS\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"精英\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"普通\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"弱点\\\",\\\"children\\\":[{\\\"label\\\":\\\"电\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"火\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"冰\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"以太\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"物理\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"风\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"抗性\\\",\\\"children\\\":[{\\\"label\\\":\\\"电\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"火\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"冰\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"以太\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"物理\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"风\\\",\\\"children\\\":[]}]}]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/65?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 65,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 47,
+              "name": "材料",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"smallAvatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/06/01/76099754/e678069fecc024eb2cc6b98e117d1db0_2618012625213109786.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[{\\\"label\\\":\\\"稀有度\\\",\\\"children\\\":[{\\\"label\\\":\\\"S\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"A\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"B\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"C\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"类型\\\",\\\"children\\\":[{\\\"label\\\":\\\"道具\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"物品\\\",\\\"children\\\":[]}]}]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/47?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 47,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 97,
+              "name": "地图",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"summary\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/97?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 97,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 67,
+              "name": "委托",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"smallAvatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/06/01/76099754/89cb7e0fb8ef815d67758aab26f43c3f_7438701266186494841.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[{\\\"label\\\":\\\"委托类型\\\",\\\"children\\\":[{\\\"label\\\":\\\"空洞委托\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"绳网推送\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"日程委托\\\",\\\"children\\\":[]}]}]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/67?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 67,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 75,
+              "name": "成就",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"smallAvatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/05/28/76099754/ebf86ad48aa7007cbb5642efcce81cbf_4643999465624196068.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/75?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 75,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 76,
+              "name": "街道",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"smallAvatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/05/28/76099754/ebf86ad48aa7007cbb5642efcce81cbf_8491894765622625154.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/76?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 76,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 89,
+              "name": "阵营",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"smallAvatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"https://baike.mihoyo.com/zzz/wiki/channel/map/2/89?mhy_presentation_style=fullscreen\\u0026from=COLLECTION_BG\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 89,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": true,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 92,
+              "name": "录像带",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"cardFilter\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[{\\\"label\\\":\\\"影片类型\\\",\\\"children\\\":[{\\\"label\\\":\\\"纪实\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"怀旧\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"冒险\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"幻想\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"喜剧\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"动作\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"惊悚\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"悬疑\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"访谈\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"都市\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"时尚\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"灾难\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"悲剧\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"亲情\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"广告\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"爱情\\\",\\\"children\\\":[]}]},{\\\"label\\\":\\\"影片等级\\\",\\\"children\\\":[{\\\"label\\\":\\\"1级\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"2级\\\",\\\"children\\\":[]},{\\\"label\\\":\\\"3级\\\",\\\"children\\\":[]}]}]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/2/92?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 92,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 93,
+              "name": "情报",
+              "parent_id": 2,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"smallAvatar\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 93,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": true,
+              "channel_style": ""
+            }
+          ],
+          "id": 2,
+          "layout": "",
+          "entry_limit": 0,
+          "hidden": false,
+          "channel_style": ""
+        },
+        {
+          "channel_id": 13,
+          "name": "档案",
+          "parent_id": 0,
+          "depth": 1,
+          "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"summaryVideo\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/06/01/76099754/8bfba74e257162078b8891231cd8725b_4412247932467843477.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"https://baike.mihoyo.com/zzz/wiki/channel/map/13/73\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+          "children": [
+            {
+              "channel_id": 73,
+              "name": "角色视频",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"summaryVideo\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/05/25/76099754/ebf86ad48aa7007cbb5642efcce81cbf_3727837849162561588.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/13/73?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 73,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 72,
+              "name": "游戏视频",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"summaryVideo\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/05/25/76099754/ebf86ad48aa7007cbb5642efcce81cbf_2662846774723027021.png\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/13/72?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 72,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 100,
+              "name": "式舆防卫战",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"default\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/13/100?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 100,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 108,
+              "name": "危局强袭战",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"default\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"https://baike.mihoyo.com/zzz/wiki/channel/map/13/108?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 108,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 98,
+              "name": "壁纸收录",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"summary\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/13/98?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 98,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 99,
+              "name": "好感壁纸",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"default\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 99,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 101,
+              "name": "前瞻情报",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"default\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"/zzz/wiki/channel/map/13/101?mhy_presentation_style=fullscreen\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 101,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": false,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 91,
+              "name": "绳匠笔记",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"default\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 91,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": true,
+              "channel_style": ""
+            },
+            {
+              "channel_id": 106,
+              "name": "调频记录",
+              "parent_id": 13,
+              "depth": 2,
+              "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"summary\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+              "children": [],
+              "id": 106,
+              "layout": "",
+              "entry_limit": 0,
+              "hidden": true,
+              "channel_style": ""
+            }
+          ],
+          "id": 13,
+          "layout": "",
+          "entry_limit": 0,
+          "hidden": false,
+          "channel_style": ""
+        }
+      ],
+      "id": 0,
+      "layout": "",
+      "entry_limit": 0,
+      "hidden": false,
+      "channel_style": ""
+    }
+  },
+  "media_index": {
+    "retcode": 0,
+    "data": {
+      "list": [
+        {
+          "id": 13,
+          "name": "档案",
+          "children": [
+            {
+              "id": 73,
+              "name": "角色视频",
+              "children": [],
+              "list": [
+                {
+                  "content_id": 2294,
+                  "title": "代理人档案丨卡芙卡",
+                  "ext": "{}",
+                  "bbs_url": "https://www.miyoushe.com/zzz/article/79099521",
+                  "summary": "代理人档案,卡芙卡,角色视频,卡芙卡视频",
+                  "alias_name": ""
+                },
+                {
+                  "content_id": 2292,
+                  "title": "代理人档案丨知更鸟",
+                  "ext": "{}",
+                  "bbs_url": "https://www.miyoushe.com/zzz/article/79099235",
+                  "summary": "代理人档案丨知更鸟,知更鸟,知更鸟视频,角色视频",
+                  "alias_name": ""
+                }
+              ]
+            },
+            {
+              "id": 72,
+              "name": "游戏视频",
+              "children": [],
+              "list": [
+                {
+                  "content_id": 2257,
+                  "title": "2026 FES | 布梦嘉年华PV",
+                  "ext": "{}",
+                  "bbs_url": "https://www.miyoushe.com/zzz/article/78817340",
+                  "summary": "2026 FES | 布梦嘉年华PV,游戏视频",
+                  "alias_name": "2026 FES | 布梦嘉年华PV"
+                },
+                {
+                  "content_id": 2255,
+                  "title": " 3.3版本PV | 重返天空的旅程",
+                  "ext": "{}",
+                  "bbs_url": "https://www.miyoushe.com/zzz/article/78804836",
+                  "summary": "3.3版本PV | 重返天空的旅程,游戏视频",
+                  "alias_name": " 3.3版本PV | 重返天空的旅程"
+                }
+              ]
+            },
+            {
+              "id": 98,
+              "name": "壁纸收录",
+              "children": [],
+              "list": [
+                {
+                  "content_id": 2215,
+                  "title": "焦点剧场·剧目单",
+                  "ext": "{}",
+                  "bbs_url": "",
+                  "summary": "焦点剧场壁纸合集,焦点剧场,焦点剧场·剧目单,壁纸收录,绝区零壁纸,绝区零官方壁纸,刑侦特勤组,刑侦特勤组壁纸,坎卜斯黑枝,坎卜斯黑枝壁纸,弗林特工坊,弗林特工坊壁纸,外务筹策局,外务筹策局壁纸,时序与戒律,时序与戒律壁纸,克拉蕾壁纸,洛克茜壁纸,雷米埃尔壁纸,希格莉德壁纸,维林娜壁纸,诺姆壁纸,菲欧妮壁纸,赛维里安壁纸",
+                  "alias_name": ""
+                },
+                {
+                  "content_id": 2175,
+                  "title": "EP短片壁纸合集(四)",
+                  "ext": "{}",
+                  "bbs_url": "",
+                  "summary": "EP短片壁纸合集,壁纸收录,绝区零壁纸,绝区零官方壁纸,希格莉德壁纸,克拉蕾壁纸,洛克茜壁纸",
+                  "alias_name": ""
+                }
+              ]
+            },
+            {
+              "id": 99,
+              "name": "好感壁纸",
+              "children": [],
+              "list": [
+                {
+                  "content_id": 2277,
+                  "title": "菲欧妮好感壁纸",
+                  "ext": "{}",
+                  "bbs_url": "",
+                  "summary": "菲欧妮好感壁纸,好感壁纸,菲欧妮,绝区零壁纸,绝区零官方壁纸,菲欧妮壁纸",
+                  "alias_name": ""
+                },
+                {
+                  "content_id": 2240,
+                  "title": "洛克茜好感壁纸",
+                  "ext": "{}",
+                  "bbs_url": "",
+                  "summary": "洛克茜好感壁纸,好感壁纸,洛克茜,绝区零壁纸,绝区零官方壁纸,洛克茜壁纸",
+                  "alias_name": ""
+                }
+              ]
+            }
+          ],
+          "list": []
+        }
+      ]
+    }
+  },
+  "roster": {
+    "retcode": 0,
+    "data": {
+      "list": [
+        {
+          "id": 2,
+          "name": "游戏图鉴",
+          "children": [
+            {
+              "id": 43,
+              "name": "代理人",
+              "children": [],
+              "list": [
+                {
+                  "content_id": 2296,
+                  "title": "卡芙卡",
+                  "alias_name": "卡芙卡",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"属性/电\\\",\\\"特性/异常\\\"]\"}}}"
+                },
+                {
+                  "content_id": 2293,
+                  "title": "知更鸟",
+                  "alias_name": "知更鸟",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"属性/以太\\\",\\\"特性/防护\\\"]\"}}}"
+                },
+                {
+                  "content_id": 2290,
+                  "title": "挽昼",
+                  "alias_name": "",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"特性/锋御\\\",\\\"阵营/罗斯凯利法\\\"]\"}}}"
+                },
+                {
+                  "content_id": 2216,
+                  "title": "菲欧妮·蕾法爱菈",
+                  "alias_name": "菲欧妮",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/异常\\\",\\\"阵营/坎卜斯黑枝\\\"]\"}}}"
+                },
+                {
+                  "content_id": 2217,
+                  "title": "赛维里安·洛威尔",
+                  "alias_name": "赛维里安",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/风\\\",\\\"特性/强攻\\\",\\\"阵营/都市秩序部\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1960,
+                  "title": "维琳娜·艾嘉德",
+                  "alias_name": "维琳娜",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/风\\\",\\\"特性/异常\\\",\\\"阵营/外务筹策局\\\"]\"}}}"
+                },
+                {
+                  "content_id": 2152,
+                  "title": "洛克茜·伊芙莉塔·普莱斯",
+                  "alias_name": "洛克茜",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/风\\\",\\\"特性/击破\\\",\\\"阵营/弗林特工坊\\\"]\"}}}"
+                },
+                {
+                  "content_id": 2145,
+                  "title": "克拉蕾·弗林特",
+                  "alias_name": "克拉蕾",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/锋御\\\",\\\"阵营/弗林特工坊\\\"]\"}}}"
+                },
+                {
+                  "content_id": 2079,
+                  "title": "希格莉德·德拉叙尔",
+                  "alias_name": "希格莉德",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/冰\\\",\\\"特性/强攻\\\",\\\"阵营/空域巡戍局\\\"]\"}}}"
+                },
+                {
+                  "content_id": 2076,
+                  "title": "蕾米埃尔·丹",
+                  "alias_name": "蕾米埃尔",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/流明\\\",\\\"特性/异常\\\",\\\"阵营/达识结社\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1962,
+                  "title": "诺姆·霍洛维尔",
+                  "alias_name": "诺姆",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/击破\\\",\\\"阵营/外务筹策局\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1958,
+                  "title": "佩洛伊斯",
+                  "alias_name": "佩洛伊斯",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/以太\\\",\\\"特性/强攻\\\",\\\"阵营/法厄同\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1927,
+                  "title": "星徽·比利·奇德",
+                  "alias_name": "星徽·比利",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/物理\\\",\\\"特性/命破\\\",\\\"阵营/狡兔屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1926,
+                  "title": "普罗米娅",
+                  "alias_name": "",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/冰\\\",\\\"特性/异常\\\",\\\"阵营/坎卜斯黑枝\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1861,
+                  "title": "希希芙",
+                  "alias_name": "希希芙",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/强攻\\\",\\\"阵营/都市秩序部\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1852,
+                  "title": "南宫羽",
+                  "alias_name": "南宫羽",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/以太\\\",\\\"特性/击破\\\",\\\"阵营/妄想天使\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1793,
+                  "title": "爱芮",
+                  "alias_name": "爱芮",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/以太\\\",\\\"特性/异常\\\",\\\"阵营/妄想天使\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1791,
+                  "title": "千夏",
+                  "alias_name": "千夏",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/物理\\\",\\\"特性/支援\\\",\\\"阵营/妄想天使\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1687,
+                  "title": "叶瞬光",
+                  "alias_name": "叶瞬光",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/凛刃\\\",\\\"特性/强攻\\\",\\\"阵营/云岿山\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1686,
+                  "title": "照",
+                  "alias_name": "照",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/冰\\\",\\\"特性/防护\\\",\\\"阵营/坎卜斯黑枝\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1626,
+                  "title": "般岳",
+                  "alias_name": "般岳",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/命破\\\",\\\"阵营/坎卜斯黑枝\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1624,
+                  "title": "琉音",
+                  "alias_name": "琉音",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/物理\\\",\\\"特性/击破\\\",\\\"阵营/坎卜斯黑枝\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1538,
+                  "title": "伊德海莉·墨菲",
+                  "alias_name": "伊德海莉",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/冰\\\",\\\"特性/命破\\\",\\\"阵营/怪啖屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1533,
+                  "title": "卢西娅·艾洛温",
+                  "alias_name": "卢西娅",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/以太\\\",\\\"特性/支援\\\",\\\"阵营/怪啖屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1501,
+                  "title": "奥菲丝·马格努森&「鬼火」",
+                  "alias_name": "奥菲丝&「鬼火」",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/强攻\\\",\\\"阵营/奥波勒斯小队\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1499,
+                  "title": "「席德」",
+                  "alias_name": "席德",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/强攻\\\",\\\"阵营/奥波勒斯小队\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1385,
+                  "title": "爱丽丝·泰姆菲尔德",
+                  "alias_name": "爱丽丝",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/物理\\\",\\\"特性/异常\\\",\\\"阵营/怪啖屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1386,
+                  "title": "浮波 柚叶",
+                  "alias_name": "柚叶",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/物理\\\",\\\"特性/支援\\\",\\\"阵营/怪啖屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1301,
+                  "title": "橘福福",
+                  "alias_name": "",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/击破\\\",\\\"阵营/云岿山\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1299,
+                  "title": "仪玄",
+                  "alias_name": "",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/玄墨\\\",\\\"特性/命破\\\",\\\"阵营/云岿山\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1290,
+                  "title": "雨果·维拉德",
+                  "alias_name": "雨果",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/冰\\\",\\\"特性/强攻\\\",\\\"阵营/反舌鸟\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1276,
+                  "title": "薇薇安·班希",
+                  "alias_name": "薇薇安",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/以太\\\",\\\"特性/异常\\\",\\\"阵营/反舌鸟\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1230,
+                  "title": "「扳机」",
+                  "alias_name": "扳机",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/击破\\\",\\\"阵营/奥波勒斯小队\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1190,
+                  "title": "零号·安比",
+                  "alias_name": "零号·安比",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/强攻\\\",\\\"阵营/防卫军·白银小队\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1158,
+                  "title": "伊芙琳·舒瓦利耶",
+                  "alias_name": "伊芙琳",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/强攻\\\",\\\"阵营/天琴座\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1109,
+                  "title": "耀嘉音",
+                  "alias_name": "",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/以太\\\",\\\"特性/支援\\\",\\\"阵营/天琴座\\\"]\"}}}"
+                },
+                {
+                  "content_id": 997,
+                  "title": "浅羽 悠真",
+                  "alias_name": "悠真",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/强攻\\\",\\\"阵营/H.S.O.S.6\\\"]\"}}}"
+                },
+                {
+                  "content_id": 996,
+                  "title": "星见 雅",
+                  "alias_name": "雅",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/烈霜\\\",\\\"特性/异常\\\",\\\"阵营/H.S.O.S.6\\\"]\"}}}"
+                },
+                {
+                  "content_id": 950,
+                  "title": "莱特",
+                  "alias_name": "莱特",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/击破\\\",\\\"阵营/卡吕冬之子\\\"]\"}}}"
+                },
+                {
+                  "content_id": 916,
+                  "title": "月城 柳",
+                  "alias_name": "柳",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/异常\\\",\\\"阵营/H.S.O.S.6\\\"]\"}}}"
+                },
+                {
+                  "content_id": 840,
+                  "title": "柏妮思·怀特",
+                  "alias_name": "柏妮思",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/异常\\\",\\\"阵营/卡吕冬之子\\\"]\"}}}"
+                },
+                {
+                  "content_id": 801,
+                  "title": "凯撒·金",
+                  "alias_name": "凯撒",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/物理\\\",\\\"特性/防护\\\",\\\"阵营/卡吕冬之子\\\"]\"}}}"
+                },
+                {
+                  "content_id": 759,
+                  "title": "简·杜",
+                  "alias_name": "简",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/物理\\\",\\\"特性/异常\\\",\\\"阵营/刑侦特勤组\\\"]\"}}}"
+                },
+                {
+                  "content_id": 680,
+                  "title": "青衣",
+                  "alias_name": "青衣",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/击破\\\",\\\"阵营/刑侦特勤组\\\"]\"}}}"
+                },
+                {
+                  "content_id": 634,
+                  "title": "朱鸢",
+                  "alias_name": "朱鸢",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/以太\\\",\\\"特性/强攻\\\",\\\"阵营/刑侦特勤组\\\"]\"}}}"
+                },
+                {
+                  "content_id": 317,
+                  "title": "艾莲·乔",
+                  "alias_name": "艾莲",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/冰\\\",\\\"特性/强攻\\\",\\\"阵营/维多利亚家政\\\"]\"}}}"
+                },
+                {
+                  "content_id": 65,
+                  "title": "冯·莱卡恩",
+                  "alias_name": "莱卡恩",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/冰\\\",\\\"特性/击破\\\",\\\"阵营/维多利亚家政\\\"]\"}}}"
+                },
+                {
+                  "content_id": 378,
+                  "title": "猫宫 又奈",
+                  "alias_name": "猫又",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/物理\\\",\\\"特性/强攻\\\",\\\"阵营/狡兔屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 73,
+                  "title": "「11号」",
+                  "alias_name": "11号",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/强攻\\\",\\\"阵营/奥波勒斯小队\\\"]\"}}}"
+                },
+                {
+                  "content_id": 316,
+                  "title": "亚历山德丽娜·莎芭丝缇安",
+                  "alias_name": "丽娜",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/支援\\\",\\\"阵营/维多利亚家政\\\"]\"}}}"
+                },
+                {
+                  "content_id": 318,
+                  "title": "珂蕾妲·贝洛伯格",
+                  "alias_name": "珂蕾妲",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/火\\\",\\\"特性/击破\\\",\\\"阵营/白祇重工\\\"]\"}}}"
+                },
+                {
+                  "content_id": 150,
+                  "title": "格莉丝·霍华德",
+                  "alias_name": "格莉丝",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/S\\\",\\\"属性/电\\\",\\\"特性/异常\\\",\\\"阵营/白祇重工\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1536,
+                  "title": "狛野 真斗",
+                  "alias_name": "真斗",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/火\\\",\\\"特性/命破\\\",\\\"阵营/怪啖屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1300,
+                  "title": "潘引壶",
+                  "alias_name": "潘引壶",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/物理\\\",\\\"特性/防护\\\",\\\"阵营/云岿山\\\"]\"}}}"
+                },
+                {
+                  "content_id": 1191,
+                  "title": "波可娜·费雷尼",
+                  "alias_name": "波可娜",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/物理\\\",\\\"特性/击破\\\",\\\"阵营/卡吕冬之子\\\"]\"}}}"
+                },
+                {
+                  "content_id": 758,
+                  "title": "赛斯·洛威尔",
+                  "alias_name": "赛斯",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/电\\\",\\\"特性/防护\\\",\\\"阵营/刑侦特勤组\\\"]\"}}}"
+                },
+                {
+                  "content_id": 493,
+                  "title": "露西亚娜·德·蒙特夫",
+                  "alias_name": "露西",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/火\\\",\\\"特性/支援\\\",\\\"阵营/卡吕冬之子\\\"]\"}}}"
+                },
+                {
+                  "content_id": 485,
+                  "title": "派派·韦尔",
+                  "alias_name": "派派",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/物理\\\",\\\"特性/异常\\\",\\\"阵营/卡吕冬之子\\\"]\"}}}"
+                },
+                {
+                  "content_id": 80,
+                  "title": "妮可·德玛拉",
+                  "alias_name": "妮可",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/以太\\\",\\\"特性/支援\\\",\\\"阵营/狡兔屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 371,
+                  "title": "比利·奇德",
+                  "alias_name": "比利",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/物理\\\",\\\"特性/强攻\\\",\\\"阵营/狡兔屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 158,
+                  "title": "本·比格",
+                  "alias_name": "本",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/火\\\",\\\"特性/防护\\\",\\\"阵营/白祇重工\\\"]\"}}}"
+                },
+                {
+                  "content_id": 227,
+                  "title": "苍角",
+                  "alias_name": "苍角",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/冰\\\",\\\"特性/支援\\\",\\\"阵营/H.S.O.S.6\\\"]\"}}}"
+                },
+                {
+                  "content_id": 379,
+                  "title": "安比·德玛拉",
+                  "alias_name": "安比",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/电\\\",\\\"特性/击破\\\",\\\"阵营/狡兔屋\\\"]\"}}}"
+                },
+                {
+                  "content_id": 179,
+                  "title": "可琳·威克斯",
+                  "alias_name": "可琳",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/物理\\\",\\\"特性/强攻\\\",\\\"阵营/维多利亚家政\\\"]\"}}}"
+                },
+                {
+                  "content_id": 147,
+                  "title": "安东·伊万诺夫",
+                  "alias_name": "安东",
+                  "ext": "{\"c_43\":{\"filter\":{\"text\":\"[\\\"稀有度/A\\\",\\\"属性/电\\\",\\\"特性/强攻\\\",\\\"阵营/白祇重工\\\"]\"}}}"
+                }
+              ]
+            }
+          ],
+          "list": []
+        }
+      ]
+    }
+  },
+  "affection": {
+    "retcode": 0,
+    "message": "OK",
+    "data": {
+      "page": {
+        "id": "1890",
+        "name": "爱芮好感壁纸",
+        "desc": "爱芮好感壁纸,好感壁纸,壁纸,绝区零壁纸,绝区零官方壁纸,爱芮壁纸",
+        "icon_url": "https://act-upload.mihoyo.com/nap-obc-indep/2026/03/04/15559334/8ab473092bd8e64f44781d5da68dae72_1902757959806190984.png",
+        "header_img_url": "",
+        "modules": [
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "rich_row_base_info",
+                "layout": "",
+                "data": "{\"rich_text\":\"<p><strong><span style=\\\"color: rgb(255, 255, 255)\\\">请注意壁纸视频较大，需要加载一段时间。</span></strong></p><p><span class=\\\"wiki-editor-extension__local-video-wrapper\\\" data-video-url=\\\"https://act-upload.mihoyo.com/nap-obc-indep/2026/03/04/15559334/c9ea93491dc7deded9630f16af06a6d8_8456985552127295669.mp4\\\" data-video-unit=\\\"px\\\" data-video-width=\\\"1920\\\" data-video-poster=\\\"\\\"><i class=\\\"custom-video-wrapper\\\" style=\\\"width: 1920px\\\"><video class=\\\"custom-video\\\" src=\\\"https://act-upload.mihoyo.com/nap-obc-indep/2026/03/04/15559334/c9ea93491dc7deded9630f16af06a6d8_8456985552127295669.mp4\\\" style=\\\"width: 1920px\\\" poster=\\\"\\\" webkit-playsinline=\\\"true\\\" playsinline=\\\"true\\\" controlslist=\\\"nodownload\\\" controls=\\\"controls\\\"></video></i></span></p>\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "323",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "0",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "rich_row_base_info",
+                "layout": "",
+                "data": "{\"rich_text\":\"<p></p>\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "545",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "0",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          }
+        ],
+        "filter_values": {},
+        "menu_id": "0",
+        "menu_name": "",
+        "version": "1772607807",
+        "langs": [],
+        "template_layout": {
+          "tab": [
+            {
+              "tab_id": "28",
+              "tab_name": "页签1",
+              "module_group": [
+                {
+                  "module_group_id": "228",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "323",
+                      "pos": "banner"
+                    },
+                    {
+                      "id": "545",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "壁纸展示",
+                  "repeated": false,
+                  "parent_group_id": "0"
+                }
+              ]
+            }
+          ]
+        },
+        "edit_lock_status": "Unlock",
+        "correct_lock_status": "Unlock",
+        "menus": [
+          {
+            "id": "99",
+            "name": "好感壁纸",
+            "has_page": false,
+            "style": "",
+            "sub_menus": [],
+            "icon": "",
+            "mi18n_key": "好感壁纸",
+            "is_hidden": false,
+            "parent_id": "13",
+            "template_id": "",
+            "bg_img": "",
+            "ch_ext": "[{\"type\":\"text\",\"attribute_name\":\"每行个数\",\"attribute_key\":\"col_per_row\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"展示样式\",\"attribute_key\":\"display_type\",\"value\":\"default\"},{\"type\":\"text\",\"attribute_name\":\"频道icon\",\"attribute_key\":\"icon_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"跳转链接\",\"attribute_key\":\"jump_url\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc\",\"attribute_key\":\"icon_url_pc\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道icon-pc-hover\",\"attribute_key\":\"icon_url_pc_hover\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"筛选器\",\"attribute_key\":\"filter\",\"value\":\"[]\"},{\"type\":\"text\",\"attribute_name\":\"首页更多\",\"attribute_key\":\"home_more\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"在目录中展示\",\"attribute_key\":\"show_in_catalog\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"最新词条\",\"attribute_key\":\"is_latest\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"更多入口icon\",\"attribute_key\":\"king_kong_icon\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"首页更多文案\",\"attribute_key\":\"home_more_text\",\"value\":\"\"},{\"type\":\"text\",\"attribute_name\":\"频道底图\",\"attribute_key\":\"channel_bg\",\"value\":\"\"}]",
+            "updated_at": "-62135596800"
+          }
+        ],
+        "template_id": "66f8eb1f5fbdcfe3703dafd8",
+        "ext": {
+          "fe_ext": "{}",
+          "post_ext": {
+            "post_id": "",
+            "post_user_name": "",
+            "post_time": "0",
+            "post_avatar_url": "",
+            "url": ""
+          },
+          "server_ext": "",
+          "personalized_color": "",
+          "scrolling_text": "",
+          "corner_mark": "None"
+        },
+        "alias_name": "",
+        "lang": "",
+        "beta": false,
+        "page_type": "Default",
+        "menu_style": "",
+        "status": "Online"
+      }
+    }
+  },
+  "character_video": {
+    "retcode": 0,
+    "data": {
+      "page": {
+        "id": "2236",
+        "name": "洛克茜角色展示 | 神秘负棺人",
+        "modules": [],
+        "template_layout": null,
+        "ext": {
+          "fe_ext": "{}",
+          "post_ext": {
+            "post_id": "78396026",
+            "post_user_name": "绝区零",
+            "post_time": "1790308819",
+            "post_avatar_url": "https://bbs-static.miyoushe.com/communityweb/upload/aa97b034ebe314fc2d1b28c3f2131a17.png",
+            "url": "https://www.miyoushe.com/zzz/article/78396026"
+          },
+          "server_ext": "",
+          "personalized_color": "",
+          "scrolling_text": "",
+          "corner_mark": "None"
+        },
+        "version": "1790309295",
+        "page_type": "Link"
+      }
+    }
+  },
+  "game_video": {
+    "retcode": 0,
+    "data": {
+      "page": {
+        "id": "2255",
+        "name": " 3.3版本PV | 重返天空的旅程",
+        "modules": [],
+        "template_layout": null,
+        "ext": {
+          "fe_ext": "{}",
+          "post_ext": {
+            "post_id": "78804836",
+            "post_user_name": "绝区零",
+            "post_time": "1791547810",
+            "post_avatar_url": "https://bbs-static.miyoushe.com/communityweb/upload/aa97b034ebe314fc2d1b28c3f2131a17.png",
+            "url": "https://www.miyoushe.com/zzz/article/78804836"
+          },
+          "server_ext": "",
+          "personalized_color": "",
+          "scrolling_text": "",
+          "corner_mark": "None"
+        },
+        "version": "1791547988",
+        "page_type": "Link"
+      }
+    }
+  },
+  "wallpaper": {
+    "retcode": 0,
+    "data": {
+      "page": {
+        "id": "685",
+        "name": "活动壁纸合集",
+        "modules": [
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"list\":[{\"tab_name\":\"默认标题\",\"image\":\"\"}],\"tachieImage\":\"\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "326",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "0",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "rich_row_base_info",
+                "layout": "",
+                "data": "{\"rich_text\":\"<p>下载图片方法：</p><p>PC端用户：鼠标右键点击图片 → 图片另存为<br>移动端用户：点击图片进入放大查看后，长按图片后点击<strong><span style=\\\"color: rgb(250, 219, 20)\\\">「保存图片」</span></strong></p>\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "530",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "0",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"list\":[{\"tab_name\":\"1\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/86382c8ce8736de766dd7bb8da2bab96_775138198110889014.jpeg\"},{\"tab_name\":\"2\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/eaf82c833ea0dba7f6eb30ddcc355abd_6782954568070308394.jpeg\"},{\"tab_name\":\"3\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/141d899c0bc12d3eaa07abf65ea92312_1603679524018992990.jpeg\"},{\"tab_name\":\"4\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/5ac1c43bca8b95763d5e10378416e30d_8280000868159044472.jpeg\"},{\"tab_name\":\"5\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/82467615c241128cbc1d2cde94b55720_3955180718435670321.jpeg\"},{\"tab_name\":\"6\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/9473d7bbe70899a32112641da44db9cb_117269668654230548.jpeg\"},{\"tab_name\":\"7\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/d3ae6355e12d70e40a8f318c1d75b391_3436142745723681975.jpeg\"},{\"tab_name\":\"8\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/32931684643b1806d2c5468e839ec04d_3333519882001177905.jpeg\"},{\"tab_name\":\"9\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/c2401d1048eb7355e5500a162e2538ec_7609536384938777018.jpeg\"},{\"tab_name\":\"10\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/9f9b1d387818dfa16fa69acdb860fa03_1184168330617500334.jpeg\"}],\"tachieImage\":\"\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "337",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"tachieImage\":\"\",\"list\":[{\"tab_name\":\"国际服推100万关注贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/12/24/160132993/8abb8ed9ce31cb08c4fa46db15aab725_8139612725358439092.png\"},{\"tab_name\":\"海外年度电影节-印尼\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/06/04/160132993/493ea1aa16ab07f4245d4fe9f95d2439_6447520572264144456.jpg\"},{\"tab_name\":\"海外年度电影节-菲律宾\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/06/04/160132993/103189528e390f7b97a92bf61fb0e8ee_4806511037871999806.jpg\"},{\"tab_name\":\"海外年度电影节-马来西亚\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/06/04/160132993/8302c1fc29263629471c979dfae47504_7733068201627633142.jpg\"},{\"tab_name\":\"浅羽悠真anan封面4\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/12/26/73751405/3b64f647ea078ca5c8bf9b201240b6a6_942488533825683457.jpg\"},{\"tab_name\":\"浅羽悠真anan封面3\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/12/26/73751405/c91113c3cca3388b5e606cf810a13015_3017253033593808879.jpg\"},{\"tab_name\":\"浅羽悠真anan封面2\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/12/26/73751405/a413111412b93c6aff9a7b5a89d57f1a_6534096703267763455.jpg\"},{\"tab_name\":\"浅羽悠真anan封面1\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/12/26/73751405/65e566c4575234d1dfada96f2cce5e0b_9159054880279187383.jpg\"},{\"tab_name\":\"虚拟偶像\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/f8a502e4836f0ff2b237abf0cd369e74_5094178454486948505.jpeg\"},{\"tab_name\":\"2000万预约贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/c76da033744dbcaa93e1c72a4c845222_6021281763881175277.png\"},{\"tab_name\":\"1000万预约贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/20ad006594ffa9ffc0a2470a72b3e361_5262897566411414560.png\"},{\"tab_name\":\"3000万预约贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/733b2291299d5403f7c12c71f3cb82a9_5787194204195073575.jpg\"},{\"tab_name\":\"4000万预约贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/f4e16bdfc387e66840c237b25a3a2f1f_3107135351270954322.png\"},{\"tab_name\":\"B站300万粉丝贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/8d14f5cd5df3399322822268ca0408d2_5165686697768530411.jpg\"},{\"tab_name\":\"B站500万粉丝贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/e8ea76b1f7d3101fa65544e8ee5c4c88_7483306783449716420.jpg\"},{\"tab_name\":\"国际服推50万关注贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/984b6e1cbcb43cf44dc2b1f52dcf530f_4350644840843543999.jpg\"},{\"tab_name\":\"日推10万关注贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/4e984dfed4d24b16eaa39cc2c1ac1bcd_8813530101106664686.jpeg\"},{\"tab_name\":\"gamescom 2024特别参展视频\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/09/06/158441880/010023fab33acf506d40bafe6c2d82bc_2437583496092767705.png\"},{\"tab_name\":\"简角色PV丨逮捕\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/09/06/158441880/7b1671629af107354e4945a62eda1419_1336961272310325410.jpg\"},{\"tab_name\":\"「天衣无缝的伪装」\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/09/06/158441880/784e52f98d0bfacfebbc5d1a2b595c0a_5881125117965777384.png\"},{\"tab_name\":\"Reddit 200k粉丝贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/12/23/15559334/1e5e38fd9e0b7a03d7a100f58f509464_5355391104399204993.png\"},{\"tab_name\":\"日推50万关注贺图\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/12/30/160132993/8f1b211ef713910dacd3b6664bfae952_7252388362086178740.jpg\"},{\"tab_name\":\"登陆港版PS5\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/12/31/160132993/c43cb3b992748137938e0152aa95571c_947756184947575167.jpg\"}]}\n",
+                "style": ""
+              }
+            ],
+            "id": "340",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"tachieImage\":\"\",\"list\":[{\"tab_name\":\"1\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/f514aac40750fa8fdd75fd43ca52a588_1914289405214421584.jpg\"},{\"tab_name\":\"2\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/c0694eb1a430c061927365544f3d900e_4843370564062918684.jpg\"},{\"tab_name\":\"3\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/1aa93a9c5c4c4478e058116a2cdc7402_7786461464521849723.jpg\"},{\"tab_name\":\"4\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/0e2da81082ff7be57839d891c4eeb7bc_3189326224772057266.jpg\"}]}\n",
+                "style": ""
+              }
+            ],
+            "id": "1611",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"list\":[{\"tab_name\":\"美梦如约-PC版\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/30/73751405/6e20176c1550b4402ed9a706d3cdbfb0_3486701948274485261.jpg\"},{\"tab_name\":\"美梦如约-手机版\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/30/73751405/80d55cef430d942c944a6a963d7e7e5b_2120251347435364907.jpg\"},{\"tab_name\":\"美梦延续的剪影-PC版\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/30/73751405/4ead39735df1b4643eee3b6b50389940_8575206825569662090.jpg\"}],\"tachieImage\":\"\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "898",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"tachieImage\":\"\",\"list\":[{\"tab_name\":\"H.S.O.S.6\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/30/73751405/d92b0c0dcf18edd52e9af997ca9714d5_745226128342851785.png\"},{\"tab_name\":\"白祇重工\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/30/73751405/c483bb7f30726079669fa4511bf3e49a_7815768005670306488.png\"},{\"tab_name\":\"法厄同\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/30/73751405/161b5dceea0c9f72a6b3914829bb483c_8030286686137966711.png\"},{\"tab_name\":\"狡兔屋\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/30/73751405/33a8f482aa29229c685fa95f3b8852e2_5153736133290339563.png\"},{\"tab_name\":\"维多利亚家政\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/30/73751405/11adbab9bc37e7dca23aadb5a8d169fb_7826310765504744555.png\"},{\"tab_name\":\"奥波勒斯小队\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/4885809/97c9e8b8a11d18ea949142cf7d63f669_7114479149549079341.png\"}]}\n",
+                "style": ""
+              }
+            ],
+            "id": "897",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"list\":[{\"tab_name\":\"1\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/18/73751405/bc642a028f94ef9bc2391c62b27017bb_8142708541524457423.jpg\"},{\"tab_name\":\"2\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2025/01/22/73751405/fcb74be5f84b24c9aace533cb81ea955_7535266383198618063.jpg\"}],\"tachieImage\":\"\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "880",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"list\":[{\"tab_name\":\"调律测试1\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/4d483e74ea3513187169277337499918_4507641561343672744.png\"},{\"tab_name\":\"调律测试2\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/07/160132993/a46e7044b2017147d1bd424f9bed585b_2562368609541598453.png\"},{\"tab_name\":\"调律测试3\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/76552937/d96f9a34b001a372971762ad88ff624f_2307411996615303147.jpg\"},{\"tab_name\":\"降噪测试1\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/fc379052dcbbb66821597d06e51ae8e3_7241850659164011652.jpg\"},{\"tab_name\":\"降噪测试2\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/05/15559334/77cfa1ac2e8ca7a92028c9891febba48_1387313369711524704.jpeg\"},{\"tab_name\":\"降噪测试3\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/b4d55383016137324a620163d1191447_8034182787896548575.jpg\"},{\"tab_name\":\"降噪测试4\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/05/07/373745652/ba01fca98543a886c2cb1ff284bf6275_6294018143277572172.jpg\"},{\"tab_name\":\"喧响测试\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2024/08/06/15559334/7aadd265b3370296971d71c9ea79c854_2800466420307953785.jpg\"}],\"tachieImage\":\"\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "339",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"list\":[{\"tab_name\":\"1\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/09/25/73751405/cd3ebf62a0a9cd6b81f0f2ccbacb9404_8683803109049850410.png\"},{\"tab_name\":\"2\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/09/25/73751405/18fb1a0596640ec7dd775b81335c988a_2444057130218626142.png\"},{\"tab_name\":\"3\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/09/25/73751405/6b51d9e05c7a90c09c995c034ad1e92f_7959208056428138392.png\"},{\"tab_name\":\"4\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/09/25/73751405/7919a41bfae8c4ab7a957b4ebe02403f_4573822786824945688.png\"},{\"tab_name\":\"5\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/09/25/73751405/bdd423cdc9b1acc88efc7928e70874e1_984320373287568993.png\"},{\"tab_name\":\"6\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/09/25/73751405/ba96da9ebc402a1824281132d6f2b02a_7869296270812228977.png\"},{\"tab_name\":\"7\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/09/25/73751405/584f0764cb93221439eebce87568bb1f_9161646885267443985.png\"}],\"tachieImage\":\"\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "1894",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          },
+          {
+            "name": "",
+            "is_poped": false,
+            "components": [
+              {
+                "component_id": "map_desc",
+                "layout": "",
+                "data": "{\"list\":[{\"tab_name\":\"1(2560x1080)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/75bc0cbeb77f8e355e66ef2854c762d6_7097192202629000502.jpg\"},{\"tab_name\":\"1(3840x2160)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/7b503cf6e35a94da4edbb9d7122794fa_8508338339568721902.jpg\"},{\"tab_name\":\"2(2560x1080)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/f796bf8edc312fcf234076d2e0d81b55_6616252044317668623.jpg\"},{\"tab_name\":\"2(3840x2160)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/7430d8bb8f7ab348a515a850560c6446_6663862427133633794.jpg\"},{\"tab_name\":\"3(2560x1080)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/126746fada48b26bc78350a95ebe24b1_1894277079836364920.jpg\"},{\"tab_name\":\"3(3840x2160)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/7f8b634f3d6bb8c23748620f60cbf9fb_8882438404496511429.jpg\"},{\"tab_name\":\"4(2560x1080)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/7116ff02c69d1ed7d1143e24b522ae76_1190363970995936256.jpg\"},{\"tab_name\":\"4(3840x2160)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/b2b01c7d4059d58aecfc08e277de0de4_5203129812582933771.jpg\"},{\"tab_name\":\"5(2560x1080)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/28303ebc23ba46a1a40353add3c57ece_776398927101489165.jpg\"},{\"tab_name\":\"5(3840x2160)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/75737c3e39f44744617e8682c0e5fd5d_5815808980608666128.jpg\"},{\"tab_name\":\"6(2560x1080)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/e4a458b95403a15ba226d1678777a7d0_2547276887180454476.jpg\"},{\"tab_name\":\"6(3840x2160)\",\"image\":\"https://act-upload.mihoyo.com/nap-obc-indep/2026/02/04/73751405/218e4fca4520dfcd0ef276450c980aaf_2836394738834967217.jpg\"}],\"tachieImage\":\"\"}\n",
+                "style": ""
+              }
+            ],
+            "id": "1610",
+            "is_customize_name": true,
+            "is_abstract": false,
+            "is_show_switch": false,
+            "switch": false,
+            "desc": "",
+            "repeated": false,
+            "is_submodule": false,
+            "origin_module_id": "326",
+            "without_border": false,
+            "can_delete": false,
+            "is_hidden": false,
+            "rich_text_editing": false
+          }
+        ],
+        "template_layout": {
+          "tab": [
+            {
+              "tab_id": "30",
+              "tab_name": "页签1",
+              "module_group": [
+                {
+                  "module_group_id": "349",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "530",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "图片保存",
+                  "repeated": true,
+                  "parent_group_id": "0"
+                },
+                {
+                  "module_group_id": "230",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "326",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "",
+                  "repeated": true,
+                  "parent_group_id": "0"
+                },
+                {
+                  "module_group_id": "1158",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "1894",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "「维尔乌姆假日相册」壁纸",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                },
+                {
+                  "module_group_id": "978",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "1611",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "「妄想天使训练中」壁纸（手机版）",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                },
+                {
+                  "module_group_id": "977",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "1610",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "「妄想天使训练中」壁纸（PC版）",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                },
+                {
+                  "module_group_id": "579",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "898",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "「美梦如约而至」壁纸",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                },
+                {
+                  "module_group_id": "578",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "897",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "「三明治香气的梦想」壁纸",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                },
+                {
+                  "module_group_id": "564",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "880",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "「若能化作天琴」壁纸",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                },
+                {
+                  "module_group_id": "240",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "337",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "「箱庭之内」壁纸",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                },
+                {
+                  "module_group_id": "242",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "339",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "测试壁纸",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                },
+                {
+                  "module_group_id": "243",
+                  "layout": "l2r1",
+                  "module": [
+                    {
+                      "id": "340",
+                      "pos": "banner"
+                    }
+                  ],
+                  "name": "其他活动",
+                  "repeated": true,
+                  "parent_group_id": "230"
+                }
+              ]
+            }
+          ]
+        },
+        "ext": {
+          "fe_ext": "{}",
+          "post_ext": {
+            "post_id": "",
+            "post_user_name": "",
+            "post_time": "0",
+            "post_avatar_url": "",
+            "url": ""
+          },
+          "server_ext": "",
+          "personalized_color": "",
+          "scrolling_text": "",
+          "corner_mark": "None"
+        },
+        "version": "1790310668",
+        "page_type": "Default"
+      }
+    }
+  }
+}

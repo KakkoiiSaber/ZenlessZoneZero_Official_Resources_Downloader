@@ -1,0 +1,1188 @@
+{
+  "version": 1,
+  "characters": {
+    "legacy:奥菲丝": {
+      "name": "奥菲丝",
+      "aliases": [
+        "奥菲丝"
+      ],
+      "source_url": "https://www.miyoushe.com/zzz/article/69017918",
+      "status": "indexed",
+      "evidence_kind": "existing_reviewed_rules"
+    },
+    "legacy:鬼火": {
+      "name": "鬼火",
+      "aliases": [
+        "鬼火"
+      ],
+      "source_url": "https://www.miyoushe.com/zzz/article/69017918",
+      "status": "indexed",
+      "evidence_kind": "existing_reviewed_rules"
+    },
+    "wiki:2296": {
+      "name": "卡芙卡",
+      "full_name": "卡芙卡",
+      "aliases": [
+        "卡芙卡"
+      ],
+      "wiki_id": "2296",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2296/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster"
+    },
+    "wiki:2293": {
+      "name": "知更鸟",
+      "full_name": "知更鸟",
+      "aliases": [
+        "知更鸟"
+      ],
+      "wiki_id": "2293",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2293/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster"
+    },
+    "wiki:2290": {
+      "name": "挽昼",
+      "full_name": "挽昼",
+      "aliases": [
+        "挽昼"
+      ],
+      "wiki_id": "2290",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2290/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "罗斯凯利法"
+    },
+    "wiki:2216": {
+      "name": "菲欧妮",
+      "full_name": "菲欧妮·蕾法爱菈",
+      "aliases": [
+        "菲欧妮",
+        "菲欧妮·蕾法爱菈"
+      ],
+      "wiki_id": "2216",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2216/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "坎卜斯黑枝"
+    },
+    "wiki:2217": {
+      "name": "赛维里安",
+      "full_name": "赛维里安·洛威尔",
+      "aliases": [
+        "赛维里安",
+        "赛维里安·洛威尔"
+      ],
+      "wiki_id": "2217",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2217/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "都市秩序部"
+    },
+    "wiki:1960": {
+      "name": "维琳娜",
+      "full_name": "维琳娜·艾嘉德",
+      "aliases": [
+        "维琳娜",
+        "维琳娜·艾嘉德"
+      ],
+      "wiki_id": "1960",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1960/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "外务筹策局"
+    },
+    "wiki:2152": {
+      "name": "洛克茜",
+      "full_name": "洛克茜·伊芙莉塔·普莱斯",
+      "aliases": [
+        "洛克茜",
+        "洛克茜·伊芙莉塔·普莱斯"
+      ],
+      "wiki_id": "2152",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2152/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "弗林特工坊"
+    },
+    "wiki:2145": {
+      "name": "克拉蕾",
+      "full_name": "克拉蕾·弗林特",
+      "aliases": [
+        "克拉蕾",
+        "克拉蕾·弗林特"
+      ],
+      "wiki_id": "2145",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2145/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "弗林特工坊"
+    },
+    "wiki:2079": {
+      "name": "希格莉德",
+      "full_name": "希格莉德·德拉叙尔",
+      "aliases": [
+        "希格莉德",
+        "希格莉德·德拉叙尔"
+      ],
+      "wiki_id": "2079",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2079/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "空域巡戍局"
+    },
+    "wiki:2076": {
+      "name": "蕾米埃尔",
+      "full_name": "蕾米埃尔·丹",
+      "aliases": [
+        "蕾米埃尔",
+        "蕾米埃尔·丹"
+      ],
+      "wiki_id": "2076",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2076/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "达识结社"
+    },
+    "wiki:1962": {
+      "name": "诺姆",
+      "full_name": "诺姆·霍洛维尔",
+      "aliases": [
+        "诺姆",
+        "诺姆·霍洛维尔"
+      ],
+      "wiki_id": "1962",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1962/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "外务筹策局"
+    },
+    "wiki:1958": {
+      "name": "佩洛伊斯",
+      "full_name": "佩洛伊斯",
+      "aliases": [
+        "佩洛伊斯"
+      ],
+      "wiki_id": "1958",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1958/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "法厄同"
+    },
+    "wiki:1927": {
+      "name": "星徽·比利",
+      "full_name": "星徽·比利·奇德",
+      "aliases": [
+        "星徽·比利",
+        "星徽·比利·奇德"
+      ],
+      "wiki_id": "1927",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1927/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "狡兔屋",
+      "form_of": "wiki:371",
+      "form_name": "星徽"
+    },
+    "wiki:1926": {
+      "name": "普罗米娅",
+      "full_name": "普罗米娅",
+      "aliases": [
+        "普罗米娅"
+      ],
+      "wiki_id": "1926",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1926/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "坎卜斯黑枝"
+    },
+    "wiki:1861": {
+      "name": "希希芙",
+      "full_name": "希希芙",
+      "aliases": [
+        "希希芙"
+      ],
+      "wiki_id": "1861",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1861/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "都市秩序部"
+    },
+    "wiki:1852": {
+      "name": "南宫羽",
+      "full_name": "南宫羽",
+      "aliases": [
+        "南宫羽"
+      ],
+      "wiki_id": "1852",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1852/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "妄想天使"
+    },
+    "wiki:1793": {
+      "name": "爱芮",
+      "full_name": "爱芮",
+      "aliases": [
+        "爱芮"
+      ],
+      "wiki_id": "1793",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1793/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "妄想天使"
+    },
+    "wiki:1791": {
+      "name": "千夏",
+      "full_name": "千夏",
+      "aliases": [
+        "千夏"
+      ],
+      "wiki_id": "1791",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1791/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "妄想天使"
+    },
+    "wiki:1687": {
+      "name": "叶瞬光",
+      "full_name": "叶瞬光",
+      "aliases": [
+        "叶瞬光"
+      ],
+      "wiki_id": "1687",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1687/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "云岿山"
+    },
+    "wiki:1686": {
+      "name": "照",
+      "full_name": "照",
+      "aliases": [
+        "照"
+      ],
+      "wiki_id": "1686",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1686/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "坎卜斯黑枝"
+    },
+    "wiki:1626": {
+      "name": "般岳",
+      "full_name": "般岳",
+      "aliases": [
+        "般岳"
+      ],
+      "wiki_id": "1626",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1626/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "坎卜斯黑枝"
+    },
+    "wiki:1624": {
+      "name": "琉音",
+      "full_name": "琉音",
+      "aliases": [
+        "琉音"
+      ],
+      "wiki_id": "1624",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1624/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "坎卜斯黑枝"
+    },
+    "wiki:1538": {
+      "name": "伊德海莉",
+      "full_name": "伊德海莉·墨菲",
+      "aliases": [
+        "伊德海莉",
+        "伊德海莉·墨菲"
+      ],
+      "wiki_id": "1538",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1538/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "怪啖屋"
+    },
+    "wiki:1533": {
+      "name": "卢西娅",
+      "full_name": "卢西娅·艾洛温",
+      "aliases": [
+        "卢西娅",
+        "卢西娅·艾洛温"
+      ],
+      "wiki_id": "1533",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1533/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "怪啖屋"
+    },
+    "wiki:1499": {
+      "name": "席德",
+      "full_name": "席德",
+      "aliases": [
+        "「席德」",
+        "席德"
+      ],
+      "wiki_id": "1499",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1499/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "奥波勒斯小队"
+    },
+    "wiki:1385": {
+      "name": "爱丽丝",
+      "full_name": "爱丽丝·泰姆菲尔德",
+      "aliases": [
+        "爱丽丝",
+        "爱丽丝·泰姆菲尔德"
+      ],
+      "wiki_id": "1385",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1385/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "怪啖屋"
+    },
+    "wiki:1386": {
+      "name": "浮波柚叶",
+      "full_name": "浮波柚叶",
+      "aliases": [
+        "柚叶",
+        "浮波 柚叶",
+        "浮波柚叶"
+      ],
+      "wiki_id": "1386",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1386/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "怪啖屋"
+    },
+    "wiki:1301": {
+      "name": "橘福福",
+      "full_name": "橘福福",
+      "aliases": [
+        "橘福福"
+      ],
+      "wiki_id": "1301",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1301/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "云岿山"
+    },
+    "wiki:1299": {
+      "name": "仪玄",
+      "full_name": "仪玄",
+      "aliases": [
+        "仪玄"
+      ],
+      "wiki_id": "1299",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1299/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "云岿山"
+    },
+    "wiki:1290": {
+      "name": "雨果",
+      "full_name": "雨果·维拉德",
+      "aliases": [
+        "雨果",
+        "雨果·维拉德"
+      ],
+      "wiki_id": "1290",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1290/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "反舌鸟"
+    },
+    "wiki:1276": {
+      "name": "薇薇安",
+      "full_name": "薇薇安·班希",
+      "aliases": [
+        "薇薇安",
+        "薇薇安·班希"
+      ],
+      "wiki_id": "1276",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1276/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "反舌鸟"
+    },
+    "wiki:1230": {
+      "name": "扳机",
+      "full_name": "扳机",
+      "aliases": [
+        "「扳机」",
+        "扳机"
+      ],
+      "wiki_id": "1230",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1230/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "奥波勒斯小队"
+    },
+    "wiki:1190": {
+      "name": "零号·安比",
+      "full_name": "零号·安比",
+      "aliases": [
+        "零号·安比",
+        "零号安比"
+      ],
+      "wiki_id": "1190",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1190/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "防卫军·白银小队"
+    },
+    "wiki:1158": {
+      "name": "伊芙琳",
+      "full_name": "伊芙琳·舒瓦利耶",
+      "aliases": [
+        "伊芙琳",
+        "伊芙琳·舒瓦利耶"
+      ],
+      "wiki_id": "1158",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1158/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "天琴座"
+    },
+    "wiki:1109": {
+      "name": "耀嘉音",
+      "full_name": "耀嘉音",
+      "aliases": [
+        "耀嘉音"
+      ],
+      "wiki_id": "1109",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1109/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "天琴座"
+    },
+    "wiki:997": {
+      "name": "浅羽悠真",
+      "full_name": "浅羽悠真",
+      "aliases": [
+        "悠真",
+        "浅羽 悠真",
+        "浅羽悠真"
+      ],
+      "wiki_id": "997",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/997/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "H.S.O.S.6"
+    },
+    "wiki:996": {
+      "name": "星见雅",
+      "full_name": "星见雅",
+      "aliases": [
+        "星见 雅",
+        "星见雅",
+        "雅"
+      ],
+      "wiki_id": "996",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/996/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "H.S.O.S.6"
+    },
+    "wiki:950": {
+      "name": "莱特",
+      "full_name": "莱特",
+      "aliases": [
+        "莱特"
+      ],
+      "wiki_id": "950",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/950/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "卡吕冬之子"
+    },
+    "wiki:916": {
+      "name": "月城柳",
+      "full_name": "月城柳",
+      "aliases": [
+        "月城 柳",
+        "月城柳",
+        "柳"
+      ],
+      "wiki_id": "916",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/916/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "H.S.O.S.6"
+    },
+    "wiki:840": {
+      "name": "柏妮思",
+      "full_name": "柏妮思·怀特",
+      "aliases": [
+        "柏妮思",
+        "柏妮思·怀特"
+      ],
+      "wiki_id": "840",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/840/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "卡吕冬之子"
+    },
+    "wiki:801": {
+      "name": "凯撒",
+      "full_name": "凯撒·金",
+      "aliases": [
+        "凯撒",
+        "凯撒·金"
+      ],
+      "wiki_id": "801",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/801/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "卡吕冬之子"
+    },
+    "wiki:759": {
+      "name": "简",
+      "full_name": "简·杜",
+      "aliases": [
+        "代理人简",
+        "简",
+        "简·杜"
+      ],
+      "wiki_id": "759",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/759/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "刑侦特勤组"
+    },
+    "wiki:680": {
+      "name": "青衣",
+      "full_name": "青衣",
+      "aliases": [
+        "青衣"
+      ],
+      "wiki_id": "680",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/680/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "刑侦特勤组"
+    },
+    "wiki:634": {
+      "name": "朱鸢",
+      "full_name": "朱鸢",
+      "aliases": [
+        "朱鸢"
+      ],
+      "wiki_id": "634",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/634/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "刑侦特勤组"
+    },
+    "wiki:317": {
+      "name": "艾莲",
+      "full_name": "艾莲·乔",
+      "aliases": [
+        "艾莲",
+        "艾莲·乔"
+      ],
+      "wiki_id": "317",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/317/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "维多利亚家政"
+    },
+    "wiki:65": {
+      "name": "莱卡恩",
+      "full_name": "冯·莱卡恩",
+      "aliases": [
+        "冯·莱卡恩",
+        "莱卡恩"
+      ],
+      "wiki_id": "65",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/65/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "维多利亚家政"
+    },
+    "wiki:378": {
+      "name": "猫又",
+      "full_name": "猫宫又奈",
+      "aliases": [
+        "猫又",
+        "猫宫 又奈",
+        "猫宫又奈"
+      ],
+      "wiki_id": "378",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/378/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "狡兔屋"
+    },
+    "wiki:73": {
+      "name": "11号",
+      "full_name": "11号",
+      "aliases": [
+        "11号",
+        "「11号」"
+      ],
+      "wiki_id": "73",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/73/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "奥波勒斯小队"
+    },
+    "wiki:316": {
+      "name": "丽娜",
+      "full_name": "亚历山德丽娜·莎芭丝缇安",
+      "aliases": [
+        "丽娜",
+        "亚历山德丽娜·莎芭丝缇安"
+      ],
+      "wiki_id": "316",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/316/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "维多利亚家政"
+    },
+    "wiki:318": {
+      "name": "珂蕾妲",
+      "full_name": "珂蕾妲·贝洛伯格",
+      "aliases": [
+        "珂蕾妲",
+        "珂蕾妲·贝洛伯格"
+      ],
+      "wiki_id": "318",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/318/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "白祇重工"
+    },
+    "wiki:150": {
+      "name": "格莉丝",
+      "full_name": "格莉丝·霍华德",
+      "aliases": [
+        "格莉丝",
+        "格莉丝·霍华德"
+      ],
+      "wiki_id": "150",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/150/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "白祇重工"
+    },
+    "wiki:1536": {
+      "name": "狛野真斗",
+      "full_name": "狛野真斗",
+      "aliases": [
+        "狛野 真斗",
+        "狛野真斗",
+        "真斗"
+      ],
+      "wiki_id": "1536",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1536/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "怪啖屋"
+    },
+    "wiki:1300": {
+      "name": "潘引壶",
+      "full_name": "潘引壶",
+      "aliases": [
+        "潘引壶"
+      ],
+      "wiki_id": "1300",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1300/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "云岿山"
+    },
+    "wiki:1191": {
+      "name": "波可娜",
+      "full_name": "波可娜·费雷尼",
+      "aliases": [
+        "波可娜",
+        "波可娜·费雷尼"
+      ],
+      "wiki_id": "1191",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1191/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "卡吕冬之子"
+    },
+    "wiki:758": {
+      "name": "赛斯",
+      "full_name": "赛斯·洛威尔",
+      "aliases": [
+        "赛斯",
+        "赛斯·洛威尔"
+      ],
+      "wiki_id": "758",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/758/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "刑侦特勤组"
+    },
+    "wiki:493": {
+      "name": "露西",
+      "full_name": "露西亚娜·德·蒙特夫",
+      "aliases": [
+        "露西",
+        "露西亚娜·德·蒙特夫"
+      ],
+      "wiki_id": "493",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/493/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "卡吕冬之子"
+    },
+    "wiki:485": {
+      "name": "派派",
+      "full_name": "派派·韦尔",
+      "aliases": [
+        "派派",
+        "派派·韦尔"
+      ],
+      "wiki_id": "485",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/485/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "卡吕冬之子"
+    },
+    "wiki:80": {
+      "name": "妮可",
+      "full_name": "妮可·德玛拉",
+      "aliases": [
+        "妮可",
+        "妮可·德玛拉"
+      ],
+      "wiki_id": "80",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/80/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "狡兔屋"
+    },
+    "wiki:371": {
+      "name": "比利",
+      "full_name": "比利·奇德",
+      "aliases": [
+        "比利",
+        "比利·奇德"
+      ],
+      "wiki_id": "371",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/371/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "狡兔屋"
+    },
+    "wiki:158": {
+      "name": "本",
+      "full_name": "本·比格",
+      "aliases": [
+        "本",
+        "本·比格"
+      ],
+      "wiki_id": "158",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/158/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "白祇重工"
+    },
+    "wiki:227": {
+      "name": "苍角",
+      "full_name": "苍角",
+      "aliases": [
+        "苍角"
+      ],
+      "wiki_id": "227",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/227/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "H.S.O.S.6"
+    },
+    "wiki:379": {
+      "name": "安比",
+      "full_name": "安比·德玛拉",
+      "aliases": [
+        "安比",
+        "安比·德玛拉"
+      ],
+      "wiki_id": "379",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/379/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "狡兔屋"
+    },
+    "wiki:179": {
+      "name": "可琳",
+      "full_name": "可琳·威克斯",
+      "aliases": [
+        "可琳",
+        "可琳·威克斯"
+      ],
+      "wiki_id": "179",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/179/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "维多利亚家政"
+    },
+    "wiki:147": {
+      "name": "安东",
+      "full_name": "安东·伊万诺夫",
+      "aliases": [
+        "安东",
+        "安东·伊万诺夫"
+      ],
+      "wiki_id": "147",
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/147/detail",
+      "status": "indexed",
+      "evidence_kind": "wiki_roster",
+      "faction": "白祇重工"
+    }
+  },
+  "groups": {
+    "罗斯凯利法": {
+      "name": "罗斯凯利法",
+      "members": [
+        "挽昼"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2290/detail"
+    },
+    "坎卜斯黑枝": {
+      "name": "坎卜斯黑枝",
+      "members": [
+        "普罗米娅",
+        "照",
+        "琉音",
+        "般岳",
+        "菲欧妮"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2216/detail"
+    },
+    "都市秩序部": {
+      "name": "都市秩序部",
+      "members": [
+        "希希芙",
+        "赛维里安"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2217/detail"
+    },
+    "外务筹策局": {
+      "name": "外务筹策局",
+      "members": [
+        "维琳娜",
+        "诺姆"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1960/detail"
+    },
+    "弗林特工坊": {
+      "name": "弗林特工坊",
+      "members": [
+        "克拉蕾",
+        "洛克茜"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2152/detail"
+    },
+    "空域巡戍局": {
+      "name": "空域巡戍局",
+      "members": [
+        "希格莉德"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2079/detail"
+    },
+    "达识结社": {
+      "name": "达识结社",
+      "members": [
+        "蕾米埃尔"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/2076/detail"
+    },
+    "法厄同": {
+      "name": "法厄同",
+      "members": [
+        "佩洛伊斯"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1958/detail"
+    },
+    "狡兔屋": {
+      "name": "狡兔屋",
+      "members": [
+        "妮可",
+        "安比",
+        "星徽·比利",
+        "比利",
+        "猫又"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1927/detail"
+    },
+    "妄想天使": {
+      "name": "妄想天使",
+      "members": [
+        "千夏",
+        "南宫羽",
+        "爱芮"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1852/detail"
+    },
+    "云岿山": {
+      "name": "云岿山",
+      "members": [
+        "仪玄",
+        "叶瞬光",
+        "橘福福",
+        "潘引壶"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1687/detail"
+    },
+    "怪啖屋": {
+      "name": "怪啖屋",
+      "members": [
+        "伊德海莉",
+        "卢西娅",
+        "浮波柚叶",
+        "爱丽丝",
+        "狛野真斗"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1538/detail"
+    },
+    "奥菲丝·马格努森&鬼火": {
+      "name": "奥菲丝·马格努森&鬼火",
+      "members": [
+        "奥菲丝",
+        "鬼火"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1501/detail"
+    },
+    "奥波勒斯小队": {
+      "name": "奥波勒斯小队",
+      "members": [
+        "11号",
+        "席德",
+        "扳机"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1499/detail"
+    },
+    "反舌鸟": {
+      "name": "反舌鸟",
+      "members": [
+        "薇薇安",
+        "雨果"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1290/detail"
+    },
+    "防卫军·白银小队": {
+      "name": "防卫军·白银小队",
+      "members": [
+        "零号·安比"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1190/detail"
+    },
+    "天琴座": {
+      "name": "天琴座",
+      "members": [
+        "伊芙琳",
+        "耀嘉音"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/1158/detail"
+    },
+    "H.S.O.S.6": {
+      "name": "H.S.O.S.6",
+      "members": [
+        "星见雅",
+        "月城柳",
+        "浅羽悠真",
+        "苍角"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/997/detail"
+    },
+    "卡吕冬之子": {
+      "name": "卡吕冬之子",
+      "members": [
+        "凯撒",
+        "柏妮思",
+        "波可娜",
+        "派派",
+        "莱特",
+        "露西"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/950/detail"
+    },
+    "刑侦特勤组": {
+      "name": "刑侦特勤组",
+      "members": [
+        "朱鸢",
+        "简",
+        "赛斯",
+        "青衣"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/759/detail"
+    },
+    "维多利亚家政": {
+      "name": "维多利亚家政",
+      "members": [
+        "丽娜",
+        "可琳",
+        "艾莲",
+        "莱卡恩"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/317/detail"
+    },
+    "白祇重工": {
+      "name": "白祇重工",
+      "members": [
+        "安东",
+        "本",
+        "格莉丝",
+        "珂蕾妲"
+      ],
+      "source_url": "https://baike.mihoyo.com/zzz/wiki/content/318/detail"
+    }
+  },
+  "versions": {
+    "1.1": {
+      "name": "卧底蓝调",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/125244",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "1.2": {
+      "name": "火狱骑行",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/126054",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "1.3": {
+      "name": "虚拟杀机",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/126739",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "1.4": {
+      "name": "星流霆击",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/127445",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "1.5": {
+      "name": "闪耀的此刻",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/129572",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "1.6": {
+      "name": "在被遗忘的废墟之上",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/154662",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "1.7": {
+      "name": "将眼泪与过往一同埋葬",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/155458",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "2.0": {
+      "name": "云霞同归处",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/156753",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "2.1": {
+      "name": "迟吟的浪涌",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/157696",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "2.2": {
+      "name": "不要温和地走入那良夜",
+      "source_url": "https://zenless.hoyoverse.com/zh-cn/news/159176",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "2.3": {
+      "name": "可曾记得梦",
+      "source_url": "https://zzz.mihoyo.com/news/160252",
+      "evidence_kind": "reviewed_official_announcement"
+    },
+    "3.3": {
+      "name": "重返天空的旅程",
+      "source_url": "https://zzz.mihoyo.com/news/166989",
+      "evidence_kind": "official_news_title"
+    },
+    "3.2": {
+      "name": "她与她的隐秘往事",
+      "source_url": "https://zzz.mihoyo.com/news/166026",
+      "evidence_kind": "official_news_title"
+    },
+    "3.1": {
+      "name": "商城",
+      "source_url": "https://zzz.mihoyo.com/news/165759",
+      "evidence_kind": "official_news_title"
+    },
+    "3.0": {
+      "name": "商城",
+      "source_url": "https://zzz.mihoyo.com/news/165150",
+      "evidence_kind": "official_news_title"
+    },
+    "2.8": {
+      "name": "新·艾利都日落时",
+      "source_url": "https://zzz.mihoyo.com/news/163857",
+      "evidence_kind": "official_news_title"
+    },
+    "2.7": {
+      "name": "英雄不死于往昔",
+      "source_url": "https://zzz.mihoyo.com/news/163261",
+      "evidence_kind": "official_news_title"
+    },
+    "2.6": {
+      "name": "旧梦的安可曲",
+      "source_url": "https://zzz.mihoyo.com/news/162592",
+      "evidence_kind": "official_news_title"
+    },
+    "2.5": {
+      "name": "微光引灯时",
+      "source_url": "https://zzz.mihoyo.com/news/161772",
+      "evidence_kind": "official_news_title"
+    },
+    "2.4": {
+      "name": "将临未抵的深渊",
+      "source_url": "https://zzz.mihoyo.com/news/161098",
+      "evidence_kind": "official_news_title"
+    }
+  },
+  "debuts": {
+    "伊德海莉": {
+      "version": "2.3",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/159945"
+    },
+    "狛野真斗": {
+      "version": "2.3",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/159945"
+    },
+    "席德": {
+      "version": "2.2",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/158967"
+    },
+    "奥菲丝": {
+      "version": "2.2",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/158967"
+    },
+    "鬼火": {
+      "version": "2.2",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/158967"
+    },
+    "薇薇安": {
+      "version": "1.7",
+      "source_url": "https://zzz.mihoyo.com/news/155465"
+    },
+    "雨果": {
+      "version": "1.7",
+      "source_url": "https://zzz.mihoyo.com/news/155465"
+    },
+    "零号·安比": {
+      "version": "1.6",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/154530"
+    },
+    "扳机": {
+      "version": "1.6",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/154530"
+    },
+    "耀嘉音": {
+      "version": "1.5",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/129594"
+    },
+    "伊芙琳": {
+      "version": "1.5",
+      "source_url": "https://zenless.hoyoverse.com/en-us/news/129594"
+    }
+  },
+  "revision": "d4c05e41b4276defb0288d0619a4839077d4d0970e2de2dedbbb4e40fff9f8ff"
+}

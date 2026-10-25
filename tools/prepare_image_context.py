@@ -4,7 +4,7 @@ import argparse
 import shutil
 
 DIRECTORIES = ('src/downloader', 'src/metadata', 'src/nas')
-FILES = ('requirements-nas.txt', 'deploy/synology/Dockerfile',
+FILES = ('requirements-nas.txt', 'deploy/synology/Dockerfile', 'src/metadata/knowledge.json',
          'tools/build_gallery.py', 'tools/deduplicate_images.py',
          'tools/gallery_tags.py', 'tools/gallery_tag_rules.py')
 
