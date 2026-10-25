@@ -39,6 +39,8 @@ jobs:
             docs/index.html
             docs/detail.html
             docs/gallery.js
+            docs/resources.html
+            docs/resources.js
             docs/NAS_SETUP.md
           sparse-checkout-cone-mode: false
       - uses: actions/setup-python@v5

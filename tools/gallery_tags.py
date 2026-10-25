@@ -10,30 +10,47 @@ try:
 except ImportError:
     from gallery_tag_rules import VERSION_NAMES, debut_title_evidence, version_label
 
-CATEGORY_ORDER = ["角色图片", "月历", "活动壁纸", "测试期素材", "表情包", "影像档案", "未分类"]
-CHARACTER_ALIASES = {
-    "伊德海莉": ["伊德海莉"], "狛野真斗": ["狛野真斗"], "奥菲丝": ["奥菲丝"], "鬼火": ["鬼火"],
-    "席德": ["席德"], "爱丽丝": ["爱丽丝"], "浮波柚叶": ["浮波柚叶"], "橘福福": ["橘福福"],
-    "仪玄": ["仪玄"], "雨果": ["雨果"], "薇薇安": ["薇薇安"], "扳机": ["扳机"],
-    "零号·安比": ["零号·安比", "零号安比"], "伊芙琳": ["伊芙琳"], "耀嘉音": ["耀嘉音"],
-    "浅羽悠真": ["浅羽悠真"], "星见雅": ["星见雅"], "莱特": ["莱特"], "月城柳": ["月城柳"],
-    "凯撒": ["凯撒"], "简": ["代理人简", "简·杜"], "青衣": ["青衣"], "艾莲": ["艾莲"],
-}
-# Only the character/version relationships verified against official announcements.
-DEBUT = {}
-for version, names, url in [
-    ("2.3", ["伊德海莉", "狛野真斗"], "https://zenless.hoyoverse.com/en-us/news/159945"),
-    ("2.2", ["席德", "奥菲丝", "鬼火"], "https://zenless.hoyoverse.com/en-us/news/158967"),
-    ("1.7", ["薇薇安", "雨果"], "https://zzz.mihoyo.com/news/155465"),
-    ("1.6", ["零号·安比", "扳机"], "https://zenless.hoyoverse.com/en-us/news/154530"),
-    ("1.5", ["耀嘉音", "伊芙琳"], "https://zenless.hoyoverse.com/en-us/news/129594"),
-]:
-    for name in names:
-        DEBUT[name] = {"version": version, "source_url": url}
+CATEGORY_ORDER = ["角色图片", "月历", "活动壁纸", "纪念与节日", "测试期素材", "表情包", "影像档案", "未分类"]
+from src.metadata.knowledge import load_knowledge, tables
+
+_KNOWLEDGE = load_knowledge()
+CHARACTER_ALIASES, DEBUT, _VERSION_TABLE = tables(_KNOWLEDGE)
+VERSION_NAMES.clear()
+VERSION_NAMES.update(_VERSION_TABLE)
+
+
+def configure_knowledge(data):
+    global _KNOWLEDGE
+    _KNOWLEDGE = data
+    chars, debuts, versions = tables(data)
+    CHARACTER_ALIASES.clear(); CHARACTER_ALIASES.update(chars)
+    DEBUT.clear(); DEBUT.update(debuts)
+    VERSION_NAMES.clear(); VERSION_NAMES.update(versions)
 
 
 def characters(text):
-    return [name for name, aliases in CHARACTER_ALIASES.items() if any(alias in text for alias in aliases)]
+    # Keep full forms distinct and prevent short aliases such as 本/照/简 from
+    # matching ordinary words like 版本/照片/简单. Longest overlapping alias wins.
+    candidates = []
+    normalized = re.sub(r"[\s「」『』“”]", "", text)
+    for name, aliases in CHARACTER_ALIASES.items():
+        for alias in aliases:
+            alias = re.sub(r"[\s「」『』“”]", "", alias)
+            if not alias:
+                continue
+            for match in re.finditer(re.escape(alias), normalized):
+                if len(alias) == 1:
+                    before, after = normalized[:match.start()], normalized[match.end():]
+                    left_ok = not before or bool(re.search(r"(?:代理人|角色|[|丨/&:：])$", before))
+                    right_ok = not after or bool(re.match(r"(?:角色|主题|EP|MV|PV|好感|生日|[./&])", after))
+                    if not (left_ok and right_ok):
+                        continue
+                candidates.append((match.start(), match.end(), name))
+    selected = []
+    for start, end, name in sorted(candidates, key=lambda value: (-(value[1]-value[0]), value[0], value[2])):
+        if not any(start >= a and end <= b for a, b, _ in selected):
+            selected.append((start, end, name))
+    return sorted({name for _, _, name in selected})
 
 
 def post_contexts():
@@ -102,7 +119,9 @@ def broad_categories(entry):
             result.add("表情包")
         elif "活动" in text:
             result.add("活动壁纸")
-        elif characters(text):
+        elif any(term in text for term in ("周年", "生日", "节日")):
+            result.add("纪念与节日")
+        elif characters(text) or any(group in text for group in _KNOWLEDGE["groups"]):
             result.add("角色图片")
     return [category for category in CATEGORY_ORDER if category in result] or ["未分类"]
 
@@ -132,6 +151,12 @@ def build_tags(entry):
     for context in contexts:
         text = context["text"]
         evidence = {key: value for key, value in context.items() if key not in ("text", "own_path") and value}
+        for group in _KNOWLEDGE['groups']:
+            if group and group in text:
+                add('group', group, group, 'explicit', evidence, relation='collection_context')
+        for term in ('周年', '生日', '动态壁纸', '好感壁纸'):
+            if term in text:
+                add('theme', term, term, 'explicit', evidence)
         for name in characters(text):
             add("character", name, name, "explicit", evidence, aliases=CHARACTER_ALIASES[name])
         for source_type in sorted(source_types(text)):
@@ -196,7 +221,7 @@ def build_tags(entry):
         tag["evidence"].append({"scope": "version_name", "value": name, "source_url": url})
     for name in version_names:
         tags.pop(("theme", name), None)
-    order = {kind: i for i, kind in enumerate(("character", "version", "associated_version", "theme", "source_type", "calendar"))}
+    order = {kind: i for i, kind in enumerate(("character", "group", "version", "associated_version", "theme", "source_type", "calendar"))}
     result = sorted(tags.values(), key=lambda tag: (order[tag["kind"]], tag["value"]))
     for tag in result:
         tag["evidence"].sort(key=lambda value: json.dumps(value, sort_keys=True))

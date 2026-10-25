@@ -7,19 +7,15 @@ from __future__ import annotations
 import re
 from urllib.parse import urlparse
 
-VERSION_NAMES = {
-    "1.1": ("卧底蓝调", "https://zenless.hoyoverse.com/zh-cn/news/125244"),
-    "1.2": ("火狱骑行", "https://zenless.hoyoverse.com/zh-cn/news/126054"),
-    "1.3": ("虚拟杀机", "https://zenless.hoyoverse.com/zh-cn/news/126739"),
-    "1.4": ("星流霆击", "https://zenless.hoyoverse.com/zh-cn/news/127445"),
-    "1.5": ("闪耀的此刻", "https://zenless.hoyoverse.com/zh-cn/news/129572"),
-    "1.6": ("在被遗忘的废墟之上", "https://zenless.hoyoverse.com/zh-cn/news/154662"),
-    "1.7": ("将眼泪与过往一同埋葬", "https://zenless.hoyoverse.com/zh-cn/news/155458"),
-    "2.0": ("云霞同归处", "https://zenless.hoyoverse.com/zh-cn/news/156753"),
-    "2.1": ("迟吟的浪涌", "https://zenless.hoyoverse.com/zh-cn/news/157696"),
-    "2.2": ("不要温和地走入那良夜", "https://zenless.hoyoverse.com/zh-cn/news/159176"),
-    "2.3": ("可曾记得梦", "https://zzz.mihoyo.com/news/160252"),
-}
+try:
+    from src.metadata.knowledge import load_knowledge, tables
+except ModuleNotFoundError:
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+    from src.metadata.knowledge import load_knowledge, tables
+
+VERSION_NAMES = tables(load_knowledge())[2]
 DEBUT_TITLE_RULE = "official-wallpaper-debut-v1"
 ROLE_TYPES = {"角色PV", "角色展示"}
 OTHER_TYPES = {"EP", "MV"}

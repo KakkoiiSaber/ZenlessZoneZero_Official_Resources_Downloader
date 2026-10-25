@@ -128,6 +128,9 @@ def public_values(value, depth=0):
 
 
 def validate(catalog):
+    if isinstance(catalog,dict) and catalog.get('version')==2:
+        from src.metadata.resources import validate as validate_resources
+        return validate_resources(catalog)
     if len(json.dumps(catalog,ensure_ascii=False).encode())>32*1024**2:
         raise ValueError('Catalog exceeds size limit')
     public_values(catalog)

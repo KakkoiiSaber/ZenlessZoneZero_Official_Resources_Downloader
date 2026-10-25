@@ -19,7 +19,7 @@ def main():
     for path in app.rglob('*'):
         assert not path.is_symlink(), str(path)
         if path.is_file():
-            assert path.suffix in ('.py', '.txt'), str(path)
+            assert path.suffix in ('.py', '.txt') or path == app / 'src/metadata/knowledge.json', str(path)
             assert path.name != 'share-codes.json'
     with tempfile.TemporaryDirectory(dir='/tmp') as temporary:
         manifest = Path(temporary) / 'empty.json'

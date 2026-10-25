@@ -1,5 +1,95 @@
 # Metadata-only Actions and a NAS media downloader
 
+## Wiki-first resource index
+
+The metadata pipeline now uses the public ZZZ Wiki's observed category tree and
+channel/detail JSON interfaces. It indexes the four media categories (character
+video, game video, wallpaper collections, affinity wallpapers) and the agent
+roster. A bounded first pass does not mean all entries have been inspected: the
+site and `resource-status.json` report indexed, checked, directly resolved and
+deferred counts separately. `Link` entries remain links to their original posts;
+external video platforms are not silently treated as downloadable MP4 files.
+
+`metafiles/resource-catalog.json` is the v2 NAS manifest; the v1 Minas catalog is
+retained. Existing source/path IDs, gallery identities, preview/download links,
+originals and all historical media stay intact. Wiki detail revision strings are
+editorial revisions, not game versions or trusted file modification dates.
+
+The generated knowledge file records names, full names, aliases, distinct forms,
+factions and source URLs. New roster entries can be learned without a Python
+name-list edit. Announced/indexed is not assumed to mean released. Numeric version
+names come from explicit official announcement titles; character debut mappings
+are retained only where reviewed release evidence exists. Missing debut evidence
+stays unknown. Merely seeing a character, EP or MV does not assign an asset's
+release version. Short aliases require structured context and longer overlapping
+forms take precedence.
+
+Official-site matching requires an exact normalized work title and the same
+language. It does not merge different PV/EP/MV works, numeric versions or character
+forms. Multiple matches are marked for review. Each work retains Wiki, matched
+official and original-post links; published image/video references retain their
+per-image section/caption evidence. Collection-wide character keywords are not
+copied to every image. Old sources/media survive index failures and source edits.
+
+Only explicit persistent references on the reviewed official CDN host allowlist
+are downloadable. Metadata collection never requests media URLs. The NAS validates
+each redirect target before sending a request. Signed/token queries, credentials,
+unexpected hosts and media-transfer routes in the Wiki client are rejected.
+Content SHA-256 is calculated only after streaming a file; CDN filenames, Wiki
+revisions and ETags are never treated as content hashes.
+
+Quality is reported as a published source with original quality unverified.
+Variants are grouped only when both observed URLs address the same CDN object
+with an OSS image transform. An observed untransformed reference is preferred,
+without claiming that it is the highest-resolution historical original. All
+variant references remain; distinct files and Minas resolutions remain separate.
+
+The default manual metadata run checks at most 12 due details and preserves the
+legacy index. An optional `refresh_legacy` input refreshes old post/Minas metadata,
+never originals. Failed details retain the last good data and are retried within
+future budgets. `python tools/collect_resources.py --offline --max-details 0`
+reclassifies from the existing caches without any requests. Newly captured public
+post evidence is sanitized and persisted rather than discarded with temporary
+share-code files.
+
+The website has an additional `resources.html` directory and retains the existing
+image/detail pages. Cached previews are reused during reclassification. The
+metadata workflow checkpoints only public metadata and generated index JSON; it
+does not download files, upload LFS or change account permissions. Pages publication
+uses the repository's existing publication mechanism separately: a GITHUB_TOKEN
+metadata push alone is not a promise of an automatic Pages build.
+
+## Runtime changes and rollback
+
+The new image reads both v1 and v2 manifests and keeps state format version 1.
+Official CDN files are attempted ahead of preserved Minas sources. A first sample
+uses images only, at most two transfer attempts and 50 MiB, no interval, restart
+disabled and a 600-second cooperative run budget. Normal mode retains the existing
+file/byte/disk limits and allows images and videos. Requests and received blocks
+check the run deadline; an in-progress blocking network/DNS operation can delay
+the next deadline check.
+
+Startup, catalog loading, source-code lookup, authentication, download progress,
+completion and sanitized failures are printed immediately. Progress is on stderr
+and the final JSON summary on stdout; Docker logs show both. No raw response,
+password, URL path, cookie or exception text is logged. A public-post response such
+as retcode 1034 with null data produces an actionable source-lookup error, not an
+AttributeError. This guard does not obtain a missing access code: exact-share
+private mappings or a usable official source are still needed.
+
+Size, transfer-count, media-type, verification and time-budget limits are deferred
+work, not failures. Interrupted transfers never mark an item complete, temporary
+files are removed and durable successes remain. Content duplicates share one
+object while all item/source associations remain. First encounters at different
+URLs can still transfer equal bytes before their hashes are known.
+
+For rollback, stop the worker, retain the same data/config directories and runtime
+identity, then restore a known image reference. If rolling back to the pre-v2 image,
+also restore its v1 `metafiles/catalog.json` manifest URL. Do not delete state,
+objects, volumes or historical images. The old image ignores official-only IDs
+that are not in its v1 catalog; the newer state fields are additive. Actual DSM
+ACLs, hardware behavior and real NAS transfers still require a user-run sample.
+
 GitHub updates public post/source metadata. A user-operated NAS downloads images and videos from the source shares. Existing LFS originals, Git history and the static gallery are preserved; this workflow does not rebuild or publish that gallery.
 
 ## Before deploying
@@ -69,7 +159,65 @@ To upgrade after reviewing a release, stop the worker and let an active transfer
 
 Ordinary catalog changes require no image upgrade: the worker reads the configured catalog on its next normal poll. New remote paths still require a metadata workflow update first. Publication of an image does not repair existing source-listing errors in a catalog.
 
-## Defaults and recovery
+## Wiki-first resource index and v2 catalogs
+
+`metafiles/resource-catalog.json` is the v2 manifest. It retains every legacy Minas
+source/item identity and adds the official Wiki index, source provenance and verified
+direct CDN references. `metafiles/catalog.json` remains the compatible v1 catalog.
+The original gallery retains its existing image identities, previews and download
+paths; only classification fields are refreshed. The separate `resources.html`
+directory shows indexed works and their resolution status.
+
+The initial cache contains 360 indexed works but only four checked details (two
+with direct media, nine media references). This is partial coverage, not 360 resolved
+downloads. A metadata run checks at most 12 due details, preferring an initial entry
+from each of the four media categories. Unchanged details are revisited after seven
+days. Index failures and detail failures retain prior successful data; removed media
+remain in history with `available: false`. Previously published source links are
+retained. `resource-status.json` and the directory show coverage, errors and deferrals.
+
+The roster updates additively from Wiki full names, short names, forms and factions.
+An alias must identify an individual unambiguously; group names do not tag every
+member. Version numbers and official names are combined in visible tags. Explicit
+asset evidence, reviewed debut-format rules and inferred character associations
+remain distinct. New characters without reviewed debut evidence receive no invented
+version. Posting date, Wiki revision and index position are not asset-release evidence.
+Official-post matches require an unambiguous exact normalized work title in the same
+language, retaining form/type/version qualifiers; ambiguous matches remain unresolved.
+
+Some Wiki video entries contain only a Miyoushe post link. Unsupported external video
+platforms stay link-only. This release does not crawl every linked post or claim all
+videos are downloadable. CDN references are not verified originals: quality evidence
+records the published URL and observed processing query, without asserting resolution
+or bitrate. Only observed same-host/path OSS transforms form preference groups; all
+source URLs and distinct media paths are retained. A normal untransformed reference
+is preferred when actually present. NAS SHA-256 verification occurs after transfer.
+
+The downloader accepts only explicit HTTPS official CDN hosts and checks each
+redirect before sending it; private hosts, userinfo, ports, signed/authenticated
+queries and temporary Minas URLs are rejected. Public caches exclude access codes,
+cookies and authorization headers. Direct official media needs no share code. Minas
+still needs its matching private code when the public post API cannot supply one;
+null/API-error responses now produce an actionable sanitized error rather than an
+AttributeError. This guard does not recover unavailable access codes.
+
+The first-run Compose is a single image-only run (two attempted files, 50 MiB and
+600 seconds, no restart). Official direct images are prioritized. Normal polling may
+include images and videos. `NAS_RUN_MAX_SECONDS` is a cooperative run deadline;
+requests/stream boundaries enforce it, so blocking DNS or an in-progress request can
+delay exit. Immediate stderr events describe catalog loading, source lookup, transfer
+progress and final outcome without full URLs or credentials. Budget, oversize,
+unselected variants and media-type exclusions are counted as deferrals. Failures
+and successful checkpoints are retained independently in `/data/state/last-sync.json`.
+
+Upgrades retain the same private config and data mounts and state schema. Keep the
+previous image digest. To roll back to a pre-v2 image, also restore the v1
+`NAS_MANIFEST_URL` ending in `/metafiles/catalog.json`; that older image cannot parse
+v2. Stop the current worker before recreation and never run two workers over the same
+data directory. Public examples use placeholders; NAS account IDs, private directories
+and share codes belong only in the NAS-local `.env` and `config/share-codes.json`.
+
+## Transfer defaults and recovery
 
 Normal configuration allows 128 transfers and 2 GiB received per run, up to 32 source attempts, a 256 MiB image or 1 GiB video, a 5 GiB free-space reserve and an 1800-second per-file limit. All transfers are staged and SHA-256 is computed while streaming. A failed file is never checkpointed as complete. Rebuilding the container resumes from persistent state; interrupted files are retried whole, without HTTP Range resume.
 

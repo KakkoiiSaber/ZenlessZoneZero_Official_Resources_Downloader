@@ -48,6 +48,20 @@ def refresh_rows():
             rows.extend(read_rows(output))
         # Only public index fields may enter the metadata commit.
         secrets={str(row.get('minas_pwd') or '').strip().strip('\"\'') for row in rows}
+        # Persist only the bounded, sanitized sidecar. The former temporary-only
+        # write lost new classification evidence after each metadata refresh.
+        evidence_path=private/'evidence.json'
+        if evidence_path.exists():
+            from src.metadata.catalog import public_values
+            evidence=json.loads(evidence_path.read_text(encoding='utf8'));public_values(evidence)
+            safe_posts={}
+            for url,value in evidence.get('posts',{}).items():
+                serialized=json.dumps(value,ensure_ascii=False)
+                if any(secret and secret in serialized for secret in secrets):continue
+                safe_posts[url]=value
+            destination=Path('metafiles/post-evidence.json')
+            previous=json.loads(destination.read_text(encoding='utf8')) if destination.exists() else {'version':1,'posts':{}}
+            previous['posts'].update(safe_posts);public_values(previous);atomic_json(destination,previous)
         for path in Path('posts').glob('*.csv'):
             safe=[]
             for row in read_rows(path):

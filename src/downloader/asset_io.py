@@ -47,10 +47,11 @@ def download_zip(session, url, dest):
     return download_bounded(session, url, dest, limit("MINAS_MAX_ARCHIVE_BYTES", 512 * 1024 ** 2))
 
 
-def download_bounded(session, url, dest, maximum, expected_size=None, consume=None):
+def download_bounded(session, url, dest, maximum, expected_size=None, consume=None, deadline=None):
     check_space(dest.parent)
     created = False
-    deadline = time.monotonic() + limit("MINAS_DOWNLOAD_MAX_SECONDS", 300)
+    deadline = min(deadline if deadline is not None else float('inf'),
+                   time.monotonic() + limit("MINAS_DOWNLOAD_MAX_SECONDS", 300))
     try:
         with session.get(url, stream=True, timeout=(30, 30),
                          headers={"Accept-Encoding": "identity"}) as response:
