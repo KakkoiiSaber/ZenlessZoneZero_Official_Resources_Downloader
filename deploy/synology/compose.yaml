@@ -1,8 +1,8 @@
 services:
   media-sync:
-    build:
-      context: ../..
-      dockerfile: deploy/synology/Dockerfile
+    image: "${NAS_IMAGE:?Set a published immutable GHCR image tag or digest}"
+    platform: linux/amd64
+    pull_policy: missing
     user: "${NAS_UID:?Set existing NAS user UID}:${NAS_GID:?Set existing NAS group GID}"
     restart: unless-stopped
     read_only: true

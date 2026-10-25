@@ -1,9 +1,9 @@
 # Future authorized one-shot sample only: at most 2 transfers, 50 MiB per run.
 services:
   media-sync:
-    build:
-      context: ../..
-      dockerfile: deploy/synology/Dockerfile
+    image: "${NAS_IMAGE:?Set a published immutable GHCR image tag or digest}"
+    platform: linux/amd64
+    pull_policy: missing
     user: "${NAS_UID:?Set existing NAS user UID}:${NAS_GID:?Set existing NAS group GID}"
     restart: "no"
     read_only: true
