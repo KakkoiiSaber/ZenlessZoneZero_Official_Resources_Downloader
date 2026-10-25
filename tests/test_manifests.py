@@ -326,7 +326,7 @@ class FullPipelineTests(unittest.TestCase):
     def test_first_run_then_incremental_skips_every_unchanged_detail(self):
         with tempfile.TemporaryDirectory() as temp,patch.object(collect,'Client',self.API):
             args=SimpleNamespace(cache=str(Path(temp)/'cache'),output=str(Path(temp)/'metafiles'),
-                restart=False,fresh=True,interval=0,transport='auto',workers=2,refresh_days=7,allow_partial=False)
+                restart=False,fresh=True,interval=0,transport='auto',workers=2,refresh_days=0,allow_partial=False)
             self.assertEqual(0,collect.run(args))
             wiki=json.loads((Path(args.output)/'wiki.json').read_text(encoding='utf8'))
             self.assertEqual(OFFICIAL_VIDEO,wiki['entries']['72']['resources'][-1]['url'])

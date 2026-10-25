@@ -32,10 +32,12 @@ def read_bundle(output):
     return expand_bundle({source:read_json(output/(source+'.json'), {}) for source in ('official','miyoushe','wiki')})
 
 
-def discover_official(client):
+def discover_official(client, previous=None):
     records = {}
     for channel_id, kind in [(273, 'news'), (1330, 'video')]:
         channel_records = set()
+        known = {ident for ident, post in (previous or {}).items()
+                 if post.get('source_kind', 'news') == kind}
         total = None
         for page in range(1, 1001):
             data = client.get(OFFICIAL + 'getContentList',
@@ -54,6 +56,10 @@ def discover_official(client):
                     'index_signature': digest({k: item.get(k) for k in
                         ('sTitle', 'sUrl', 'dtStartTime', 'sExt', 'sSign')})}
             emit('official_index', channel=kind, page=page, found=len(channel_records), expected=total)
+            # Consume the entire page: the first item can be an old pinned announcement.
+            if items and known and all(str(item['iInfoId']) in known for item in items):
+                emit('official_boundary', channel=kind, page=page)
+                break
             if len(channel_records) >= total:
                 break
             if not items:
@@ -63,7 +69,7 @@ def discover_official(client):
     return records
 
 
-def discover_miyoushe(client):
+def discover_miyoushe(client, previous=None):
     records = {}
     cursor = ''
     seen_cursors = set()
@@ -88,6 +94,9 @@ def discover_miyoushe(client):
                 'published_at': datetime.fromtimestamp(int(post['created_at']), timezone.utc).isoformat(),
                 'index_signature': digest(relevant), '_listing': wrapper}
         emit('miyoushe_index', page=page, found=len(records))
+        if items and previous and all(str(item['post']['post_id']) in previous for item in items):
+            emit('miyoushe_boundary', page=page)
+            return records
         if data.get('is_last') is True or not items:
             return records
         next_cursor = str(data.get('last_id') or items[-1]['post']['post_id'])
@@ -152,15 +161,21 @@ def fetch_post(client, source, entry):
     return {**{k:v for k,v in entry.items() if k!='_listing'}, **parsed, 'status': 'ok', 'checked_at': now(), 'parser_version': PARSER_VERSION}
 
 
-def needs_refresh(old, entry, age_days):
+def expiring_video(post):
+    return any((video.get('selected') or {}).get('expires_at')
+               and datetime.fromisoformat(video['selected']['expires_at']).timestamp() <= time.time() + 86400
+               for video in post.get('videos', []))
+
+
+def needs_refresh(old, entry, age_days, refresh_expiring=True):
     if not old or old.get('status') != 'ok' or old.get('parser_version') != PARSER_VERSION:
         return True
     if old.get('index_signature') != entry['index_signature']:
         return True
-    for video in old.get('videos', []):
-        expires = (video.get('selected') or {}).get('expires_at')
-        if expires and datetime.fromisoformat(expires).timestamp() <= time.time() + 86400:
-            return True
+    if refresh_expiring and expiring_video(old):
+        return True
+    if not age_days:
+        return False
     try:
         age = datetime.now(timezone.utc) - datetime.fromisoformat(old['checked_at'])
         return age.total_seconds() >= age_days * 86400
@@ -168,14 +183,14 @@ def needs_refresh(old, entry, age_days):
         return True
 
 
-def update_records(source, entries, previous, progress_path, fetch, workers, age_days):
+def update_records(source, entries, previous, progress_path, fetch, workers, age_days, *, refresh_expiring=True):
     resumed = read_json(progress_path, {})
     old = {**previous, **resumed}
     result = {}
     due = []
     for ident, entry in entries.items():
         cached = old.get(ident)
-        if needs_refresh(cached, entry, age_days):
+        if needs_refresh(cached, entry, age_days, refresh_expiring):
             due.append(entry)
         else:
             result[ident] = {**cached, **{k:v for k,v in entry.items() if k!='_listing'}}
@@ -196,6 +211,36 @@ def update_records(source, entries, previous, progress_path, fetch, workers, age
                 atomic_json(progress_path, result)
                 emit(source + '_progress', completed=done, total=len(due), failures=failures)
     return {ident: result[ident] for ident in entries}, failures, len(due)
+
+
+def post_index_entry(post):
+    """Reuse identity/scan state without overwriting fresh bodies from resumed progress."""
+    return {key: post[key] for key in ('id', 'title', 'url', 'published_at', 'index_signature',
+                                      'channel_id', 'source_kind') if key in post}
+
+
+def renew_selected_videos(client, wiki, sources, cache, workers):
+    """Only renew expired source posts that actually supply a final Wiki video."""
+    required = {'official': set(), 'miyoushe': set()}
+    for entry in wiki.values():
+        for resource in entry.get('resources', []):
+            provider = resource.get('selected_source')
+            expires = resource.get('expires_at')
+            if (provider in required and expires
+                    and datetime.fromisoformat(expires).timestamp() <= time.time() + 86400):
+                # Both providers' selected resource IDs embed the exact source post ID.
+                required[provider].add(resource['id'].split(':', 4)[3])
+    failures = 0
+    for source, ids in required.items():
+        if not ids:
+            continue
+        previous = sources[source]
+        entries = {ident: post_index_entry(previous[ident]) for ident in sorted(ids)}
+        records, errors, _ = update_records(source + '_selected_renewal', entries, previous,
+            cache/(source+'-renewal-progress.json'), lambda entry: fetch_post(client, source, entry), workers, 0)
+        previous.update(records)
+        failures += errors
+    return failures, sum(map(len, required.values()))
 
 
 def validate_bundle(bundle):
@@ -283,8 +328,8 @@ def run(args):
     if args.restart or state.get('complete') or not state:
         state = {'started_at': time.time(), 'complete': False}
         # Parsed progress belongs to this run. Previous manifests provide incremental reuse.
-        for source in ('official', 'miyoushe', 'wiki'):
-            (cache/(source+'-progress.json')).unlink(missing_ok=True)
+        for progress in cache.glob('*-progress.json'):
+            progress.unlink()
         atomic_json(run_file, state)
     client = Client(cache/'responses', state['started_at'], args.interval, args.transport)
     output = Path(args.output)
@@ -292,9 +337,13 @@ def run(args):
     previous = {source: {} if args.fresh else existing[source].get(
                 'entries' if source == 'wiki' else 'posts', {}) for source in ('official','miyoushe','wiki')}
     def collect_source(source):
-        entries = discover_official(client) if source == 'official' else discover_miyoushe(client)
+        baseline = None if getattr(args, 'full_scan', False) else previous[source]
+        discovered = discover_official(client, baseline) if source == 'official' else discover_miyoushe(client, baseline)
+        # An early-stop listing is a delta, never a replacement for the historical index.
+        entries = {ident: post_index_entry(post) for ident, post in previous[source].items()}
+        entries.update(discovered)
         return update_records(source, entries, previous[source], cache/(source+'-progress.json'),
-            lambda e: fetch_post(client, source, e), args.workers, args.refresh_days)
+            lambda e: fetch_post(client, source, e), args.workers, args.refresh_days, refresh_expiring=False)
     def collect_wiki():
         entries, categories = discover_wiki(client)
         def fetch_wiki(entry):
@@ -341,24 +390,30 @@ def run(args):
     from src.scrape.parse import resolve_parsed_wiki
     for ident, entry in list(wiki.items()):
         wiki[ident] = resolve_parsed_wiki(entry, mi, official, index)
+    renewal_failures, renewals = renew_selected_videos(client, wiki, {'official': official, 'miyoushe': mi}, cache, args.workers)
+    if renewals:
+        # Matching stays offline; project the renewed URLs into the final Wiki resources.
+        for ident, entry in list(wiki.items()):
+            wiki[ident] = resolve_parsed_wiki(entry, mi, official, index)
     tree = directory_tree(wiki, categories)
     stamp = now()
     snapshot = digest({'generated_at': stamp, 'official': official, 'miyoushe': mi, 'wiki': wiki})
     base = {'schema_version': 1, 'snapshot_id': snapshot, 'generated_at': stamp}
     def document(source, records, failures, changed):
+        failures = max(failures, sum(post.get('status') != 'ok' for post in records.values()))
         return {**base, 'source': source, 'status': 'partial' if failures else 'complete',
                 'statistics': {'records': len(records), 'refreshed': changed, 'reused': len(records)-changed,
                                'failures': failures}, 'posts': records}
     bundle = {'official': document('official', official, ofail, ochanged),
               'miyoushe': document('miyoushe', mi, mfail+extra_failures+extra2, mchanged+extra_changed+changed2),
-              'wiki': {**base, 'source': 'wiki', 'status': 'partial' if wfail else 'complete',
+              'wiki': {**base, 'source': 'wiki', 'status': 'partial' if wfail or renewal_failures else 'complete',
                 'statistics': {'entries': len(wiki), 'resources': sum(len(e.get('resources', [])) for e in wiki.values()),
-                    'refreshed': wchanged, 'failures': wfail,
+                    'refreshed': wchanged, 'failures': wfail + renewal_failures,
                     'video_selection': {key: sum(e.get('selection_status') == key for e in wiki.values())
                         for key in ('official','miyoushe_fallback','wiki_direct','unresolved')}},
                 'categories': categories, 'entries': wiki, 'directory_tree': tree}}
     validate_bundle(bundle)
-    failures = ofail + mfail + wfail + extra_failures + extra2
+    failures = ofail + mfail + wfail + extra_failures + extra2 + renewal_failures
     if failures and not args.allow_partial:
         emit('not_published', failures=failures, requests=client.requests,
              message='Progress saved; rerun to retry failures. Existing metafiles unchanged.')
@@ -412,16 +467,18 @@ def main():
     parser.add_argument('--output', default='metafiles')
     parser.add_argument('--cache', default='.cache/scrape')
     parser.add_argument('--fresh', action='store_true', help='Rebuild from source; do not reuse old manifests')
+    parser.add_argument('--full-scan', action='store_true', help='Scan all post index pages instead of stopping at a known page')
     parser.add_argument('--resolve-only', action='store_true', help='Review duplicate videos and rematch existing manifests only')
     parser.add_argument('--compact-only', action='store_true', help='Migrate existing manifests to the minimal schema without network requests')
     parser.add_argument('--restart', action='store_true', help='Start a new crawl rather than resume an interrupted one')
     parser.add_argument('--allow-partial', action='store_true', help='Explicitly publish records with visible error statuses')
     parser.add_argument('--workers', type=int, default=6)
     parser.add_argument('--interval', type=float, default=.15, help='Minimum interval between request starts')
-    parser.add_argument('--refresh-days', type=int, default=7)
+    parser.add_argument('--refresh-days', type=int, default=0,
+                        help='Optional age-based body refresh; 0 (default) skips unchanged historical bodies')
     parser.add_argument('--transport', choices=('auto','curl','requests'), default='auto')
     args = parser.parse_args()
-    if not 1 <= args.workers <= 12 or args.interval < 0 or args.refresh_days < 1:
+    if not 1 <= args.workers <= 12 or args.interval < 0 or args.refresh_days < 0:
         parser.error('Invalid concurrency, interval or refresh age')
     try:
         return compact_only(args) if args.compact_only else resolve_only(args) if args.resolve_only else run(args)

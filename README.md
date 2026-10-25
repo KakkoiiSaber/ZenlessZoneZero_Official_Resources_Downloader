@@ -1,7 +1,14 @@
 # zzz_scraper
 
 抓取绝区零官网、米游社官方资讯和 Wiki，生成三个 JSON metafile。
-当前仅处理元数据，不下载完整媒体文件，不包含 NAS 程序。
+抓取程序负责元数据；独立 Docker 下载器根据 Wiki 清单在 NAS 上增量下载媒体。
+
+## NAS 下载
+
+使用 `Dockerfile` 和 `compose.yaml` 部署。容器定时读取 public 仓库的 `wiki.json`，
+支持增量下载、服务器支持时的断点续传、Wiki 目录归档和本地 SQLite 下载记录。
+无需向公网开放 NAS，也不需要 NAS 账户密码或 GitHub token。
+部署步骤、权限设置、更新和恢复见 [NAS Docker 部署文档](docs/NAS_DOCKER.md)。
 
 ## 输出
 
@@ -25,11 +32,15 @@ pip install -r requirements.txt
 python -m src.scrape.collect --fresh
 # 之后的增量更新。
 python -m src.scrape.collect
+# 手动核对全部历史索引；仍复用未变化的正文。
+python -m src.scrape.collect --full-scan
+# 若要定期复查旧正文，显式启用年龄刷新。
+python -m src.scrape.collect --full-scan --refresh-days 7
 # 将已有清单离线迁移到精简格式；不发起任何网络请求。
 python -m src.scrape.collect --compact-only
 # 仅重新核对同名官网视频并匹配现有清单，不抓取索引或正文。
 python -m src.scrape.collect --resolve-only
-# 单元测试：全部离线，不请求媒体文件。
+# 单元测试：全部离线，下载测试使用本地 HTTP 服务。
 python -m unittest discover -s tests -v
 ```
 
@@ -38,13 +49,21 @@ Windows 默认使用系统 curl 执行元数据请求；其他系统默认使用
 
 ## 增量与恢复
 
-每次读取完整帖子索引，避免置顶帖和顺序变化造成漏抓。米游社列表接口提供完整结构化正文、图片 ID 映射与视频清晰度，因此直接解析这些数据，
+日常按官网两个频道、米游社各自的新到旧顺序扫描列表。每页完整检查，遇到整页均为已知帖时停止翻页，
+避免旧置顶帖出现在第一条导致提前停止；翻页期间发现的所有新帖都会处理。
+以前保存的历史帖子继续保留，不因这次只扫描前几页而丢失。
+首次或 `--fresh` 没有历史基线时扫描到底；`--full-scan` 可手动核对历史补发、重新排序的帖子。
+这种快速边界策略不保证发现插入边界之后的回填帖子，需用手动全索引检查覆盖。
+米游社列表接口提供完整结构化正文、图片 ID 映射与视频清晰度，因此直接解析这些数据，
 仅在结构化正文确实不完整时请求详情接口。每条记录保存
 `index_signature`、`checked_at` 和 `parser_version`，未变化的帖子不重复请求详情或解析正文。
 新增、索引发生变化、之前失败、解析版本变化的记录会重新抓取。
-签名视频链接保留有效期，提前一天触发刷新；签名轮换本身不被误判为正文修改。
-默认每七天复查旧正文，以覆盖未在列表字段中反映的修改，可用
-`--refresh-days` 调整。Wiki 重新匹配官网视频不需要重新抓取未变化的 Wiki 页面。
+默认 `--refresh-days 0`，跳过未变化的历史正文，不再每七天批量重抓旧帖。
+本次看到的列表签名变化、失败记录或解析版本升级仍会触发处理。
+Wiki 总目录通过一次请求检查，只有索引变化或失败的条目重新请求详情；资源选择在本地重新计算。
+选完资源后，只对 Wiki 最终使用且即将过期的视频来源帖定点续期（提前一天），
+未选用的米游社视频即使过期也不请求。签名轮换不被误判为正文修改。
+如需覆盖未在列表字段中反映的历史修改，可显式设置 `--refresh-days 7`。
 
 `.cache/scrape/` 只保存本地响应缓存和中断进度，不是第四份业务 metafile，也不提交到 Git。
 一次抓取中断后重跑，会复用已成功获取的响应和记录，只补做未完成部分。
@@ -100,7 +119,9 @@ Minas 分享可能需要认证或临时下载令牌，因此只保存分享地�
 
 ## GitHub Actions
 
-`.github/workflows/update.yml` 每日增量更新，也可手动触发。
+`.github/workflows/update_metadata.yml`（Actions 名称：`Update metadata - incremental source crawl`）
+每日 UTC 08:17（北京时间 16:17）增量更新，跳过旧正文，
+也可手动触发并勾选 `full_scan` 核对全量历史索引。
 运行离线测试后生成三份清单，校验成功才提交当前分支；失败保留上一批文件，
 并上传中断进度。工作流进入默认分支后才会按计划运行。
 

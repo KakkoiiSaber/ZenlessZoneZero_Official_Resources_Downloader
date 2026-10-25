@@ -1,0 +1,24 @@
+services:
+  downloader:
+    build: .
+    image: zzz-downloader:local
+    user: "${NAS_UID:-1000}:${NAS_GID:-1000}"
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      MANIFEST_URL: "${MANIFEST_URL:-https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/dev/metafiles/wiki.json}"
+      CHECK_INTERVAL: "${CHECK_INTERVAL:-3600}"
+      VERIFY_DAYS: "${VERIFY_DAYS:-7}"
+    volumes:
+      - "${DOWNLOAD_PATH:-./nas-data/downloads}:/downloads"
+      - "${STATE_PATH:-./nas-data/state}:/state"
+    stop_grace_period: 90s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

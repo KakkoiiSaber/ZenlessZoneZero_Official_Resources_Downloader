@@ -1,0 +1,26 @@
+name: Downloader checks
+on:
+  push:
+    paths: ['src/download.py', 'tests/test_download.py', 'Dockerfile', '.dockerignore', 'compose.yaml', 'requirements-download.txt', '.github/workflows/downloader.yml']
+  pull_request:
+    paths: ['src/download.py', 'tests/test_download.py', 'Dockerfile', '.dockerignore', 'compose.yaml', 'requirements-download.txt', '.github/workflows/downloader.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m unittest discover -s tests -v
+      - run: docker compose config --quiet
+      - run: docker compose build
+      - name: Validate the real manifest inside the non-root container
+        run: >-
+          docker compose run --rm --no-deps
+          -v "$PWD/metafiles/wiki.json:/manifest/wiki.json:ro"
+          downloader --manifest-file /manifest/wiki.json --dry-run

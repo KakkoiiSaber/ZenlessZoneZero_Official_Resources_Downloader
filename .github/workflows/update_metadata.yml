@@ -1,7 +1,12 @@
-name: Refresh three metadata manifests
+name: Update metadata - incremental source crawl
 
 on:
   workflow_dispatch:
+    inputs:
+      full_scan:
+        description: Scan all historical index pages (normally unnecessary)
+        type: boolean
+        default: false
   schedule:
     - cron: '17 8 * * *'
 
@@ -43,7 +48,12 @@ jobs:
       - name: Regression tests
         run: python -m unittest discover -s tests -v
       - name: Refresh sources and resolve Wiki download manifest
-        run: python -u -m src.scrape.collect
+        env:
+          FULL_SCAN: ${{ inputs.full_scan || false }}
+        run: |
+          args=(--refresh-days 0)
+          if [ "$FULL_SCAN" = 'true' ]; then args+=(--full-scan); fi
+          python -u -m src.scrape.collect "${args[@]}"
       - uses: actions/cache/save@v4
         if: always()
         with:
