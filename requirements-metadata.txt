@@ -1,3 +1,0 @@
--r requirements-nas.txt
-lxml>=5,<7
-playwright>=1.50,<2

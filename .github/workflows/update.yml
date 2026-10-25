@@ -1,18 +1,15 @@
-name: Metadata Update
+name: Refresh three metadata manifests
 
 on:
   workflow_dispatch:
-    inputs:
-      refresh_legacy:
-        description: Also refresh preserved post/Minas metadata (never download media)
-        type: boolean
-        default: false
+  schedule:
+    - cron: '17 8 * * *'
 
 permissions:
   contents: write
 
 concurrency:
-  group: asset-update
+  group: metadata-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -21,11 +18,10 @@ env:
 jobs:
   metadata:
     runs-on: ubuntu-latest
-    timeout-minutes: 35
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
           fetch-depth: 1
           lfs: false
           sparse-checkout-cone-mode: false
@@ -37,24 +33,37 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install metadata and test dependencies
-        run: pip install -r requirements-metadata.txt
-      - name: Install browser for offline regression fixtures
-        run: python -m playwright install --with-deps chromium
+        run: pip install -r requirements.txt
+      - uses: actions/cache/restore@v4
+        with:
+          path: .cache/scrape
+          key: metadata-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            metadata-${{ github.ref_name }}-
       - name: Regression tests
         run: python -m unittest discover -s tests -v
-      - name: Refresh public catalog without media transfers
-        id: catalog
-        if: ${{ inputs.refresh_legacy }}
-        continue-on-error: true
-        run: python -u tools/collect_metadata.py --refresh-posts
-      - name: Update Wiki index, knowledge and cached-preview classification
-        id: resources
-        continue-on-error: true
-        run: python -u tools/collect_resources.py --max-details 12
-      - name: Checkpoint public metadata only
-        run: python tools/checkpoint_metadata.py
-      - name: Report incomplete sources
-        if: ${{ steps.resources.outcome != 'success' || (inputs.refresh_legacy && steps.catalog.outcome != 'success') }}
+      - name: Refresh sources and resolve Wiki download manifest
+        run: python -u -m src.scrape.collect
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .cache/scrape
+          key: metadata-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save interrupted crawl progress
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: metadata-crawl-progress
+          path: .cache/scrape
+          include-hidden-files: true
+          retention-days: 7
+      - name: Commit the three validated manifests
+        env:
+          BRANCH: ${{ github.ref_name }}
         run: |
-          echo 'Some metadata sources failed; inspect resource-status.json and catalog-status.json. Previous successful entries and all media are retained.'
-          exit 1
+          git add -- metafiles/official.json metafiles/miyoushe.json metafiles/wiki.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: refresh source and Wiki manifests'
+          git push origin "HEAD:refs/heads/$BRANCH"

@@ -1,14 +1,8 @@
+"""Entry point for metadata collection only."""
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from src.scrape.collect import main
 
-from scraper.PostScraper import PostScraper
-from scraper.MinasScraper import MinasScraper
-from downloader.MinasDownloader import run_batch_from_csv
-
-
-PostScraper("米游社-官方资讯").run()
-PostScraper("官网-新闻资讯").run()
-MinasScraper("米游社-官方资讯-minas").run()
-run_batch_from_csv(
-    Path("metafiles/米游社-官方资讯-minas.csv"),
-    Path("./downloads")
-)
+if __name__ == '__main__':
+    raise SystemExit(main())
