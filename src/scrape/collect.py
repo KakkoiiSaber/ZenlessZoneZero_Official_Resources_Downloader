@@ -127,6 +127,14 @@ def discover_wiki(client):
                         'url': 'https://baike.mihoyo.com/zzz/wiki/content/' + ident + '/detail',
                         'category_ids': [], 'miyoushe_url': raw.get('bbs_url') or None,
                         'index_signature': digest(raw)})
+                    if cid in (72, 73):
+                        from src.scrape.parse import media_url
+                        cover = media_url(raw.get('icon'), 'image')
+                        if cover:
+                            # Both official BBS image domains address the same uploaded object.
+                            cover = cover.replace('https://upload-bbs.miyoushe.com/',
+                                                  'https://upload-bbs.mihoyo.com/', 1)
+                            entry['cover_url'] = cover
                     if cid not in entry['category_ids']:
                         entry['category_ids'].append(cid)
             for key in ('children', 'list'):

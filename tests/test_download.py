@@ -10,7 +10,7 @@ import tempfile
 import threading
 import unittest
 
-from src.download import (Downloader, State, canonical_url, exclusive_lock, fingerprint,
+from src.download import (Downloader, State, canonical_url, cover_plan, exclusive_lock, fingerprint,
                           load_manifest, plan, select_resources, format_size, format_progress)
 
 
@@ -92,6 +92,26 @@ class ProgressDisplayTests(unittest.TestCase):
 
 
 class DownloadTests(unittest.TestCase):
+    def test_cover_cache_downloads_once_without_changing_media_plan(self):
+        document = deepcopy(self.doc)
+        document['entries']['1'].update(title='视频主题', cover_url=self.url + '/cover.jpg')
+        identity = lambda doc: [(r['id'], r['paths'], r['fingerprint']) for r in plan(doc)]
+        self.assertEqual(identity(document), identity(self.doc))
+        covers = cover_plan(document)
+        self.assertEqual(len(covers), 1)
+        self.assertEqual(cover_plan(document, ['unknown-id']), [])
+        root = self.state_dir / 'covers'
+        state = State(root)
+        worker = Downloader(root, state, retries=1)
+        self.addCleanup(state.close)
+        self.addCleanup(worker.http.close)
+        self.assertEqual(worker.run(covers)['downloaded'], 1)
+        calls = len(self.server.calls)
+        self.assertEqual(worker.run(covers, quiet_skips=True)['skipped'], 1)
+        self.assertEqual(len(self.server.calls), calls)
+        self.assertEqual((root / covers[0]['paths'][0]).read_bytes(), self.server.body)
+        self.assertFalse((self.root / covers[0]['paths'][0]).exists())
+
     @classmethod
     def setUpClass(cls):
         cls.server = ThreadingHTTPServer(('127.0.0.1', 0), MediaHandler)
