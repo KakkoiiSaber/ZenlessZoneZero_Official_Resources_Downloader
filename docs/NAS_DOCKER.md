@@ -9,8 +9,8 @@ GitHub Actions 继续生成三个 metafile；NAS 只读取 `wiki.json` 中已经
 NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Container Manager 的“项目”）。
 镜像在 NAS 本机构建，没有预先发布到镜像仓库；Python 和依赖安装在镜像里，NAS 不用安装 Python。
 
-1. 把 **dev 分支**的代码放到 NAS，例如 `/volume1/docker/zzz-downloader/app`。
-   可以在 GitHub 切换到 dev 后下载 ZIP、解压上传；不需要下载历史媒体。
+1. 把 **main 分支**的代码放到 NAS，例如 `/volume1/docker/zzz-downloader/app`。
+   可以在 GitHub 下载 main 的 ZIP、解压上传。
    实际构建只用到 `Dockerfile`、`requirements-download.txt` 和 `src/download.py`，
    部署还需要 `compose.yaml` 和 `.env.example`。
 2. 建立下载目录和状态目录，例如：
@@ -31,7 +31,7 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    DOWNLOAD_PATH=/volume1/Media/ZZZ
    STATE_PATH=/volume1/docker/zzz-downloader/state
    VERIFY_DAYS=7
-   MANIFEST_URL=https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/dev/metafiles/wiki.json
+   MANIFEST_URL=https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/main/metafiles/wiki.json
    ```
 
 4. 在项目目录执行：
@@ -90,11 +90,11 @@ HEAD 不支持时只检查本地完整性；远端缺少校验值时，无法保
 
 过期视频链接不会盲目下载；日志提示刷新 GitHub 清单。下载器下一轮会重新读取清单，
 下次任务使用新链接继续。NAS 不解析网页，也不会自行运行抓取程序。
-尚在 dev 分支时，GitHub Actions 的定时工作流不会仅因文件存在于 dev 就自动运行；
-请到 Actions → `Update metadata - incremental source crawl`（`update_metadata.yml`）→ Run workflow，选择 dev 刷新。
+GitHub Actions 的定时工作流运行在默认 main 分支；也可到 Actions →
+`Update metadata - incremental source crawl`（`update_metadata.yml`）→ Run workflow，选择 main 手动刷新。
 默认只扫描最新帖子，整页均为已知帖时停止；旧正文不按年龄批量刷新。
 最终选用的视频需要续期时仍定点刷新来源帖。手动运行可勾选 `full_scan` 核对全部历史索引。
-正式合入默认分支后，再将 `MANIFEST_URL` 调整到对应分支，使用每日定时更新。
+正式 NAS 配置读取 main 清单；dev 仅供后续开发和测试。
 
 每个资源最多尝试三次；单个失败不阻塞其他资源，下次任务仍会重试。
 清单抓取或校验失败时跳过该轮，不修改现有下载文件。
@@ -118,7 +118,7 @@ docker compose build --pull
 # 仅构建，不立即下载；之后手动运行或等 NAS 任务计划触发。
 ```
 
-更新代码需要重新下载 dev 的代码或执行 `git pull`，但不要覆盖自己的 `.env`。
+更新代码需要重新下载 main 的代码或执行 `git pull`，但不要覆盖自己的 `.env`。
 更改 `.env` 后，下次 `docker compose up` 会应用配置变化；单纯 restart 不应用配置变化。
 不要删除状态目录，否则已有文件失去归属记录，程序会拒绝覆盖同名文件。
 备份时先停止容器，再一起备份下载目录和状态目录；迁移时保持这两者配套。
@@ -145,10 +145,8 @@ docker compose build --pull
 4. `data` 内媒体、`.zzz-partials` 和 `state/downloads.sqlite3` 都应保留。
    独立续传测试产生的 `data/.resume-test`、`state/resume-test` 可在测试容器退出后删除，
    它们与正式记录分开。旧测试项目文件夹可以暂留作回退，确认正式服务正常后再删除。
-5. GitHub 每日元数据工作流需要进入默认分支才能定时运行。dev 验证通过后可合入 main；
-   合并后将 NAS 的清单 URL 从 `/dev/metafiles/wiki.json` 改为 `/main/metafiles/wiki.json`，
-   下次任务运行时应用环境变量变化。尚未合并时继续使用 dev URL，
-   元数据需手动刷新；不要提前切换到旧版本或不存在的 main 清单。
+5. 旧测试配置如果仍读取 `/dev/metafiles/wiki.json`，将其改为 `/main/metafiles/wiki.json`。
+   下次任务运行时 Compose 会应用环境变量变化；媒体目录和下载记录保持原样。
 
 ## 群晖每日任务计划
 

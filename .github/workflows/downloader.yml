@@ -1,9 +1,9 @@
 name: Downloader checks
 on:
   push:
-    paths: ['src/download.py', 'tests/test_download.py', 'Dockerfile', '.dockerignore', 'compose.yaml', 'requirements-download.txt', '.github/workflows/downloader.yml']
+    branches: [main, dev]
   pull_request:
-    paths: ['src/download.py', 'tests/test_download.py', 'Dockerfile', '.dockerignore', 'compose.yaml', 'requirements-download.txt', '.github/workflows/downloader.yml']
+    branches: [main]
   workflow_dispatch:
 permissions:
   contents: read

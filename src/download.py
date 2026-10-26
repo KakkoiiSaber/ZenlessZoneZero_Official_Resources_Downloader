@@ -18,7 +18,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import requests
 
 LOG = logging.getLogger('download')
-DEFAULT_MANIFEST = 'https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/dev/metafiles/wiki.json'
+DEFAULT_MANIFEST = 'https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/main/metafiles/wiki.json'
 MAX_MANIFEST = 32 * 1024 * 1024
 
 

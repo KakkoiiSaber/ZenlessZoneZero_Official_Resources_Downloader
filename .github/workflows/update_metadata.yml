@@ -17,23 +17,12 @@ concurrency:
   group: metadata-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  GIT_LFS_SKIP_SMUDGE: "1"
-
 jobs:
   metadata:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          lfs: false
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            /*
-            !/downloads/
-            !/docs/thumbs/
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"

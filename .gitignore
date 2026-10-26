@@ -7,3 +7,4 @@ __pycache__/
 .metafiles-previous/
 .env
 nas-data/
+downloads/
