@@ -21,7 +21,7 @@ class RunnerTests(unittest.TestCase):
         self.git(self.seed, 'config', 'user.name', 'Test')
         self.git(self.seed, 'config', 'user.email', 'test@example.invalid')
         source = Path(__file__).resolve().parent.parent
-        for name in ['run-project.sh', 'run-downloader.sh', 'run-wiki.sh', 'Dockerfile',
+        for name in ['run-downloader.sh', 'Dockerfile',
                      'requirements-download.txt', '.dockerignore', 'compose.yaml', 'compose.wiki.yaml']:
             shutil.copyfile(source / name, self.seed / name)
         (self.seed / '.gitignore').write_text('.env\n.cache/\nstate/\nmedia/\n')
@@ -62,10 +62,10 @@ exit 0
         self.git(self.seed, 'commit', '-m', 'update')
         self.git(self.seed, 'push', 'origin', 'main')
 
-    def run_task(self, mode='download', **extra):
+    def run_task(self, **extra):
         env = {**os.environ, 'PATH': str(self.bin) + os.pathsep + os.environ['PATH'],
                'DOCKER_TEST_LOG': str(self.log), **extra}
-        result = subprocess.run(['/bin/sh', str(self.work / ('run-' + ('wiki' if mode == 'wiki' else 'downloader') + '.sh'))],
+        result = subprocess.run(['/bin/sh', str(self.work / 'run-downloader.sh')],
                                 env=env, capture_output=True, text=True, timeout=15)
         return result, self.log.read_text() if self.log.exists() else ''
 
@@ -120,12 +120,12 @@ exit 0
         self.assertEqual((self.work / 'web/app.js').read_text(), 'version one')
         self.assertNotIn('--exit-code-from', log)
 
-    def test_wiki_boot_starts_service_after_sync(self):
+    def test_stopped_wiki_is_not_started_by_daily_task(self):
         self.update()
-        result, log = self.run_task('wiki')
+        result, log = self.run_task()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('up -d --no-build --force-recreate wiki', log)
-        self.assertNotIn('--exit-code-from', log)
+        self.assertNotIn('up -d --no-build --force-recreate wiki', log)
+        self.assertIn('--exit-code-from', log)
 
     def test_stale_lock_from_previous_boot_is_recovered(self):
         lock = self.work / '.cache/runner.lock'
