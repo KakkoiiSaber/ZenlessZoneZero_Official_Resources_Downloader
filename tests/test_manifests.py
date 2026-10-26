@@ -24,6 +24,14 @@ def post(ident='1', title='《绝区零》首曝PV | 世界全剧终', provider=
 
 
 class ParsingTests(unittest.TestCase):
+    def test_story_ending_names_distinguish_multiple_official_videos(self):
+        html = ('<p>恭喜解锁故事结局「谨慎观望」</p><p><video src="' + OFFICIAL_VIDEO + '"></video></p>'
+                '<p>恭喜解锁故事结局「大胆冒险」</p><p><video src="' +
+                OFFICIAL_VIDEO.replace('high.mp4','other.mp4') + '"></video></p>')
+        videos = parse.official_article({'sContent':html})['videos']
+        self.assertEqual([v['caption'] for v in videos], ['结局：谨慎观望','结局：大胆冒险'])
+        self.assertEqual([v['id'] for v in videos], ['0','1'])
+
     def test_complete_listing_resolves_image_ids_and_share_codes_without_detail_request(self):
         wrapper={'post':{'structured_content':json.dumps([
             {'insert':{'image':'123'}},
