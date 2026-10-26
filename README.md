@@ -46,8 +46,6 @@ python -m src.scrape.collect
 python -m src.scrape.collect --full-scan
 # 若要定期复查旧正文，显式启用年龄刷新。
 python -m src.scrape.collect --full-scan --refresh-days 7
-# 将已有清单离线迁移到精简格式；不发起任何网络请求。
-python -m src.scrape.collect --compact-only
 # 仅重新核对同名官网视频并匹配现有清单，不抓取索引或正文。
 python -m src.scrape.collect --resolve-only
 # 单元测试：全部离线，下载测试使用本地 HTTP 服务。

@@ -461,15 +461,6 @@ def resolve_only(args):
     return 0
 
 
-def compact_only(args):
-    bundle = read_bundle(args.output)
-    validate_bundle(bundle)
-    publish(args.output, bundle)
-    emit('compacted', files={source: (Path(args.output)/(source+'.json')).stat().st_size
-                            for source in bundle})
-    return 0
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', default='metafiles')
@@ -477,7 +468,6 @@ def main():
     parser.add_argument('--fresh', action='store_true', help='Rebuild from source; do not reuse old manifests')
     parser.add_argument('--full-scan', action='store_true', help='Scan all post index pages instead of stopping at a known page')
     parser.add_argument('--resolve-only', action='store_true', help='Review duplicate videos and rematch existing manifests only')
-    parser.add_argument('--compact-only', action='store_true', help='Migrate existing manifests to the minimal schema without network requests')
     parser.add_argument('--restart', action='store_true', help='Start a new crawl rather than resume an interrupted one')
     parser.add_argument('--allow-partial', action='store_true', help='Explicitly publish records with visible error statuses')
     parser.add_argument('--workers', type=int, default=6)
@@ -489,7 +479,7 @@ def main():
     if not 1 <= args.workers <= 12 or args.interval < 0 or args.refresh_days < 0:
         parser.error('Invalid concurrency, interval or refresh age')
     try:
-        return compact_only(args) if args.compact_only else resolve_only(args) if args.resolve_only else run(args)
+        return resolve_only(args) if args.resolve_only else run(args)
     except (FetchError, ValueError, OSError) as error:
         emit('failed', reason=str(error) if isinstance(error, FetchError) else type(error).__name__)
         return 1
