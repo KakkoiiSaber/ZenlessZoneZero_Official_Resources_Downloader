@@ -19,4 +19,4 @@ if [ -z "$docker_bin" ]; then
         exit 1
     }
 fi
-exec "$docker_bin" compose --env-file "$project_dir/.env" --project-directory "$project_dir" -p downloader -f "$project_dir/compose.yaml" up --no-build --no-color --no-log-prefix --abort-on-container-exit --exit-code-from downloader
+exec "$docker_bin" compose --env-file "$project_dir/.env" --project-directory "$project_dir" -f "$project_dir/compose.yaml" up --no-build --no-color --no-log-prefix --abort-on-container-exit --exit-code-from downloader
