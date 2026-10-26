@@ -24,3 +24,11 @@ jobs:
           docker compose run --rm --no-deps
           -v "$PWD/metafiles/wiki.json:/manifest/wiki.json:ro"
           downloader --manifest-file /manifest/wiki.json --dry-run
+      - name: Verify the container exits after one run without scheduling flags
+        run: |
+          printf '%s\n' '{"schema_version":2,"source":"wiki","entries":{}}' > "$RUNNER_TEMP/empty-wiki.json"
+          timeout 30s docker run --rm --network none --read-only \
+            --tmpfs /downloads:uid=1000,gid=1000,mode=0700 \
+            --tmpfs /state:uid=1000,gid=1000,mode=0700 \
+            -v "$RUNNER_TEMP/empty-wiki.json:/manifest/wiki.json:ro" \
+            zzz-downloader:local --manifest-file /manifest/wiki.json

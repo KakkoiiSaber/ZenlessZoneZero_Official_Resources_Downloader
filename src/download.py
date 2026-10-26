@@ -427,16 +427,15 @@ def main():
     parser.add_argument('--manifest-file', type=Path)
     parser.add_argument('--download-dir', type=Path, default=Path(os.getenv('DOWNLOAD_DIR', '/downloads')))
     parser.add_argument('--state-dir', type=Path, default=Path(os.getenv('STATE_DIR', '/state')))
-    parser.add_argument('--interval', type=float, default=float(os.getenv('CHECK_INTERVAL', '86400')))
     parser.add_argument('--verify-days', type=float, default=float(os.getenv('VERIFY_DAYS', '7')))
     parser.add_argument('--retries', type=int, default=3)
     parser.add_argument('--resource-id', action='append', help='Only download these exact IDs (repeat for a small deployment test)')
     parser.add_argument('--rate-limit', type=int, default=0, help='Maximum streamed media bytes/second per transfer; 0 disables throttling')
-    parser.add_argument('--once', action='store_true')
+    parser.add_argument('--once', action='store_true', help=argparse.SUPPRESS)  # Older deployment commands remain valid.
     parser.add_argument('--dry-run', action='store_true', help='Validate and count manifest resources without downloading')
     args = parser.parse_args()
-    if args.interval <= 0 or args.verify_days < 0 or args.retries < 1 or args.rate_limit < 0:
-        parser.error('interval and retries must be positive; verify-days must be nonnegative')
+    if args.verify_days < 0 or args.retries < 1 or args.rate_limit < 0:
+        parser.error('retries must be positive; verify-days and rate-limit must be nonnegative')
     logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s] %(message)s',
                         datefmt='%Y-%m-%d %H:%M:%S')
     stop = threading.Event()
@@ -452,16 +451,12 @@ def main():
             worker = Downloader(args.download_dir, state, retries=args.retries, verify_days=args.verify_days,
                                 rate_limit=args.rate_limit, stop=stop)
             try:
-                while not stop.is_set():
-                    try:
-                        resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file)), args.resource_id)
-                        failed = worker.run(resources)['failed']
-                    except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as error:
-                        LOG.error('Manifest cycle failed: %s', type(error).__name__)
-                        failed = 1
-                    if args.once:
-                        return int(bool(failed or stop.is_set()))
-                    stop.wait(args.interval)
+                resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file)), args.resource_id)
+                failed = worker.run(resources)['failed']
+                return int(bool(failed or stop.is_set()))
+            except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as error:
+                LOG.error('Download run failed: %s', type(error).__name__)
+                return 1
             finally:
                 worker.http.close()
                 state.close()

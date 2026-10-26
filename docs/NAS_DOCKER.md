@@ -30,7 +30,6 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    NAS_GID=你的用户数字GID
    DOWNLOAD_PATH=/volume1/Media/ZZZ
    STATE_PATH=/volume1/docker/zzz-downloader/state
-   CHECK_INTERVAL=86400
    VERIFY_DAYS=7
    MANIFEST_URL=https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/dev/metafiles/wiki.json
    ```
@@ -41,9 +40,8 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    docker compose build --pull
    # 先验证清单，显示资源数量，不下载媒体。
    docker compose run --rm downloader --dry-run
-   # 启动：立即下载一轮，此后每轮结束等待 24 小时再检查。
-   docker compose up -d
-   docker compose logs -f --tail=100 downloader
+   # 首次执行：增量下载一轮，完成后退出并返回容器退出码。
+   docker compose up --no-build --abort-on-container-exit --exit-code-from downloader
    ```
 
    群晖可以在 Container Manager → 项目 → 新增，选择含 `compose.yaml` 和 `.env`
@@ -54,11 +52,11 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    Compose 的 `build: .` 必须能访问同目录的代码，不能只粘贴 YAML 而缺少源文件。
 
 首次会下载清单中的全部资源，可能占用较多容量。默认串行下载，避免大量并发。
-首次部署测试可在项目的 `command` 中加入 `--once` 和重复的 `--resource-id 资源ID`，
+首次部署测试可在项目的 `command` 中加入重复的 `--resource-id 资源ID`，
 只处理明确选定的少量资源；不存在的 ID 会报错，不会回退成下载全部。
 配合 `--rate-limit 262144` 限速为每秒 256 KiB，方便在日志显示视频开始后手动停止、
 重新启动，核对 `validated HTTP 206; continuing at ... bytes` 续传日志。
-测试项目请设置 `restart: "no"`，完成后保持停止，验收通过再改为全量后台模式。
+测试和正式项目都使用 `restart: "no"`；每次完成后退出，由 NAS 任务计划决定下一次何时运行。
 容器无需特权模式，不挂载 Docker socket，仅挂载这两个目录；使用填写的普通用户权限，
 容器根文件系统只读。下载目录最好专门用于本项目，避免混入手工保存的同名文件。
 
@@ -91,14 +89,14 @@ HEAD 不支持时只检查本地完整性；远端缺少校验值时，无法保
 `VERIFY_DAYS=0` 表示每轮复查，不是关闭复查。
 
 过期视频链接不会盲目下载；日志提示刷新 GitHub 清单。下载器下一轮会重新读取清单，
-使用新链接继续。NAS 不解析网页，也不会自行运行抓取程序。
+下次任务使用新链接继续。NAS 不解析网页，也不会自行运行抓取程序。
 尚在 dev 分支时，GitHub Actions 的定时工作流不会仅因文件存在于 dev 就自动运行；
 请到 Actions → `Update metadata - incremental source crawl`（`update_metadata.yml`）→ Run workflow，选择 dev 刷新。
 默认只扫描最新帖子，整页均为已知帖时停止；旧正文不按年龄批量刷新。
 最终选用的视频需要续期时仍定点刷新来源帖。手动运行可勾选 `full_scan` 核对全部历史索引。
 正式合入默认分支后，再将 `MANIFEST_URL` 调整到对应分支，使用每日定时更新。
 
-每个资源最多尝试三次；单个失败不阻塞其他资源，下轮仍会重试。
+每个资源最多尝试三次；单个失败不阻塞其他资源，下次任务仍会重试。
 清单抓取或校验失败时跳过该轮，不修改现有下载文件。
 同一状态目录只允许一个下载器运行，避免同时写库或拼接同一临时文件。
 
@@ -113,15 +111,15 @@ docker compose logs --tail=100 downloader
 docker compose down
 
 # 只执行一轮（先停后台实例，避免锁冲突）
-docker compose run --rm downloader --once
+docker compose up --no-build --abort-on-container-exit --exit-code-from downloader
 
-# 更新应用代码后重新构建、启动；.env、下载与状态目录保留
+# 更新应用代码后重新构建；.env、下载与状态目录保留
 docker compose build --pull
-docker compose up -d
+# 仅构建，不立即下载；之后手动运行或等 NAS 任务计划触发。
 ```
 
 更新代码需要重新下载 dev 的代码或执行 `git pull`，但不要覆盖自己的 `.env`。
-更改 `.env` 后执行 `docker compose up -d` 重新创建服务，单纯 restart 不应用配置变化。
+更改 `.env` 后，下次 `docker compose up` 会应用配置变化；单纯 restart 不应用配置变化。
 不要删除状态目录，否则已有文件失去归属记录，程序会拒绝覆盖同名文件。
 备份时先停止容器，再一起备份下载目录和状态目录；迁移时保持这两者配套。
 不要让两个不同状态目录的实例共享同一个下载目录。
@@ -139,25 +137,49 @@ docker compose up -d
 1. 停止旧测试项目，保留宿主机下载目录与状态目录。`docker compose down` 仅移除
    该项目容器和网络；不要删除实际的挂载目录。
 2. 正式 Compose 使用相同 UID/GID、相同下载及状态挂载路径，配置
-   `CHECK_INTERVAL: "86400"`、`restart: unless-stopped`，去掉测试 `command`。
+   `restart: "no"`，去掉测试 `command` 和旧 `CHECK_INTERVAL`。
    不再传入 `--once`、`--resource-id`、`--rate-limit` 或 `--retries 1`；默认无资源筛选、
-   不限速、失败最多重试三次。更新 `src/download.py` 后重新构建镜像，才能应用新日志格式。
-3. 启动正式项目后会立即读取完整清单，跳过已经完成的小样资源，下载剩余资源。
-   一轮结束后等待 24 小时再检查；这不是固定钟点的 cron。NAS 重启或重建服务会立即检查一轮。
+   不限速、失败最多重试三次。更新 `src/download.py` 后重新构建镜像，才能应用新程序行为。
+3. 正式项目每次读取完整清单，跳过已经完成的小样资源，下载剩余资源，然后退出。
+   不在容器内部等待，不配置何时启动；NAS 重启后也不会由 Docker 自动重新运行。
 4. `data` 内媒体、`.zzz-partials` 和 `state/downloads.sqlite3` 都应保留。
    独立续传测试产生的 `data/.resume-test`、`state/resume-test` 可在测试容器退出后删除，
    它们与正式记录分开。旧测试项目文件夹可以暂留作回退，确认正式服务正常后再删除。
 5. GitHub 每日元数据工作流需要进入默认分支才能定时运行。dev 验证通过后可合入 main；
    合并后将 NAS 的清单 URL 从 `/dev/metafiles/wiki.json` 改为 `/main/metafiles/wiki.json`，
-   再执行 `docker compose up -d` 应用环境变量变化。尚未合并时继续使用 dev URL，
+   下次任务运行时应用环境变量变化。尚未合并时继续使用 dev URL，
    元数据需手动刷新；不要提前切换到旧版本或不存在的 main 清单。
+
+## 群晖每日任务计划
+
+先在 NAS 构建一次镜像：`sudo docker compose -p downloader -f /实际项目路径/docker-compose.yml build`。
+计划任务只运行现有镜像，不每天构建或自动升级程序。
+
+DSM 控制面板 → 任务计划 → 新增 → 计划的任务 → 用户定义的脚本：
+
+- 名称：`ZZZ Downloader`。
+- 运行用户：`root`，用于操作 Docker 服务；容器内部仍按 Compose 的普通 UID/GID 写入文件。
+- 计划：每天一次，具体钟点由用户选择，按 DSM 时区执行。
+- 任务设置：运行 Compose，保持前台等待，以便 DSM 记录完成状态和退出码。
+
+脚本示例（Docker 路径可通过 NAS 的 `command -v docker` 核对，项目路径替换为实际值）：
+
+```sh
+/var/packages/ContainerManager/target/usr/bin/docker compose -p downloader -f '/实际项目路径/docker-compose.yml' up --no-build --abort-on-container-exit --exit-code-from downloader
+```
+
+不要使用 `up -d` 或仅 `start` 作为计划任务：前者立即返回，后者不能直接反映本次下载结果。
+这里使用同一个项目和服务容器，日志保留在 Container Manager 中；正常完成后容器显示停止是预期行为。
+任务计划的“设置”可启用“保存输出结果”，再通过“操作 → 查看结果”查看本次输出。
+创建后先选中任务手动“运行”一次，确认下载和退出状态正常，再启用每日计划。
+同一下载记录目录具有进程锁；不要另建第二个下载项目同时运行。
 
 ## 不用 Docker 的本地验证
 
 ```sh
 pip install -r requirements-download.txt
 python -m src.download --manifest-file metafiles/wiki.json --dry-run
-python -m src.download --download-dir ./nas-data/downloads --state-dir ./nas-data/state --once
+python -m src.download --download-dir ./nas-data/downloads --state-dir ./nas-data/state
 python -m unittest discover -s tests -v
 ```
 

@@ -5,10 +5,11 @@
 
 ## NAS 下载
 
-使用 `Dockerfile` 和 `compose.yaml` 部署。容器定时读取 public 仓库的 `wiki.json`，
+使用 `Dockerfile` 和 `compose.yaml` 部署。容器每次读取 public 仓库的 `wiki.json`，
 支持增量下载、服务器支持时的断点续传、Wiki 目录归档和本地 SQLite 下载记录。
 无需向公网开放 NAS，也不需要 NAS 账户密码或 GitHub token。
-默认每轮结束后等待 24 小时检查下一轮。日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`。
+下载器完成一轮增量下载后退出；每天何时运行由 NAS 任务计划控制，无内部定时循环或自动重启。
+日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`。
 部署步骤、权限设置、测试转正式及恢复见 [NAS Docker 部署文档](docs/NAS_DOCKER.md)。
 
 ## 输出
