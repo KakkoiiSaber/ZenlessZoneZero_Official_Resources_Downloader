@@ -1,4 +1,4 @@
-# zzz_scraper
+# ZenlessZoneZero_Official_Resources_Downloader
 
 抓取绝区零官网、米游社官方资讯和 Wiki，生成三个 JSON metafile。
 抓取程序负责元数据；独立 Docker 下载器根据 Wiki 清单在 NAS 上增量下载媒体。
