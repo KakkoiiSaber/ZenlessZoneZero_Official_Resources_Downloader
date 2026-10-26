@@ -1,10 +1,11 @@
 'use strict';
 const $ = selector => document.querySelector(selector);
-const state = {data: null, category: '', query: '', entry: null, groups: new Map(), page: 1};
+const state = {data: null, category: '', query: '', entry: null, groups: new Map()};
 const symbols = {'73': '▷', '72': '▶', '98': '▧', '99': '♡'};
 let gallery = [], position = 0, previousFocus, viewerPoster;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let closingViewer = false;
+let listObserver;
 
 function transition(node, frames, duration = 180) {
   if (reducedMotion.matches || !node.animate) return null;
@@ -48,7 +49,6 @@ function readRoute() {
   const hash = new URLSearchParams(location.hash.slice(1));
   state.category = hash.get('category') || '';
   state.entry = hash.get('entry');
-  state.page = 1;
   $('#sidebar').classList.remove('open');
   $('#menu').setAttribute('aria-expanded', 'false');
   render();
@@ -92,6 +92,7 @@ function render() {
   transition($('#content'), [{opacity: .35, transform: 'translateY(7px)'}, {opacity: 1, transform: 'translateY(0)'}]);
 }
 function renderContent() {
+  listObserver?.disconnect();
   if (!state.data) return;
   renderNavigation();
   const all = state.data.entries.filter(e => !state.category || e.categories.includes(state.category));
@@ -111,30 +112,47 @@ function renderContent() {
   const matching = all.filter(e => filteredGroups(e).length);
   if (!matching.length) { content.append(empty('没有符合条件的资源')); return; }
   const grid = element('div', 'entry-grid');
-  for (const entry of matching.slice(0, state.page * 24)) {
-    const button = element('button', 'entry-card');
-    const groups = filteredGroups(entry);
-    const items = [...uniqueResources([{groups}]).values()];
-    const image = items.find(r => r.available && r.kind === 'image');
-    const preview = element('div', 'entry-preview');
-    if (entry.cover || image) {
-      const img = element('img'); img.src = entry.cover || image.url; img.loading = 'lazy'; img.alt = ''; preview.append(img);
-      if (items.some(r => r.kind === 'video')) preview.append(element('span', 'preview-play', '▷'));
-    } else {
-      preview.classList.add(items[0]?.kind === 'video' ? 'video-placeholder' : 'image-placeholder');
-      preview.append(element('span', 'preview-glyph', items[0]?.kind === 'video' ? '▷' : '▧'));
+  const sentinel = element('div', 'load-sentinel');
+  sentinel.setAttribute('aria-hidden', 'true');
+  content.append(grid, sentinel);
+  let loaded = 0;
+  const appendBatch = () => {
+    if (!grid.isConnected) return;
+    const start = loaded;
+    loaded = Math.min(loaded + 24, matching.length);
+    const fragment = document.createDocumentFragment();
+    for (const entry of matching.slice(start, loaded)) {
+      const button = element('button', 'entry-card');
+      const groups = filteredGroups(entry);
+      const items = [...uniqueResources([{groups}]).values()];
+      const image = items.find(r => r.available && r.kind === 'image');
+      const preview = element('div', 'entry-preview');
+      if (entry.cover || image) {
+        const img = element('img'); img.src = entry.cover || image.url; img.loading = 'lazy'; img.alt = ''; preview.append(img);
+        if (items.some(r => r.kind === 'video')) preview.append(element('span', 'preview-play', '▷'));
+      } else {
+        preview.classList.add(items[0]?.kind === 'video' ? 'video-placeholder' : 'image-placeholder');
+        preview.append(element('span', 'preview-glyph', items[0]?.kind === 'video' ? '▷' : '▧'));
+      }
+      const text = element('div', 'entry-text');
+      text.append(element('h2', '', entry.title), element('p', '', `${items.length} 个资源 · ${items.filter(r => r.available).length} 已下载`));
+      button.append(preview, text);
+      button.onclick = () => setRoute(state.category, entry.id);
+      fragment.append(button);
     }
-    const text = element('div', 'entry-text');
-    text.append(element('h2', '', entry.title), element('p', '', `${items.length} 个资源 · ${items.filter(r => r.available).length} 已下载`));
-    button.append(preview, text);
-    button.onclick = () => setRoute(state.category, entry.id);
-    grid.append(button);
-  }
-  content.append(grid);
-  if (matching.length > state.page * 24) {
-    const more = element('button', 'load-more', `加载更多主题（${Math.min(state.page * 24, matching.length)} / ${matching.length}）`);
-    more.onclick = () => {state.page++; render();}; content.append(more);
-  }
+    const added = [...fragment.children];
+    grid.append(fragment);
+    if (start) added.forEach(card => transition(card, [{opacity: .4}, {opacity: 1}]));
+    if (loaded < matching.length) observer.observe(sentinel);
+    else { observer.disconnect(); sentinel.remove(); }
+  };
+  const observer = new IntersectionObserver(entries => {
+    if (!entries.some(entry => entry.isIntersecting)) return;
+    observer.unobserve(sentinel);
+    appendBatch();
+  }, {rootMargin: '500px 0px'});
+  listObserver = observer;
+  appendBatch();
 }
 function renderDetail(entry, content) {
   const groups = filteredGroups(entry);
@@ -247,7 +265,7 @@ $('#viewer').addEventListener('keydown', event => {
   if (event.key === 'ArrowRight') $('#next').click();
 });
 $('#viewer').addEventListener('click', event => {if (event.target === $('#viewer')) closeViewer();});
-$('#search').oninput = event => {state.query = event.target.value.trim().toLocaleLowerCase(); state.page = 1; render();};
+$('#search').oninput = event => {state.query = event.target.value.trim().toLocaleLowerCase(); render();};
 $('#menu').onclick = () => { const open = $('#sidebar').classList.toggle('open'); $('#menu').setAttribute('aria-expanded', String(open)); };
 async function loadCatalog() {
   $('#status').textContent = '正在读取本地目录…';
