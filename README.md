@@ -13,8 +13,9 @@
 日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`。
 正常下载会同时保存 `state/logs/downloader.log`（随状态目录挂载，自动轮转）；
 中间进度默认每分钟输出一次，可通过本地 `PROGRESS_INTERVAL` 调整。
-NAS 的 UID/GID、目录和其他参数仅放本地 `.env`（Git 忽略）。日常 `git pull --ff-only origin main`
-即可更新代码，下次任务直接生效；仅依赖文件或 Dockerfile 变化时才需重新构建运行环境。
+NAS 的 UID/GID、目录和其他参数仅放本地 `.env`（Git 忽略）。`run-downloader.sh` 与 `run-wiki.sh`
+在启动前自动快进更新 `origin/main`；代码变化会重启正在运行的 Wiki，依赖文件或 Dockerfile 变化时自动构建镜像。
+每日任务沿用下载脚本，开机任务调用 Wiki 脚本，配置一次即可持续更新；网络不可用时继续使用本地代码。
 默认 `downloads/`、`state/` 仅提交 `.gitkeep` 空目录占位，实际媒体和本地下载记录不进入 Git。
 也可在 `.env` 指定仓库外的绝对路径，沿用已有 NAS 文件和记录。
 部署步骤、权限设置、测试转正式及恢复见 [NAS Docker 部署文档](docs/NAS_DOCKER.md)。

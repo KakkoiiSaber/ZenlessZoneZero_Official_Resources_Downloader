@@ -20,7 +20,7 @@
 
 ```sh
 git pull --ff-only origin main
-sudo docker compose --env-file .env -f compose.wiki.yaml up -d --build
+sudo /bin/sh ./run-wiki.sh
 ```
 
 在项目根目录执行以上命令。现有 `.env` 中的 `NAS_UID`、`NAS_GID`、`STATE_PATH` 和 `DOWNLOAD_PATH` 会复用，**下载目录不需要移动**；网站只读挂载 `state`，HTTP 服务只公开清单目录和清单内的媒体，不公开数据库、日志或 `.env`。
@@ -37,7 +37,8 @@ WIKI_PORT=8080
 
 这里没有账号登录，适用于可信局域网。无需设置公网端口转发。如果 DSM 防火墙启用，需要允许局域网访问所选端口。
 
-网站设置为 `restart: unless-stopped`，NAS 开机且 Docker 服务启动后会恢复运行。下载器仍由原来的每日任务启动，任务命令不需要改。
+网站设置为 `restart: unless-stopped`，NAS 开机且 Docker 服务启动后会恢复运行。再按 [NAS 部署文档](NAS_DOCKER.md#自动同步与开机启动-wiki) 增加调用 `run-wiki.sh` 的 root 开机任务，就能在开机时同步 GitHub 后启动网站。
+下载器仍由原来的每日任务启动，每次任务也会先更新代码，命令不需要改。
 
 查看服务日志：
 
@@ -51,14 +52,13 @@ sudo docker compose --env-file .env -f compose.wiki.yaml logs --tail=50 -f wiki
 sudo docker compose --env-file .env -f compose.wiki.yaml stop wiki
 ```
 
-后续代码更新：
+手动同步并启动网站：
 
 ```sh
-git pull --ff-only origin main
-sudo docker compose --env-file .env -f compose.wiki.yaml up -d --force-recreate
+sudo /bin/sh ./run-wiki.sh
 ```
 
-源代码、前端和 metafiles 都从 Git 项目只读挂载，普通代码更新无需重新构建依赖镜像。只有 Dockerfile 或依赖变化才加 `--build`。
+源代码、前端和 metafiles 都从 Git 项目只读挂载。启动脚本会同步 main，必要时重启网站；普通代码更新不构建镜像，依赖变化时才自动构建。
 
 ## Windows 本机预览
 
