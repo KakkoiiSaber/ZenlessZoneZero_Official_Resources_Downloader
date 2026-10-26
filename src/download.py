@@ -430,16 +430,26 @@ class Downloader:
 
 def load_manifest(url, filename=None):
     if filename:
+        LOG.info('Reading local manifest')
         if filename.stat().st_size > MAX_MANIFEST:
             raise ValueError('Manifest exceeds 32 MiB')
         return json.loads(filename.read_text(encoding='utf-8'))
+    LOG.info('Fetching download manifest')
     with requests.get(url, stream=True, timeout=(15, 60), headers={'Accept-Encoding': 'identity'}) as response:
         response.raise_for_status()
+        length = response.headers.get('Content-Length', '')
+        total = int(length) if length.isdigit() else None
+        LOG.info('Manifest response received; reading body')
         data = bytearray()
+        reported = time.monotonic()
         for chunk in response.iter_content(64 * 1024):
             data.extend(chunk)
             if len(data) > MAX_MANIFEST:
                 raise ValueError('Manifest exceeds 32 MiB')
+            if time.monotonic() - reported >= 5:
+                LOG.info('Manifest progress %s', format_progress(len(data), total))
+                reported = time.monotonic()
+    LOG.info('Manifest received: %s', format_size(len(data)))
     return json.loads(data)
 
 
@@ -463,17 +473,22 @@ def main():
     stop = threading.Event()
     for signum in (signal.SIGINT, signal.SIGTERM):
         signal.signal(signum, lambda *_: stop.set())
+    LOG.info('Downloader started')
     try:
         if args.dry_run:
             resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file)), args.resource_id)
             LOG.info('Valid manifest: %d resources, %d placements', len(resources), sum(len(r['paths']) for r in resources))
             return 0
+        LOG.info('Preparing local download state')
         with exclusive_lock(args.state_dir):
             state = State(args.state_dir)
             worker = Downloader(args.download_dir, state, retries=args.retries, verify_days=args.verify_days,
                                 rate_limit=args.rate_limit, stop=stop)
             try:
+                LOG.info('Local download state ready')
                 resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file)), args.resource_id)
+                LOG.info('Manifest ready: %d resources, %d placements', len(resources),
+                         sum(len(resource['paths']) for resource in resources))
                 failed = worker.run(resources)['failed']
                 return int(bool(failed or stop.is_set()))
             except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as error:

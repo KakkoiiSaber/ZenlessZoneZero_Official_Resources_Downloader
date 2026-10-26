@@ -145,6 +145,10 @@ docker compose build --pull
 如果连接 GitHub 失败，检查 NAS 的 DNS、代理和网络能否访问 `raw.githubusercontent.com`。
 容器日志只记录资源 ID、动作和错误类型，不打印带签名的完整链接。
 应用日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`，不带毫秒。
+启动后立即输出 `Downloader started`，随后报告本地记录准备、清单请求、响应接收和资源数量。
+清单传输较慢时也会每隔约五秒报告读取进度。若只有 `Fetching download manifest` 而没有
+`Manifest response received`，说明正在等待 HTTP 请求；若群晖界面为空，先用
+`docker compose logs --tail=100 downloader` 核对终端日志，区分界面显示和程序等待。
 文件大小自动使用 B、KB、MB、GB 或 TB（每级 1000），已知总大小时显示进度百分比，例如
 `progress 125.00 MB / 500.00 MB (25.0%)`。续传百分比包含之前已经下载的部分，
 成功接收并核对完整文件后输出 `100.0%`；总大小未知时显示 `total unknown`。
