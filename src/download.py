@@ -39,6 +39,15 @@ def fingerprint(resource):
                               resource.get('etag')], ensure_ascii=False))
 
 
+def select_resources(resources, ids):
+    if not ids:
+        return resources
+    indexed = {resource['id']: resource for resource in resources}
+    if any(ident not in indexed for ident in ids):
+        raise ValueError('Requested test resource is absent from the manifest')
+    return [indexed[ident] for ident in dict.fromkeys(ids)]
+
+
 def safe_path(root, relative):
     """Reject traversal and symlink escapes, including paths loaded from local state."""
     parts = relative.split('/')
@@ -171,10 +180,11 @@ def file_hash(path):
 
 
 class Downloader:
-    def __init__(self, root, state, *, retries=3, verify_days=7, stop=None):
+    def __init__(self, root, state, *, retries=3, verify_days=7, rate_limit=0, stop=None):
         self.root, self.state = root.resolve(), state
         self.root.mkdir(parents=True, exist_ok=True)
         self.retries, self.verify_seconds = retries, verify_days * 86400
+        self.rate_limit = rate_limit
         self.stop = stop or threading.Event()
         self.http = requests.Session()
         self.http.headers.update({'User-Agent': 'zzz-scraper-downloader/1', 'Accept-Encoding': 'identity'})
@@ -357,6 +367,8 @@ class Downloader:
                     part.unlink(missing_ok=True)
                     raise ValueError('Range or validator mismatch; restarting download')
             elif response.status_code == 200:
+                if offset:
+                    LOG.info('%s server restarted body; writing from zero', resource['id'])
                 offset, total = 0, length  # Server ignored Range / If-Range detected a new version.
             else:
                 raise ValueError('Expected HTTP 200 or 206')
@@ -371,10 +383,22 @@ class Downloader:
                 # Truncate an obsolete body before saving the replacement's validator.
                 record.update(etag=response.headers.get('ETag'), last_modified=response.headers.get('Last-Modified'), total=total)
                 self.state.save(resource['id'], record)
-                for chunk in response.iter_content(256 * 1024):
+                if offset:
+                    LOG.info('%s validated HTTP 206; continuing at %d bytes', resource['id'], offset)
+                started, transferred, reported = time.monotonic(), 0, time.monotonic()
+                chunk_size = min(256 * 1024, self.rate_limit) if self.rate_limit else 256 * 1024
+                for chunk in response.iter_content(chunk_size):
                     if self.stop.is_set():
                         raise InterruptedError()
                     handle.write(chunk)
+                    transferred += len(chunk)
+                    if self.rate_limit:
+                        delay = transferred / self.rate_limit - (time.monotonic() - started)
+                        if delay > 0 and self.stop.wait(delay):
+                            raise InterruptedError()
+                    if time.monotonic() - reported >= 5:
+                        LOG.info('%s progress %d/%s bytes', resource['id'], offset + transferred, total or '?')
+                        reported = time.monotonic()
                 handle.flush()
                 os.fsync(handle.fileno())
             size = part.stat().st_size
@@ -403,30 +427,34 @@ def main():
     parser.add_argument('--manifest-file', type=Path)
     parser.add_argument('--download-dir', type=Path, default=Path(os.getenv('DOWNLOAD_DIR', '/downloads')))
     parser.add_argument('--state-dir', type=Path, default=Path(os.getenv('STATE_DIR', '/state')))
-    parser.add_argument('--interval', type=float, default=float(os.getenv('CHECK_INTERVAL', '3600')))
+    parser.add_argument('--interval', type=float, default=float(os.getenv('CHECK_INTERVAL', '86400')))
     parser.add_argument('--verify-days', type=float, default=float(os.getenv('VERIFY_DAYS', '7')))
     parser.add_argument('--retries', type=int, default=3)
+    parser.add_argument('--resource-id', action='append', help='Only download these exact IDs (repeat for a small deployment test)')
+    parser.add_argument('--rate-limit', type=int, default=0, help='Maximum streamed media bytes/second per transfer; 0 disables throttling')
     parser.add_argument('--once', action='store_true')
     parser.add_argument('--dry-run', action='store_true', help='Validate and count manifest resources without downloading')
     args = parser.parse_args()
-    if args.interval <= 0 or args.verify_days < 0 or args.retries < 1:
+    if args.interval <= 0 or args.verify_days < 0 or args.retries < 1 or args.rate_limit < 0:
         parser.error('interval and retries must be positive; verify-days must be nonnegative')
-    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s] %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
     stop = threading.Event()
     for signum in (signal.SIGINT, signal.SIGTERM):
         signal.signal(signum, lambda *_: stop.set())
     try:
         if args.dry_run:
-            resources = plan(load_manifest(args.manifest_url, args.manifest_file))
+            resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file)), args.resource_id)
             LOG.info('Valid manifest: %d resources, %d placements', len(resources), sum(len(r['paths']) for r in resources))
             return 0
         with exclusive_lock(args.state_dir):
             state = State(args.state_dir)
-            worker = Downloader(args.download_dir, state, retries=args.retries, verify_days=args.verify_days, stop=stop)
+            worker = Downloader(args.download_dir, state, retries=args.retries, verify_days=args.verify_days,
+                                rate_limit=args.rate_limit, stop=stop)
             try:
                 while not stop.is_set():
                     try:
-                        resources = plan(load_manifest(args.manifest_url, args.manifest_file))
+                        resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file)), args.resource_id)
                         failed = worker.run(resources)['failed']
                     except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as error:
                         LOG.error('Manifest cycle failed: %s', type(error).__name__)

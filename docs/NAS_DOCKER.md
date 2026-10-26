@@ -30,7 +30,7 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    NAS_GID=你的用户数字GID
    DOWNLOAD_PATH=/volume1/Media/ZZZ
    STATE_PATH=/volume1/docker/zzz-downloader/state
-   CHECK_INTERVAL=3600
+   CHECK_INTERVAL=86400
    VERIFY_DAYS=7
    MANIFEST_URL=https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/dev/metafiles/wiki.json
    ```
@@ -41,17 +41,24 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    docker compose build --pull
    # 先验证清单，显示资源数量，不下载媒体。
    docker compose run --rm downloader --dry-run
-   # 启动：立即下载一轮，此后每小时检查。
+   # 启动：立即下载一轮，此后每轮结束等待 24 小时再检查。
    docker compose up -d
    docker compose logs -f --tail=100 downloader
    ```
 
    群晖可以在 Container Manager → 项目 → 新增，选择含 `compose.yaml` 和 `.env`
    的目录后构建并启动；其他 NAS 使用对应的 Compose/项目功能。
+   部分群晖版本的路径选择器不显示 `home/homes`；项目放在个人目录时，
+   可以通过 NAS 终端在该目录执行 Compose，之后到 Container Manager 的容器列表查看状态和日志。
    如界面没有终端入口，验证与日志也可以通过 SSH 执行上面的命令。
    Compose 的 `build: .` 必须能访问同目录的代码，不能只粘贴 YAML 而缺少源文件。
 
 首次会下载清单中的全部资源，可能占用较多容量。默认串行下载，避免大量并发。
+首次部署测试可在项目的 `command` 中加入 `--once` 和重复的 `--resource-id 资源ID`，
+只处理明确选定的少量资源；不存在的 ID 会报错，不会回退成下载全部。
+配合 `--rate-limit 262144` 限速为每秒 256 KiB，方便在日志显示视频开始后手动停止、
+重新启动，核对 `validated HTTP 206; continuing at ... bytes` 续传日志。
+测试项目请设置 `restart: "no"`，完成后保持停止，验收通过再改为全量后台模式。
 容器无需特权模式，不挂载 Docker socket，仅挂载这两个目录；使用填写的普通用户权限，
 容器根文件系统只读。下载目录最好专门用于本项目，避免混入手工保存的同名文件。
 
@@ -122,6 +129,28 @@ docker compose up -d
 如果下载报权限错误，检查 `.env` 的 UID/GID 和 NAS 目录 ACL；
 如果连接 GitHub 失败，检查 NAS 的 DNS、代理和网络能否访问 `raw.githubusercontent.com`。
 容器日志只记录资源 ID、动作和错误类型，不打印带签名的完整链接。
+应用日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`，不带毫秒。
+时间使用容器本地时区；当前镜像默认通常为 UTC。
+终端查看时可用 `docker compose logs --no-log-prefix -f --tail=100 downloader`
+隐藏 Compose 额外添加的容器名前缀。
+
+## 从小样测试切换正式运行
+
+1. 停止旧测试项目，保留宿主机下载目录与状态目录。`docker compose down` 仅移除
+   该项目容器和网络；不要删除实际的挂载目录。
+2. 正式 Compose 使用相同 UID/GID、相同下载及状态挂载路径，配置
+   `CHECK_INTERVAL: "86400"`、`restart: unless-stopped`，去掉测试 `command`。
+   不再传入 `--once`、`--resource-id`、`--rate-limit` 或 `--retries 1`；默认无资源筛选、
+   不限速、失败最多重试三次。更新 `src/download.py` 后重新构建镜像，才能应用新日志格式。
+3. 启动正式项目后会立即读取完整清单，跳过已经完成的小样资源，下载剩余资源。
+   一轮结束后等待 24 小时再检查；这不是固定钟点的 cron。NAS 重启或重建服务会立即检查一轮。
+4. `data` 内媒体、`.zzz-partials` 和 `state/downloads.sqlite3` 都应保留。
+   独立续传测试产生的 `data/.resume-test`、`state/resume-test` 可在测试容器退出后删除，
+   它们与正式记录分开。旧测试项目文件夹可以暂留作回退，确认正式服务正常后再删除。
+5. GitHub 每日元数据工作流需要进入默认分支才能定时运行。dev 验证通过后可合入 main；
+   合并后将 NAS 的清单 URL 从 `/dev/metafiles/wiki.json` 改为 `/main/metafiles/wiki.json`，
+   再执行 `docker compose up -d` 应用环境变量变化。尚未合并时继续使用 dev URL，
+   元数据需手动刷新；不要提前切换到旧版本或不存在的 main 清单。
 
 ## 不用 Docker 的本地验证
 

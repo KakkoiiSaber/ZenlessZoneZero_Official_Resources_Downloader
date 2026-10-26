@@ -11,7 +11,7 @@ import threading
 import unittest
 
 from src.download import (Downloader, State, canonical_url, exclusive_lock, fingerprint,
-                          load_manifest, plan)
+                          load_manifest, plan, select_resources)
 
 
 class MediaHandler(BaseHTTPRequestHandler):
@@ -207,6 +207,30 @@ class DownloadTests(unittest.TestCase):
         self.assertNotEqual(canonical_url(self.url + '?version=1'), canonical_url(self.url + '?version=2'))
         self.assertNotEqual(canonical_url(self.url + '?auth_key=1'), canonical_url(self.url + '?auth_key=2'))
 
+    def test_small_test_selection_rejects_unknown_id_and_preserves_requested_order(self):
+        other = {**self.r, 'id': 'other'}
+        self.assertEqual(select_resources([self.r, other], ['other', self.r['id'], 'other']), [other, self.r])
+        with self.assertRaises(ValueError):
+            select_resources(self.resources, ['not-in-manifest'])
+
+    def test_throttled_stop_keeps_partial_and_next_start_resumes(self):
+        self.worker.rate_limit = 256 * 1024
+        timer = threading.Timer(.15, self.worker.stop.set)
+        timer.start()
+        try:
+            self.worker.run(self.resources)
+        finally:
+            timer.cancel()
+        offset = self.worker.partial(self.r).stat().st_size
+        self.assertGreater(offset, 0)
+        self.assertFalse(self.target().exists())
+        self.assertFalse(self.state.get(self.r['id'])['complete'])
+        self.worker.stop.clear()
+        self.worker.rate_limit = 0
+        self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
+        self.assertIn(('GET', f'bytes={offset}-', '"version1"'), self.server.calls)
+        self.assertEqual(self.target().read_bytes(), self.server.body)
+
     def test_directory_move_without_http(self):
         self.worker.run(self.resources)
         old = self.target()
@@ -311,6 +335,7 @@ class DownloadTests(unittest.TestCase):
                    '--state-dir', str(self.state_dir), '--download-dir', str(self.root), '--once']
         first = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(first.returncode, 0, first.stderr)
+        self.assertRegex(first.stderr, r'\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\[INFO\]')
         self.server.calls.clear()
         second = subprocess.run(command, capture_output=True, text=True)
         self.assertEqual(second.returncode, 0, second.stderr)
