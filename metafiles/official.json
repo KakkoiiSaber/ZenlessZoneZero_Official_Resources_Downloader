@@ -1,8 +1,8 @@
 {
   "schema_version":2,
   "source":"official",
-  "snapshot_id":"e78e08d15c76998758aa6d99be2b0447c6367f24d244842a8cc96ee2ce1707e1",
-  "generated_at":"2026-10-25T21:42:29.758135+00:00",
+  "snapshot_id":"654ff3f9fb7ff8f6a5ecb0e8558dfe7d9165daa772cac0620e53fb4d3628adb4",
+  "generated_at":"2026-10-26T15:15:36.723874+00:00",
   "parser_version":3,
   "url_template":"https://zzz.mihoyo.com/news/{id}",
   "posts":{
@@ -1707,6 +1707,7 @@
     "164817":{"title":"《绝区零》2.6版本PV | 旧梦的安可曲","published_at":"2026-01-30T20:00:00+08:00","index_signature":"68984a1cdc2053c0d24f020b07b6bcfc66c912ad84a3c928fada7c1ed99b11ae","checked_at":"2026-10-25T20:34:50.717917+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/164817/7d561a7910a8314aba5684efb6106148_1362578057279200078.mp4","size_bytes":922781334,"etag":"\"7D561A7910A8314ABA5684EFB6106148\"","media_checked_at":"2026-10-25T20:54:31.762178+00:00"}]},
     "164818":{"title":"《绝区零》妄想天使EP | 把心跳变成节奏","published_at":"2026-01-26T12:00:00+08:00","index_signature":"ae80723f7c6a0f4729fa1f6865c9dec6993eb2389613db031f7229ca23fea355","checked_at":"2026-10-25T20:34:50.961542+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/164818/db4d1b554bfc3c756770fd1c7af23255_2141589816359226924.mp4","size_bytes":465930791,"etag":"\"DB4D1B554BFC3C756770FD1C7AF23255\"","media_checked_at":"2026-10-25T20:54:31.762182+00:00"}]},
     "164819":{"title":"《绝区零》妄想天使EP | ReDreaming Angel 复梦天使","published_at":"2026-01-23T12:00:00+08:00","index_signature":"ca0594a40e13d4cb137a4521f6809e28fe1f4af4e5dbe4525addf324e8c85ab9","checked_at":"2026-10-25T20:34:51.081536+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/164819/c187cfdb6c5f38d256309b1c4a29fce6_4423156166103534585.mp4","size_bytes":668099984,"etag":"\"C187CFDB6C5F38D256309B1C4A29FCE6\"","media_checked_at":"2026-10-25T20:54:35.887296+00:00"}]},
-    "164820":{"title":"《绝区零》过场动画 | 我们从不孤单","published_at":"2026-01-01T12:00:00+08:00","index_signature":"426e032812fc90b4c4020618df8430a08b2306b81ee8ec8758267198ae48f053","checked_at":"2026-10-25T20:34:51.265194+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/164820/6d08f94a993d89ca9efafb24105091ed_2743043521693738669.mp4","size_bytes":742812229,"etag":"\"6D08F94A993D89CA9EFAFB24105091ED\"","media_checked_at":"2026-10-25T20:54:31.762186+00:00"}]}
+    "164820":{"title":"《绝区零》过场动画 | 我们从不孤单","published_at":"2026-01-01T12:00:00+08:00","index_signature":"426e032812fc90b4c4020618df8430a08b2306b81ee8ec8758267198ae48f053","checked_at":"2026-10-25T20:34:51.265194+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/164820/6d08f94a993d89ca9efafb24105091ed_2743043521693738669.mp4","size_bytes":742812229,"etag":"\"6D08F94A993D89CA9EFAFB24105091ED\"","media_checked_at":"2026-10-25T20:54:31.762186+00:00"}]},
+    "167045":{"title":"「赛博圣手，出诊!」活动说明","published_at":"2026-10-26T12:30:00+08:00","index_signature":"2e703b44e4aabe9415d0efd34ddbc27741b34b9f596236075d96bf98fba695d9","checked_at":"2026-10-26T15:15:35.447969+00:00","images":["https://fastcdn.mihoyo.com/content-v2/nap/167045/45d180c12a2b5e8f8273963454ac6d7b_7264039775699234908.jpg"]}
   }
 }
