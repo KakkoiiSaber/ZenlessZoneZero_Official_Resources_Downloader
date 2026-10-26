@@ -160,7 +160,7 @@ class DownloadTests(unittest.TestCase):
             self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
         output = '\n'.join(logs.output)
         self.assertIn('validated HTTP 206; continuing at 262.14 KB / 1.28 MB (20.5%)', output)
-        self.assertIn('progress 1.28 MB / 1.28 MB (100.0%)', output)
+        self.assertIn('downloaded 测试 / 001.jpg 1.28 MB / 1.28 MB (100.0%)', output)
 
     def test_logs_use_theme_section_and_filename_instead_of_resource_ids(self):
         self.doc['entries']['1']['title'] = '3.2 剧情壁纸'
@@ -406,6 +406,29 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(second.returncode, 0, second.stderr)
         self.assertIn('skipped', second.stderr)
         self.assertEqual(self.server.calls, [])
+        saved_log = (self.state_dir / 'logs/downloader.log').read_text(encoding='utf8')
+        self.assertIn('Download run started; persistent log enabled', saved_log)
+        self.assertIn('downloaded 测试 / 001.jpg', saved_log)
+        self.assertIn('skipped 测试 / 001.jpg', saved_log)
+        self.assertEqual(saved_log.count('Download run started; persistent log enabled'), 2)
+
+    def test_progress_interval_reduces_intermediate_logs_and_zero_keeps_completion(self):
+        from unittest.mock import patch
+        self.worker.progress_interval = 60
+        self.worker.rate_limit = 256 * 1024
+        # Advance the logging clock deterministically; do not actually wait a minute.
+        with patch('src.download.time.monotonic', side_effect=range(0, 10000, 10)), \
+                patch.object(self.worker.stop, 'wait', return_value=False), \
+                self.assertLogs('download', level='INFO') as logs:
+            self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
+        self.assertEqual(sum(' progress ' in line for line in logs.output), 1)
+        self.target().unlink()
+        self.worker.progress_interval = 0
+        self.worker.rate_limit = 0
+        with self.assertLogs('download', level='INFO') as quiet:
+            self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
+        self.assertFalse(any(' progress ' in line for line in quiet.output))
+        self.assertTrue(any('100.0%' in line and 'downloaded ' in line for line in quiet.output))
 
     def test_exclusive_state_lock(self):
         with exclusive_lock(self.state_dir):

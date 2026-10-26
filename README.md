@@ -11,6 +11,8 @@
 无需向公网开放 NAS，也不需要 NAS 账户密码或 GitHub token。
 下载器完成一轮增量下载后退出；每天何时运行由 NAS 任务计划控制，无内部定时循环或自动重启。
 日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`。
+正常下载会同时保存 `state/logs/downloader.log`（随状态目录挂载，自动轮转）；
+中间进度默认每分钟输出一次，可通过本地 `PROGRESS_INTERVAL` 调整。
 NAS 的 UID/GID、目录和其他参数仅放本地 `.env`（Git 忽略）。日常 `git pull --ff-only origin main`
 即可更新代码，下次任务直接生效；仅依赖文件或 Dockerfile 变化时才需重新构建运行环境。
 默认 `downloads/`、`state/` 仅提交 `.gitkeep` 空目录占位，实际媒体和本地下载记录不进入 Git。

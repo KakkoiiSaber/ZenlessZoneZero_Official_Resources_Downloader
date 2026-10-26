@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import hashlib
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 import os
 from pathlib import Path
 import re
@@ -20,6 +21,17 @@ import requests
 LOG = logging.getLogger('download')
 DEFAULT_MANIFEST = 'https://raw.githubusercontent.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader/main/metafiles/wiki.json'
 MAX_MANIFEST = 32 * 1024 * 1024
+LOG_FORMAT = '[%(asctime)s][%(levelname)s] %(message)s'
+LOG_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+
+
+def persistent_log_handler(state_dir):
+    directory = state_dir / 'logs'
+    directory.mkdir(parents=True, exist_ok=True)
+    handler = RotatingFileHandler(directory / 'downloader.log', maxBytes=5 * 1024 * 1024,
+                                  backupCount=4, encoding='utf-8')
+    handler.setFormatter(logging.Formatter(LOG_FORMAT, datefmt=LOG_DATE_FORMAT))
+    return handler
 
 
 def format_size(size):
@@ -201,11 +213,12 @@ def file_hash(path):
 
 
 class Downloader:
-    def __init__(self, root, state, *, retries=3, verify_days=7, rate_limit=0, stop=None):
+    def __init__(self, root, state, *, retries=3, verify_days=7, rate_limit=0, progress_interval=60, stop=None):
         self.root, self.state = root.resolve(), state
         self.root.mkdir(parents=True, exist_ok=True)
         self.retries, self.verify_seconds = retries, verify_days * 86400
         self.rate_limit = rate_limit
+        self.progress_interval = progress_interval
         self.stop = stop or threading.Event()
         self.http = requests.Session()
         self.http.headers.update({'User-Agent': 'zzz-scraper-downloader/1', 'Accept-Encoding': 'identity'})
@@ -226,7 +239,11 @@ class Downloader:
                 try:
                     action = self.sync(resource)
                     counts[action] += 1
-                    LOG.info('%s %s', action, label)
+                    if action == 'downloaded':
+                        size = self.state.get(ident)['size']
+                        LOG.info('downloaded %s %s', label, format_progress(size, size))
+                    else:
+                        LOG.info('%s %s', action, label)
                     break
                 except InterruptedError:
                     self.stop.set()
@@ -369,7 +386,6 @@ class Downloader:
                 match = re.fullmatch(r'bytes \*/(\d+)', response.headers.get('Content-Range', ''))
                 if (match and int(match[1]) == offset and record.get('total') == offset
                         and response.headers.get('ETag') == validator):
-                    LOG.info('%s progress %s', label, format_progress(offset, offset))
                     return
                 part.unlink(missing_ok=True)
                 raise ValueError('Unsatisfied range; restarting download')
@@ -423,7 +439,7 @@ class Downloader:
                         delay = transferred / self.rate_limit - (time.monotonic() - started)
                         if delay > 0 and self.stop.wait(delay):
                             raise InterruptedError()
-                    if time.monotonic() - reported >= 5:
+                    if self.progress_interval and time.monotonic() - reported >= self.progress_interval:
                         LOG.info('%s progress %s', label,
                                  format_progress(offset + transferred, total or expected))
                         reported = time.monotonic()
@@ -432,10 +448,9 @@ class Downloader:
             size = part.stat().st_size
             if not size or (total is not None and size != total) or (expected and size != expected):
                 raise ValueError('Incomplete media body')
-            LOG.info('%s progress %s', label, format_progress(size, size))
 
 
-def load_manifest(url, filename=None):
+def load_manifest(url, filename=None, progress_interval=60):
     if filename:
         LOG.info('Reading local manifest')
         if filename.stat().st_size > MAX_MANIFEST:
@@ -453,7 +468,7 @@ def load_manifest(url, filename=None):
             data.extend(chunk)
             if len(data) > MAX_MANIFEST:
                 raise ValueError('Manifest exceeds 32 MiB')
-            if time.monotonic() - reported >= 5:
+            if progress_interval and time.monotonic() - reported >= progress_interval:
                 LOG.info('Manifest progress %s', format_progress(len(data), total))
                 reported = time.monotonic()
     LOG.info('Manifest received: %s', format_size(len(data)))
@@ -470,30 +485,37 @@ def main():
     parser.add_argument('--retries', type=int, default=3)
     parser.add_argument('--resource-id', action='append', help='Only download these exact IDs (repeat for a small deployment test)')
     parser.add_argument('--rate-limit', type=int, default=0, help='Maximum streamed media bytes/second per transfer; 0 disables throttling')
+    parser.add_argument('--progress-interval', type=float, default=float(os.getenv('PROGRESS_INTERVAL', '60')),
+                        help='Seconds between progress messages; 0 disables intermediate progress')
     parser.add_argument('--once', action='store_true', help=argparse.SUPPRESS)  # Older deployment commands remain valid.
     parser.add_argument('--dry-run', action='store_true', help='Validate and count manifest resources without downloading')
     args = parser.parse_args()
-    if args.verify_days < 0 or args.retries < 1 or args.rate_limit < 0:
-        parser.error('retries must be positive; verify-days and rate-limit must be nonnegative')
-    logging.basicConfig(level=logging.INFO, format='[%(asctime)s][%(levelname)s] %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S')
+    if args.verify_days < 0 or args.retries < 1 or args.rate_limit < 0 or args.progress_interval < 0:
+        parser.error('retries must be positive; verify-days, rate-limit and progress-interval must be nonnegative')
+    logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, datefmt=LOG_DATE_FORMAT)
     stop = threading.Event()
     for signum in (signal.SIGINT, signal.SIGTERM):
         signal.signal(signum, lambda *_: stop.set())
     LOG.info('Downloader started')
+    file_handler = None
     try:
         if args.dry_run:
-            resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file)), args.resource_id)
+            resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file,
+                                                            args.progress_interval)), args.resource_id)
             LOG.info('Valid manifest: %d resources, %d placements', len(resources), sum(len(r['paths']) for r in resources))
             return 0
         LOG.info('Preparing local download state')
         with exclusive_lock(args.state_dir):
+            file_handler = persistent_log_handler(args.state_dir)
+            logging.getLogger().addHandler(file_handler)
+            LOG.info('Download run started; persistent log enabled')
             state = State(args.state_dir)
             worker = Downloader(args.download_dir, state, retries=args.retries, verify_days=args.verify_days,
-                                rate_limit=args.rate_limit, stop=stop)
+                                rate_limit=args.rate_limit, progress_interval=args.progress_interval, stop=stop)
             try:
                 LOG.info('Local download state ready')
-                resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file)), args.resource_id)
+                resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file,
+                                                                args.progress_interval)), args.resource_id)
                 LOG.info('Manifest ready: %d resources, %d placements', len(resources),
                          sum(len(resource['paths']) for resource in resources))
                 failed = worker.run(resources)['failed']
@@ -507,6 +529,10 @@ def main():
     except (OSError, RuntimeError) as error:
         LOG.error('%s', error)
         return 1
+    finally:
+        if file_handler is not None:
+            logging.getLogger().removeHandler(file_handler)
+            file_handler.close()
     return 0
 
 

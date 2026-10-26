@@ -39,6 +39,7 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    DOWNLOAD_PATH=/volume1/Media/ZZZ
    STATE_PATH=/volume1/docker/zzz-downloader/state
    VERIFY_DAYS=7
+   PROGRESS_INTERVAL=60
    MANIFEST_URL=https://raw.githubusercontent.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader/main/metafiles/wiki.json
    ```
 
@@ -148,15 +149,24 @@ docker compose build --pull
 显示名称只在运行时从清单生成；资源 ID、下载记录和版本指纹保持不变，不增加 JSON 字段。
 应用日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`，不带毫秒。
 启动后立即输出 `Downloader started`，随后报告本地记录准备、清单请求、响应接收和资源数量。
-清单传输较慢时也会每隔约五秒报告读取进度。若只有 `Fetching download manifest` 而没有
+清单和媒体传输的中间进度默认每隔约 60 秒报告一次。若只有 `Fetching download manifest` 而没有
 `Manifest response received`，说明正在等待 HTTP 请求；若群晖界面为空，先用
 `docker compose logs --tail=100 downloader` 核对终端日志，区分界面显示和程序等待。
 文件大小自动使用 B、KB、MB、GB 或 TB（每级 1000），已知总大小时显示进度百分比，例如
 `progress 125.00 MB / 500.00 MB (25.0%)`。续传百分比包含之前已经下载的部分，
-成功接收并核对完整文件后输出 `100.0%`；总大小未知时显示 `total unknown`。
+成功接收并核对完整文件后，在完成消息中输出 `100.0%`，不再重复输出一条完成进度；
+总大小未知时显示 `total unknown`。
+可以在本地 `.env` 设置 `PROGRESS_INTERVAL=300` 改为每五分钟输出中间进度，
+或设为 `0` 关闭中间进度；开始、续传、完成和错误消息始终保留。
 时间使用容器本地时区；当前镜像默认通常为 UTC。
 终端查看时可用 `docker compose logs --no-log-prefix -f --tail=100 downloader`
 隐藏 Compose 额外添加的容器名前缀。
+
+正常下载还会向 `STATE_PATH/logs/downloader.log` 追加 UTF-8 文本日志，无需依赖群晖容器日志界面。
+默认状态目录在项目内时，对应 `state/logs/downloader.log`；可通过 File Station 查看或下载。
+单份约 5 MiB，自动轮转保留当前文件和四份历史（`.1` 到 `.4`），最多约 25 MiB。
+容器停止、重建和代码同步不会删除这些文件，它们随整个状态目录被 Git 忽略。
+`--dry-run` 仍然只输出终端日志，不创建状态目录或日志文件。
 
 ## 从小样测试切换正式运行
 
