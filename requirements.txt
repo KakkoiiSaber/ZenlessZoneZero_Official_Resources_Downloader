@@ -1,9 +1,2 @@
-requests
-beautifulsoup4
-lxml
-tqdm
-pandas
-selenium
-yt-dlp
-playwright
-pillow
+requests>=2.32,<3
+beautifulsoup4>=4.12,<5

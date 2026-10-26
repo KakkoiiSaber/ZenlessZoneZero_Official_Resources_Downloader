@@ -1,17 +1,10 @@
-.venv
-.DS_store
-*.pyc
-archived
-
-# Interrupted task-owned staging files must never be committed as assets.
-downloads/**/.minas-*/
-downloads/**/.backup-*/
-metafiles/.state-*
-docs/**/.gallery-*
-metafiles/image-aliases.json.tmp
-metafiles/minas-files.json.tmp
-
-# NAS-only private configuration and local media state.
-deploy/synology/.env
-**/share-codes.json
+__pycache__/
+*.py[cod]
+.venv/
+.cache/
+.DS_Store
+.metafiles-next/
+.metafiles-previous/
+.env
 nas-data/
+downloads/

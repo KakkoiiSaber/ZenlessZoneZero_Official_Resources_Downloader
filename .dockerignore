@@ -1,11 +1,5 @@
-.git
-.agents
-.codex
-downloads
-docs
-metafiles
-posts
-tests
-**/.env
-**/share-codes.json
-**/__pycache__
+*
+!requirements-download.txt
+!src/
+src/*
+!src/download.py

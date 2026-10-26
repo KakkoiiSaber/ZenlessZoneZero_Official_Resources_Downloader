@@ -1,0 +1,68 @@
+name: Update metadata - incremental source crawl
+
+on:
+  workflow_dispatch:
+    inputs:
+      full_scan:
+        description: Scan all historical index pages (normally unnecessary)
+        type: boolean
+        default: false
+  schedule:
+    - cron: '17 8 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: metadata-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install metadata and test dependencies
+        run: pip install -r requirements.txt
+      - uses: actions/cache/restore@v4
+        with:
+          path: .cache/scrape
+          key: metadata-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            metadata-${{ github.ref_name }}-
+      - name: Regression tests
+        run: python -m unittest discover -s tests -v
+      - name: Refresh sources and resolve Wiki download manifest
+        env:
+          FULL_SCAN: ${{ inputs.full_scan || false }}
+        run: |
+          args=(--refresh-days 0)
+          if [ "$FULL_SCAN" = 'true' ]; then args+=(--full-scan); fi
+          python -u -m src.scrape.collect "${args[@]}"
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: .cache/scrape
+          key: metadata-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Save interrupted crawl progress
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: metadata-crawl-progress
+          path: .cache/scrape
+          include-hidden-files: true
+          retention-days: 7
+      - name: Commit the three validated manifests
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          git add -- metafiles/official.json metafiles/miyoushe.json metafiles/wiki.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore: refresh source and Wiki manifests'
+          git push origin "HEAD:refs/heads/$BRANCH"
