@@ -25,7 +25,7 @@ def post_url(source, ident, kind='news'):
 
 def pack_video(video):
     chosen = video.get('selected') or {}
-    result = {'id': video['id'], **fields(chosen, VIDEO_FIELDS)}
+    result = {'id': video['id'], **fields(video, ('caption',)), **fields(chosen, VIDEO_FIELDS)}
     if video.get('duration_ms') is not None:
         result['duration_ms'] = video['duration_ms']
     facts = chosen.get('http_metadata') or {}
@@ -54,7 +54,7 @@ def expand_video(value):
                 raise ValueError('Incomplete verified video profile')
             chosen['video_metadata'] = {**profile, 'source_etag':facts['etag'],
                 'source_size_bytes':facts['size_bytes'], 'checked_at':facts['checked_at']}
-    return {'id':value['id'], 'duration_ms':value.get('duration_ms'), 'selected':chosen, 'variants':[chosen]}
+    return {'id':value['id'], **fields(value, ('caption',)), 'duration_ms':value.get('duration_ms'), 'selected':chosen, 'variants':[chosen]}
 
 
 def common(document, source, records):

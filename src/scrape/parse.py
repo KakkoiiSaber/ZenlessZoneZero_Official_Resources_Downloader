@@ -146,7 +146,20 @@ def article(html, structured='', wrapper=None):
             if url and url not in {v['url'] for v in values}:
                 values.append({'url': url})
         if values:
-            videos.append({'id': str(i), 'variants': values, 'selected': best_variant(values)})
+            item = {'id': str(i), 'variants': values, 'selected': best_variant(values)}
+            for previous in video.find_all_previous(['p','h1','h2','h3','h4','video']):
+                if previous.name == 'video':
+                    break
+                if previous.find('video'):
+                    continue
+                text = previous.get_text(' ', strip=True)
+                if not text:
+                    continue
+                ending = re.search(r'结局\s*[「“《]([^」”》]{1,40})[」”》]', text)
+                if ending and len(text) <= 120:
+                    item['caption'] = '结局：' + ending[1]
+                break
+            videos.append(item)
     for vod in (wrapper or {}).get('vod_list') or []:
         values = [parsed for raw in vod.get('resolutions', []) if (parsed := variant(raw))]
         if values:
@@ -397,6 +410,7 @@ def resolve_parsed_wiki(entry, miyoushe, official, index):
                     chosen = video['selected']
                     videos.append({'id': f"wiki:{entry['id']}:video:{post['id']}:{video['id']}",
                         'kind': 'video', **chosen, 'selected_source': provider, 'source_post': post['url'],
+                        **({'caption':video['caption']} if video.get('caption') else {}),
                         'duration_ms': video.get('duration_ms'), 'section_path': [],
                         'filename': f'{i+1:03d}' + (chosen.get('extension') or extension(chosen['url']))})
         if videos:
