@@ -143,7 +143,9 @@ docker compose build --pull
 
 如果下载报权限错误，检查 `.env` 的 UID/GID 和 NAS 目录 ACL；
 如果连接 GitHub 失败，检查 NAS 的 DNS、代理和网络能否访问 `raw.githubusercontent.com`。
-容器日志只记录资源 ID、动作和错误类型，不打印带签名的完整链接。
+资源日志使用 Wiki 主题名、分组和文件名，例如 `3.2 剧情壁纸 / 章节一 / 001.jpg`，
+不再要求用户辨认 Wiki/视频编号，也不打印带签名的完整链接。
+显示名称只在运行时从清单生成；资源 ID、下载记录和版本指纹保持不变，不增加 JSON 字段。
 应用日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`，不带毫秒。
 启动后立即输出 `Downloader started`，随后报告本地记录准备、清单请求、响应接收和资源数量。
 清单传输较慢时也会每隔约五秒报告读取进度。若只有 `Fetching download manifest` 而没有
