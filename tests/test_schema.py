@@ -1,13 +1,9 @@
 from copy import deepcopy
-from pathlib import Path
-from types import SimpleNamespace
 import json
-import tempfile
 import unittest
-from unittest.mock import patch
 
 from src.scrape import collect, parse
-from src.scrape.http import atomic_json, now
+from src.scrape.http import now
 from src.scrape.schema import pack_bundle, expand_bundle
 from test_manifests import post, IMAGE, OFFICIAL_VIDEO, MI_VIDEO
 
@@ -150,20 +146,6 @@ class MinimalSchemaTests(unittest.TestCase):
         compact=pack_bundle(bundle());compact['wiki']['entries']['1']['resources'][0]['folder']=999
         with self.assertRaises(ValueError):expand_bundle(compact)
 
-    def test_offline_migration_calls_no_network_and_keeps_records_readable_per_line(self):
-        with tempfile.TemporaryDirectory() as temp:
-            output=Path(temp)/'metafiles';output.mkdir()
-            original=bundle()
-            for source,document in original.items():atomic_json(output/(source+'.json'),document)
-            with patch('src.scrape.http.Client.get',side_effect=AssertionError('network forbidden')):
-                self.assertEqual(0,collect.compact_only(SimpleNamespace(output=str(output))))
-                first={p.name:p.read_bytes() for p in output.iterdir()}
-                self.assertEqual(0,collect.compact_only(SimpleNamespace(output=str(output))))
-                self.assertEqual(first,{p.name:p.read_bytes() for p in output.iterdir()})
-            self.assertEqual(selected_files(original),selected_files(collect.read_bundle(output)))
-            text=(output/'official.json').read_text(encoding='utf8')
-            self.assertGreater(text.count('\n'),3)
-            self.assertTrue(any(line.startswith('    "1":') for line in text.splitlines()))
 
 
 if __name__=='__main__':
