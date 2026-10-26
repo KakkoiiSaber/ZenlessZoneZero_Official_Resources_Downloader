@@ -7,4 +7,7 @@ __pycache__/
 .metafiles-previous/
 .env
 nas-data/
-downloads/
+/downloads/*
+!/downloads/.gitkeep
+/state/*
+!/state/.gitkeep

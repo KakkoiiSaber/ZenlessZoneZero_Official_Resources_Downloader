@@ -5,11 +5,16 @@
 
 ## NAS 下载
 
-使用 `Dockerfile` 和 `compose.yaml` 部署。容器每次读取 public 仓库的 `wiki.json`，
+在 NAS 上 clone 仓库，使用 `Dockerfile` 和 `compose.yaml` 部署。镜像仅安装 Python 和下载依赖，
+运行时只读挂载仓库的 `src/`，每次读取 public 仓库的 `wiki.json`，
 支持增量下载、服务器支持时的断点续传、Wiki 目录归档和本地 SQLite 下载记录。
 无需向公网开放 NAS，也不需要 NAS 账户密码或 GitHub token。
 下载器完成一轮增量下载后退出；每天何时运行由 NAS 任务计划控制，无内部定时循环或自动重启。
 日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`。
+NAS 的 UID/GID、目录和其他参数仅放本地 `.env`（Git 忽略）。日常 `git pull --ff-only origin main`
+即可更新代码，下次任务直接生效；仅依赖文件或 Dockerfile 变化时才需重新构建运行环境。
+默认 `downloads/`、`state/` 仅提交 `.gitkeep` 空目录占位，实际媒体和本地下载记录不进入 Git。
+也可在 `.env` 指定仓库外的绝对路径，沿用已有 NAS 文件和记录。
 部署步骤、权限设置、测试转正式及恢复见 [NAS Docker 部署文档](docs/NAS_DOCKER.md)。
 
 ## 输出
