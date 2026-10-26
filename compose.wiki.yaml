@@ -1,0 +1,26 @@
+name: zenlesszonezero_official_resources_wiki
+services:
+  wiki:
+    build: .
+    image: downloader:runtime
+    entrypoint: [python, -m, src.wiki]
+    command: [--host, 0.0.0.0, --manifest, /manifest/wiki.json, --snapshot, /state/wiki.json, --downloads, /downloads]
+    user: "${NAS_UID:-1000}:${NAS_GID:-1000}"
+    init: true
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    ports:
+      - "${WIKI_PORT:-8080}:8080"
+    volumes:
+      - ./src:/app/src:ro
+      - ./web:/app/web:ro
+      - ./metafiles:/manifest:ro
+      - "${STATE_PATH:-./state}:/state:ro"
+      - "${DOWNLOAD_PATH:-./downloads}:/downloads:ro"
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
