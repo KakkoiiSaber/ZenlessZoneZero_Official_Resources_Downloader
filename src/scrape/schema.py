@@ -131,6 +131,9 @@ def pack_wiki(document):
 
         def resource(raw):
             item = fields(raw, ('id','kind','url','filename','size_bytes','expires_at'))
+            caption = (raw.get('caption') or '').strip()
+            if caption and not caption.isdecimal():
+                item['caption'] = caption
             directories = raw.get('directories')
             if not directories:
                 from src.scrape.parse import safe_name
@@ -201,7 +204,7 @@ def expand_wiki(document, sources):
             if len(directories)!=len(positions) or not directories:
                 raise ValueError('Invalid resource folder reference')
             provider = item.get('source','wiki')
-            raw = {**fields(item, ('id','kind','url','filename','size_bytes','expires_at','etag')),
+            raw = {**fields(item, ('id','kind','url','filename','size_bytes','expires_at','etag','caption')),
                    'directories':directories, 'section_path':directories[0][2:], 'selected_source':provider}
             if provider != 'wiki':
                 post = sources[provider]['posts'].get(item['post_id'])

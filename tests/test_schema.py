@@ -41,6 +41,17 @@ def selected_files(value):
 
 
 class MinimalSchemaTests(unittest.TestCase):
+    def test_wiki_tab_names_survive_incremental_round_trip(self):
+        original = bundle()
+        image = original['wiki']['entries']['1']['resources'][0]
+        image['caption'] = '她与她的隐秘往事'
+        compact = pack_bundle(original)
+        self.assertEqual(compact['wiki']['entries']['1']['resources'][0]['caption'], '她与她的隐秘往事')
+        self.assertEqual(compact, pack_bundle(expand_bundle(compact)))
+        self.assertEqual(selected_files(original), selected_files(expand_bundle(compact)))
+        image['caption'] = '1'
+        self.assertNotIn('caption', pack_bundle(original)['wiki']['entries']['1']['resources'][0])
+
     def test_output_uses_one_image_url_one_video_version_and_one_folder_table(self):
         compact=pack_bundle(bundle())
         self.assertEqual([IMAGE],compact['official']['posts']['1']['images'])

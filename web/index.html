@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>绝区零 · 资源档案</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="绝区零资源首页"><img src="/assets/zzz-logo.svg" alt="绝区零"></a>
+    <span class="site-name">资源档案</span>
+    <button id="menu" class="icon-button" aria-label="展开分类" aria-expanded="false">☰</button>
+    <label class="search"><span>⌕</span><input id="search" type="search" placeholder="搜索主题、分组、文件名" aria-label="搜索资源"></label>
+  </header>
+  <aside id="sidebar">
+    <nav id="categories" aria-label="资源分类"></nav>
+  </aside>
+  <div class="workspace">
+    <div id="status" role="status" aria-live="polite"></div>
+    <main id="content"></main>
+  </div>
+  <dialog id="viewer" aria-labelledby="viewer-title">
+    <div class="viewer-header"><div><h2 id="viewer-title"></h2><p id="viewer-caption"></p></div><button id="close" class="icon-button" aria-label="关闭预览">✕</button></div>
+    <div class="viewer-stage"><button id="previous" class="arrow" aria-label="上一项">‹</button><div id="player"></div><button id="next" class="arrow" aria-label="下一项">›</button></div>
+    <div class="viewer-footer"><span id="counter"></span><a id="save" download>保存原文件 ↓</a></div>
+  </dialog>
+</body>
+</html>

@@ -1,0 +1,76 @@
+# 本地资源 Wiki
+
+本地网站用于结构化浏览已经下载的图片和视频，视觉参考绝区零 Wiki 的档案区域：黑灰底色、黄色选中标签、分类导航、主题分组、图片放大和视频播放。它不是完整 Wiki 镜像，不含角色图鉴、攻略、账号或评论。
+
+## 数据与离线访问
+
+- 优先读取下载器每次运行保存在本地 `state/wiki.json` 的最新清单快照；尚无快照时读取项目中的 `metafiles/wiki.json`。沿用同一个 Wiki 清单格式，不增加 Git 跟踪的元数据文件。
+- 图片和视频来自本地下载目录，页面、样式与背景也在本地。运行期间不会请求官网、CDN、在线字体或统计服务。
+- 显示四类资源：角色视频、游戏视频、壁纸收录、好感壁纸。可以搜索主题、分组和文件名。
+- 每个分组通过标签切换文件；图片可放大、用左右方向键浏览，视频支持拖动进度条，媒体可保存原文件。
+- 标签优先显示 Wiki 原有的版本、活动或主题名称；纯序号标签显示为 1、2 等。只有一个资源的分组不显示多余的切换标签。清单仅保留有意义的 `caption` 名称，增量更新会继续保留它们；下载文件名和目录不变。
+- 尚未下载的文件显示占位。下载器的 `.zzz-partials` 不会展示；下载完成后刷新页面即可识别。
+- 网站只读挂载资源，不修改下载记录和文件。JSON 更新后刷新网页即可，无需重启服务。
+- 本地目录没有额外的海报或缩略图；图片封面直接使用本地图片，视频列表使用统一占位封面，不会请求远程海报。
+
+## Synology Container Manager
+
+先在现有 Git 项目中更新代码，然后使用独立的 Compose 文件启动网站。它与每天运行一次的下载器是独立的项目。
+
+```sh
+git pull --ff-only origin main
+sudo docker compose --env-file .env -f compose.wiki.yaml up -d --build
+```
+
+在项目根目录执行以上命令。现有 `.env` 中的 `NAS_UID`、`NAS_GID`、`STATE_PATH` 和 `DOWNLOAD_PATH` 会复用，**下载目录不需要移动**；网站只读挂载 `state`，HTTP 服务只公开清单目录和清单内的媒体，不公开数据库、日志或 `.env`。
+
+更新后下次每日下载任务会自动保存最新清单快照。首次启动没有快照也可浏览仓库已有清单；快照生成后刷新页面自动切换，不需要每天为了网页更新而 `git pull`。
+
+可在 NAS 本地 `.env` 中另外设置端口，例如：
+
+```dotenv
+WIKI_PORT=8080
+```
+
+浏览器打开 `http://NAS的局域网IP:8080`。同一局域网的电脑、平板和手机均可访问；NAS 断网仍可浏览本地资源，但 NAS 本身必须开机。`localhost` 仅表示浏览器所在的设备，因此手机上要使用 NAS IP。
+
+这里没有账号登录，适用于可信局域网。无需设置公网端口转发。如果 DSM 防火墙启用，需要允许局域网访问所选端口。
+
+网站设置为 `restart: unless-stopped`，NAS 开机且 Docker 服务启动后会恢复运行。下载器仍由原来的每日任务启动，任务命令不需要改。
+
+查看服务日志：
+
+```sh
+sudo docker compose --env-file .env -f compose.wiki.yaml logs --tail=50 -f wiki
+```
+
+停止网站：
+
+```sh
+sudo docker compose --env-file .env -f compose.wiki.yaml stop wiki
+```
+
+后续代码更新：
+
+```sh
+git pull --ff-only origin main
+sudo docker compose --env-file .env -f compose.wiki.yaml up -d --force-recreate
+```
+
+源代码、前端和 metafiles 都从 Git 项目只读挂载，普通代码更新无需重新构建依赖镜像。只有 Dockerfile 或依赖变化才加 `--build`。
+
+## Windows 本机预览
+
+在项目根目录执行：
+
+```powershell
+python -m src.wiki --downloads 'D:\你的本地资源目录'
+```
+
+打开 `http://localhost:8080`。未指定目录时使用项目的 `downloads`。如果希望同一局域网设备访问该电脑，可以加 `--host 0.0.0.0`，并按需允许 Windows 防火墙的专用网络访问。
+
+## 资源说明
+
+背景图取自官方 Wiki `https://baike.mihoyo.com/zzz/wiki/pc-page-bg.png`，保存于 `web/assets/background.png`；游戏相关素材版权归原权利人。前端交互和本地服务为本项目编写，没有复制官网账号、评论或追踪脚本。
+
+导航栏 Logo 使用官网 `https://zzz.mihoyo.com/_nuxt/img/logo-sm.1b88313.svg` 原文件，保存于 `web/assets/zzz-logo.svg`，运行时不需要访问官网。

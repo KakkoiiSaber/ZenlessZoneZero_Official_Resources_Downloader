@@ -18,6 +18,8 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import requests
 
+from src.scrape.http import atomic_json
+
 LOG = logging.getLogger('download')
 DEFAULT_MANIFEST = 'https://raw.githubusercontent.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader/main/metafiles/wiki.json'
 MAX_MANIFEST = 32 * 1024 * 1024
@@ -514,8 +516,10 @@ def main():
                                 rate_limit=args.rate_limit, progress_interval=args.progress_interval, stop=stop)
             try:
                 LOG.info('Local download state ready')
-                resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file,
-                                                                args.progress_interval)), args.resource_id)
+                document = load_manifest(args.manifest_url, args.manifest_file, args.progress_interval)
+                resources = select_resources(plan(document), args.resource_id)
+                # Share the validated catalog with the offline Wiki, even without a Git pull.
+                atomic_json(args.state_dir / 'wiki.json', document, record_maps=('entries',))
                 LOG.info('Manifest ready: %d resources, %d placements', len(resources),
                          sum(len(resource['paths']) for resource in resources))
                 failed = worker.run(resources)['failed']
