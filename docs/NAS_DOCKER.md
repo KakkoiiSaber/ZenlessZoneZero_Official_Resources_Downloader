@@ -55,7 +55,7 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
 首次部署测试可在项目的 `command` 中加入重复的 `--resource-id 资源ID`，
 只处理明确选定的少量资源；不存在的 ID 会报错，不会回退成下载全部。
 配合 `--rate-limit 262144` 限速为每秒 256 KiB，方便在日志显示视频开始后手动停止、
-重新启动，核对 `validated HTTP 206; continuing at ... bytes` 续传日志。
+重新启动，核对 `validated HTTP 206; continuing at ...` 续传日志中的非零进度。
 测试和正式项目都使用 `restart: "no"`；每次完成后退出，由 NAS 任务计划决定下一次何时运行。
 容器无需特权模式，不挂载 Docker socket，仅挂载这两个目录；使用填写的普通用户权限，
 容器根文件系统只读。下载目录最好专门用于本项目，避免混入手工保存的同名文件。
@@ -128,6 +128,9 @@ docker compose build --pull
 如果连接 GitHub 失败，检查 NAS 的 DNS、代理和网络能否访问 `raw.githubusercontent.com`。
 容器日志只记录资源 ID、动作和错误类型，不打印带签名的完整链接。
 应用日志格式为 `[yyyy-mm-dd hh:mm:ss][INFO] message`，不带毫秒。
+文件大小自动使用 B、KB、MB、GB 或 TB（每级 1000），已知总大小时显示进度百分比，例如
+`progress 125.00 MB / 500.00 MB (25.0%)`。续传百分比包含之前已经下载的部分，
+成功接收并核对完整文件后输出 `100.0%`；总大小未知时显示 `total unknown`。
 时间使用容器本地时区；当前镜像默认通常为 UTC。
 终端查看时可用 `docker compose logs --no-log-prefix -f --tail=100 downloader`
 隐藏 Compose 额外添加的容器名前缀。
