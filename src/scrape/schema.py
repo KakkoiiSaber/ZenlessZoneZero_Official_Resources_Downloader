@@ -112,7 +112,7 @@ def pack_wiki(document):
     result['categories'] = {ident:category['name'] for ident,category in document['categories'].items()}
     entries = {}
     for ident, entry in document['entries'].items():
-        value = {**fields(entry, ('title','category_ids', *SCAN_FIELDS)), 'folders':[], 'resources':[]}
+        value = {**fields(entry, ('title','category_ids','cover_url', *SCAN_FIELDS)), 'folders':[], 'resources':[]}
         links = list(dict.fromkeys([*([entry['miyoushe_url']] if entry.get('miyoushe_url') else []),
                                    *entry.get('detail_links',[]), *entry.get('miyoushe_posts',[])]))
         mi_ids, other_links = [], []
@@ -188,7 +188,7 @@ def expand_wiki(document, sources):
         result['categories'][ident] = {'id':int(ident), 'name':name, 'entry_ids':[]}
     for ident, value in document['entries'].items():
         links = [URL_TEMPLATES['miyoushe'].format(id=post_id) for post_id in value.get('miyoushe_ids',[])]
-        entry = {**fields(value, ('title','category_ids', *SCAN_FIELDS, 'error','official_unavailable')),
+        entry = {**fields(value, ('title','category_ids','cover_url', *SCAN_FIELDS, 'error','official_unavailable')),
                  'id':ident, 'url':URL_TEMPLATES['wiki'].format(id=ident), 'status':value.get('status','ok'),
                  'parser_version':value.get('parser_version',document['parser_version']),
                  'miyoushe_url':links[0] if links else None,

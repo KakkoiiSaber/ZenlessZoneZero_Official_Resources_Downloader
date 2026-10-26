@@ -149,6 +149,26 @@ def plan(document):
     return list(result.values())
 
 
+def cover_plan(document, resource_ids=None):
+    """Keep presentation covers outside the media plan and NAS media directories."""
+    result = []
+    wanted = set(resource_ids or [])
+    for ident, entry in document['entries'].items():
+        url = entry.get('cover_url')
+        if not url or (wanted and not any(r['id'] in wanted for r in entry['resources'])):
+            continue
+        parsed = urlsplit(url)
+        suffix = Path(parsed.path).suffix.lower()
+        if (parsed.scheme not in {'http', 'https'} or not parsed.hostname or parsed.username
+                or parsed.password or parsed.fragment or suffix not in {'.jpg','.jpeg','.png','.webp','.gif','.avif'}):
+            raise ValueError('Invalid cover URL')
+        filename = digest(str(ident) + ':' + canonical_url(url)) + suffix
+        resource = {'id': f'wiki:{ident}:cover', 'kind': 'image', 'url': url,
+                    'paths': [filename], 'label': entry['title'] + ' / 封面'}
+        result.append({**resource, 'fingerprint': fingerprint(resource)})
+    return result
+
+
 @contextmanager
 def exclusive_lock(directory):
     directory.mkdir(parents=True, exist_ok=True)
@@ -226,7 +246,7 @@ class Downloader:
         self.http.headers.update({'User-Agent': 'zzz-scraper-downloader/1', 'Accept-Encoding': 'identity'})
         self.active_paths = {}
 
-    def run(self, resources):
+    def run(self, resources, *, quiet_skips=False):
         self.active_paths = {p.casefold(): r['id'] for r in resources for p in r['paths']}
         for resource in resources:
             for relative in resource['paths']:
@@ -244,7 +264,7 @@ class Downloader:
                     if action == 'downloaded':
                         size = self.state.get(ident)['size']
                         LOG.info('downloaded %s %s', label, format_progress(size, size))
-                    else:
+                    elif not quiet_skips:
                         LOG.info('%s %s', action, label)
                     break
                 except InterruptedError:
@@ -502,9 +522,11 @@ def main():
     file_handler = None
     try:
         if args.dry_run:
-            resources = select_resources(plan(load_manifest(args.manifest_url, args.manifest_file,
-                                                            args.progress_interval)), args.resource_id)
+            document = load_manifest(args.manifest_url, args.manifest_file, args.progress_interval)
+            resources = select_resources(plan(document), args.resource_id)
+            covers = cover_plan(document, args.resource_id)
             LOG.info('Valid manifest: %d resources, %d placements', len(resources), sum(len(r['paths']) for r in resources))
+            LOG.info('Valid cover cache: %d covers', len(covers))
             return 0
         LOG.info('Preparing local download state')
         with exclusive_lock(args.state_dir):
@@ -518,11 +540,25 @@ def main():
                 LOG.info('Local download state ready')
                 document = load_manifest(args.manifest_url, args.manifest_file, args.progress_interval)
                 resources = select_resources(plan(document), args.resource_id)
+                covers = cover_plan(document, args.resource_id)
                 # Share the validated catalog with the offline Wiki, even without a Git pull.
                 atomic_json(args.state_dir / 'wiki.json', document, record_maps=('entries',))
                 LOG.info('Manifest ready: %d resources, %d placements', len(resources),
                          sum(len(resource['paths']) for resource in resources))
-                failed = worker.run(resources)['failed']
+                failed = 0
+                if covers:
+                    cover_root = args.state_dir / 'covers'
+                    cover_state = State(cover_root)
+                    cover_worker = Downloader(cover_root, cover_state, retries=args.retries,
+                        verify_days=args.verify_days, rate_limit=args.rate_limit,
+                        progress_interval=args.progress_interval, stop=stop)
+                    try:
+                        LOG.info('Updating local cover cache: %d covers', len(covers))
+                        failed += cover_worker.run(covers, quiet_skips=True)['failed']
+                    finally:
+                        cover_worker.http.close()
+                        cover_state.close()
+                failed += worker.run(resources)['failed']
                 return int(bool(failed or stop.is_set()))
             except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as error:
                 LOG.error('Download run failed: %s', type(error).__name__)

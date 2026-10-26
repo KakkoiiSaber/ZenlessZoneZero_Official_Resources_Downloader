@@ -11,7 +11,7 @@ import re
 import threading
 from urllib.parse import urlsplit
 
-from src.download import LOG_DATE_FORMAT, LOG_FORMAT, digest, plan, safe_path
+from src.download import LOG_DATE_FORMAT, LOG_FORMAT, cover_plan, digest, plan, safe_path
 
 WEB = Path(__file__).resolve().parent.parent / 'web'
 STATIC = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js',
@@ -20,7 +20,7 @@ STATIC = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js',
 
 
 class Catalog:
-    def __init__(self, manifest, media_root, snapshot=None):
+    def __init__(self, manifest, media_root, snapshot=None, covers='state/covers'):
         self.manifest = Path(manifest)
         self.media_root = Path(media_root).resolve()
         self.lock = threading.Lock()
@@ -29,6 +29,8 @@ class Catalog:
         self.resources = None
         self.paths = None
         self.snapshot = Path(snapshot) if snapshot else None
+        self.cover_root = Path(covers).resolve()
+        self.cover_paths = {}
 
     def index(self):
         with self.lock:
@@ -38,6 +40,7 @@ class Catalog:
             if signature != self.signature:
                 document = json.loads(manifest.read_text(encoding='utf-8'))
                 resources = {r['id']: r for r in plan(document)}
+                self.cover_paths = {digest(r['id']): r['paths'][0] for r in cover_plan(document)}
                 self.paths = {digest(r['id']): r['paths'] for r in resources.values()}
                 self.document, self.resources, self.signature = document, resources, signature
             return self.document, self.resources, self.paths
@@ -46,6 +49,15 @@ class Catalog:
         _, _, paths = self.index()
         for relative in paths.get(key, []):
             path = safe_path(self.media_root, relative)
+            if path.is_file() and path.stat().st_size > 0:
+                return path
+        return None
+
+    def locate_cover(self, key):
+        self.index()
+        relative = self.cover_paths.get(key)
+        if relative:
+            path = safe_path(self.cover_root, relative)
             if path.is_file() and path.stat().st_size > 0:
                 return path
         return None
@@ -76,8 +88,12 @@ class Catalog:
                         value['caption'] = raw['caption']
                     for index in ([raw['folder']] if 'folder' in raw else raw['folders']):
                         groups[index]['resources'].append(value)
-                entries.append({'id': ident, 'title': entry['title'],
-                                'categories': [str(c) for c in entry['category_ids']], 'groups': groups})
+                value = {'id': ident, 'title': entry['title'],
+                         'categories': [str(c) for c in entry['category_ids']], 'groups': groups}
+                cover_key = digest(f'wiki:{ident}:cover')
+                if self.locate_cover(cover_key):
+                    value['cover'] = '/covers/' + cover_key
+                entries.append(value)
             return {'generated_at': document.get('generated_at'), 'categories': document['categories'],
                     'entries': entries}, media
 
@@ -144,6 +160,12 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_error(404, 'Media has not been downloaded')
                     return
                 self.serve_file(path, head)
+            elif re.fullmatch(r'/covers/[0-9a-f]{64}', route):
+                path = self.catalog.locate_cover(route.rsplit('/', 1)[1])
+                if path is None:
+                    self.send_error(404, 'Cover has not been downloaded')
+                    return
+                self.serve_file(path, head)
             else:
                 self.send_error(404)
         except (BrokenPipeError, ConnectionResetError):
@@ -193,10 +215,11 @@ def main():
     parser.add_argument('--port', default=8080, type=int)
     parser.add_argument('--manifest', default='metafiles/wiki.json')
     parser.add_argument('--snapshot', default='state/wiki.json', help='Prefer the downloader local manifest snapshot')
+    parser.add_argument('--covers', default='state/covers', help='Read-only local cover cache directory')
     parser.add_argument('--downloads', default=os.environ.get('DOWNLOAD_PATH', 'downloads'))
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, datefmt=LOG_DATE_FORMAT)
-    catalog = Catalog(args.manifest, args.downloads, args.snapshot)
+    catalog = Catalog(args.manifest, args.downloads, args.snapshot, args.covers)
     document, _ = catalog.read()
     server = ThreadingHTTPServer((args.host, args.port), partial(Handler, catalog=catalog))
     logging.info('Local media Wiki: http://%s:%s (%s entries)', args.host, args.port, len(document['entries']))

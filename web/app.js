@@ -2,7 +2,7 @@
 const $ = selector => document.querySelector(selector);
 const state = {data: null, category: '', query: '', entry: null, groups: new Map(), page: 1};
 const symbols = {'73': '▷', '72': '▶', '98': '▧', '99': '♡'};
-let gallery = [], position = 0, previousFocus;
+let gallery = [], position = 0, previousFocus, viewerPoster;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let closingViewer = false;
 
@@ -117,8 +117,9 @@ function renderContent() {
     const items = [...uniqueResources([{groups}]).values()];
     const image = items.find(r => r.available && r.kind === 'image');
     const preview = element('div', 'entry-preview');
-    if (image) {
-      const img = element('img'); img.src = image.url; img.loading = 'lazy'; img.alt = ''; preview.append(img);
+    if (entry.cover || image) {
+      const img = element('img'); img.src = entry.cover || image.url; img.loading = 'lazy'; img.alt = ''; preview.append(img);
+      if (items.some(r => r.kind === 'video')) preview.append(element('span', 'preview-play', '▷'));
     } else {
       preview.classList.add(items[0]?.kind === 'video' ? 'video-placeholder' : 'image-placeholder');
       preview.append(element('span', 'preview-glyph', items[0]?.kind === 'video' ? '▷' : '▧'));
@@ -185,6 +186,7 @@ function renderGroup(entry, group) {
       stage.append(trigger);
     } else {
       const video = element('video'); video.src = resource.url; video.controls = true; video.preload = 'metadata'; video.playsInline = true;
+      if (entry.cover) video.poster = entry.cover;
       stage.append(video);
     }
   } else {
@@ -205,6 +207,7 @@ function openViewer(entry, group, index) {
   gallery = group.resources.filter(r => r.available);
   position = gallery.findIndex(r => r.id === group.resources[index].id);
   previousFocus = document.activeElement;
+  viewerPoster = entry.cover;
   $('#viewer-title').textContent = entry.title;
   $('#viewer-caption').textContent = group.name;
   drawViewer(); $('#viewer').showModal();
@@ -215,7 +218,10 @@ function drawViewer() {
   $('#player').replaceChildren();
   const media = element(item.kind === 'video' ? 'video' : 'img');
   media.src = item.url;
-  if (item.kind === 'video') media.controls = true; else media.alt = item.caption || item.filename;
+  if (item.kind === 'video') {
+    media.controls = true;
+    if (viewerPoster) media.poster = viewerPoster;
+  } else media.alt = item.caption || item.filename;
   $('#player').append(media);
   revealMedia($('#player'));
   $('#counter').textContent = `${position + 1} / ${gallery.length} · ${item.caption || item.filename}${item.size ? ` · ${size(item.size)}` : ''}`;

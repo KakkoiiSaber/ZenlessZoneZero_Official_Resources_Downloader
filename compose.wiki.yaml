@@ -4,7 +4,7 @@ services:
     build: .
     image: downloader:runtime
     entrypoint: [python, -m, src.wiki]
-    command: [--host, 0.0.0.0, --manifest, /manifest/wiki.json, --snapshot, /state/wiki.json, --downloads, /downloads]
+    command: [--host, 0.0.0.0, --manifest, /manifest/wiki.json, --snapshot, /state/wiki.json, --covers, /state/covers, --downloads, /downloads]
     user: "${NAS_UID:-1000}:${NAS_GID:-1000}"
     init: true
     restart: unless-stopped

@@ -11,7 +11,7 @@ import sys
 
 import requests
 
-from src.download import digest
+from src.download import cover_plan, digest
 from src.wiki import Catalog, Handler
 
 
@@ -87,6 +87,23 @@ class WikiTests(unittest.TestCase):
         (partials / (digest('image-1') + '.part')).write_bytes(b'partial')
         response = requests.get(self.url + '/media/' + digest('image-1'), timeout=5)
         self.assertEqual(response.status_code, 404)
+
+    def test_local_cover_is_served_without_exposing_cache_database_or_remote_url(self):
+        self.document['entries']['1']['cover_url'] = 'https://example.invalid/cover.jpg'
+        self.manifest.write_text(json.dumps(self.document), encoding='utf-8')
+        cover_root = self.root / 'covers'
+        cover_root.mkdir()
+        self.catalog.cover_root = cover_root
+        response = requests.get(self.url + '/api/catalog', timeout=5).json()
+        self.assertNotIn('cover', response['entries'][0])
+        resource = cover_plan(self.document)[0]
+        (cover_root / resource['paths'][0]).write_bytes(b'local-image')
+        (cover_root / 'downloads.sqlite3').write_bytes(b'private')
+        response = requests.get(self.url + '/api/catalog', timeout=5)
+        self.assertNotIn('example.invalid', response.text)
+        url = response.json()['entries'][0]['cover']
+        self.assertEqual(requests.get(self.url + url, timeout=5).content, b'local-image')
+        self.assertEqual(requests.get(self.url + '/covers/downloads.sqlite3', timeout=5).status_code, 404)
 
     def test_git_manifest_update_is_visible_without_restart(self):
         self.catalog.read()

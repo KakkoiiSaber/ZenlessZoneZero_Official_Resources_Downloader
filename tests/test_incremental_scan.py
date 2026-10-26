@@ -27,6 +27,27 @@ def mi_item(ident, top=False):
 
 
 class IncrementalScanTests(unittest.TestCase):
+    def test_wiki_cover_comes_from_index_without_refetching_old_body(self):
+        client = Mock()
+        cover = 'https://upload-bbs.miyoushe.com/upload/cover.jpg?x-oss-process=image/format,webp'
+        client.get.return_value = {'list': [{'id': cid, 'name': str(cid), 'list': [
+            {'content_id': cid, 'title': '主题', 'icon': cover}]} for cid in collect.CATEGORY_IDS]}
+        entries, _ = collect.discover_wiki(client)
+        expected = cover.split('?')[0].replace('upload-bbs.miyoushe.com', 'upload-bbs.mihoyo.com')
+        self.assertEqual(entries['73']['cover_url'], expected)
+        self.assertNotIn('cover_url', entries['98'])
+        previous = {ident: {**entry, 'status': 'ok', 'parser_version': collect.PARSER_VERSION}
+                    for ident, entry in entries.items()}
+        for entry in previous.values():
+            entry.pop('cover_url', None)
+        fetch = Mock()
+        with tempfile.TemporaryDirectory() as temp:
+            updated, failures, changed = collect.update_records('wiki', entries, previous,
+                Path(temp) / 'progress.json', fetch, 1, 0)
+        self.assertEqual((failures, changed), (0, 0))
+        fetch.assert_not_called()
+        self.assertEqual(updated['73']['cover_url'], expected)
+
     def test_official_consumes_page_with_old_pinned_post_and_stops_on_known_page(self):
         previous = {ident: old_post(ident) for ident in ['pin', 'old', 'older']}
         previous['video'] = old_post('video', 'video')
