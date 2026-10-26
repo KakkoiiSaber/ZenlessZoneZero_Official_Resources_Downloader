@@ -1,3 +1,4 @@
+name: zenlesszonezero_official_resources_downloader
 services:
   downloader:
     build: .

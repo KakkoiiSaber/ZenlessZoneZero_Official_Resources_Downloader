@@ -14,8 +14,8 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
 1. 确认 NAS 的 `git --version` 可用，在选好的项目父目录 clone main：
 
    ```sh
-   git clone --depth 1 --branch main https://github.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader.git downloader
-   cd downloader
+   git clone --depth 1 --branch main https://github.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader.git
+   cd ZenlessZoneZero_Official_Resources_Downloader
    ```
 
    目标目录须不存在或为空。已有手动上传目录的迁移见后文，不要直接覆盖。
@@ -59,6 +59,8 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    如界面没有终端入口，验证与日志也可以通过 SSH 执行上面的命令。
    `compose.yaml` 和 `run-downloader.sh` 保持仓库原样，个人参数全部放 `.env`；
    不能只粘贴 YAML 而缺少 `src/` 和依赖文件。代码挂载是只读，容器不能修改仓库源码。
+   项目文件夹保留仓库原名。Compose 默认项目名为 `zenlesszonezero_official_resources_downloader`，
+   因 Docker 项目名只允许小写；如需自定义，只在本地 `.env` 设置 `COMPOSE_PROJECT_NAME`。
 
 首次会下载清单中的全部资源，可能占用较多容量。默认串行下载，避免大量并发。
 首次部署测试可在项目的 `command` 中加入重复的 `--resource-id 资源ID`，
@@ -174,7 +176,7 @@ docker compose build --pull
 
 ## 群晖每日任务计划
 
-先在新仓库目录构建一次镜像：`sudo docker compose --env-file .env -p downloader -f compose.yaml build`。
+先在新仓库目录构建一次镜像：`sudo docker compose --env-file .env -f compose.yaml build`。
 计划任务只运行现有镜像，不每天构建或自动升级程序。
 
 DSM 控制面板 → 任务计划 → 新增 → 计划的任务 → 用户定义的脚本：
