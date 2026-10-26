@@ -351,6 +351,17 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(len(plan(load_manifest('', local))), 1)
         self.assertGreater(len(plan(json.loads(Path('metafiles/wiki.json').read_text(encoding='utf8')))), 3000)
 
+    def test_manifest_fetch_reports_network_stages_without_exposing_url(self):
+        self.server.body = json.dumps(self.doc).encode()
+        self.server.content_type = 'application/json'
+        with self.assertLogs('download', level='INFO') as logs:
+            self.assertEqual(load_manifest(self.url), self.doc)
+        output = '\n'.join(logs.output)
+        self.assertIn('Fetching download manifest', output)
+        self.assertIn('Manifest response received; reading body', output)
+        self.assertIn('Manifest received:', output)
+        self.assertNotIn(self.url, output)
+
     def test_cli_exits_by_default_and_persists_state_across_processes(self):
         local = Path(self.temp.name) / 'wiki.json'
         local.write_text(json.dumps(self.doc), encoding='utf8')
@@ -359,6 +370,8 @@ class DownloadTests(unittest.TestCase):
         first = subprocess.run(command, capture_output=True, text=True, timeout=20)
         self.assertEqual(first.returncode, 0, first.stderr)
         self.assertRegex(first.stderr, r'\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\]\[INFO\]')
+        self.assertLess(first.stderr.index('Downloader started'), first.stderr.index('Reading local manifest'))
+        self.assertLess(first.stderr.index('Manifest ready:'), first.stderr.index('start at'))
         self.server.calls.clear()
         second = subprocess.run(command, capture_output=True, text=True, timeout=20)
         self.assertEqual(second.returncode, 0, second.stderr)
