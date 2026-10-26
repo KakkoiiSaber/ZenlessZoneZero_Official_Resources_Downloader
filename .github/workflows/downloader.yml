@@ -17,8 +17,13 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: python -m unittest discover -s tests -v
+      - run: sh -n run-downloader.sh
       - run: docker compose config --quiet
       - run: docker compose build
+      - name: Verify the runtime image contains dependencies but no application code
+        run: >-
+          docker run --rm --network none --entrypoint python downloader:runtime
+          -c "import pathlib, requests; assert not pathlib.Path('/app/src').exists()"
       - name: Validate the real manifest inside the non-root container
         run: >-
           docker compose run --rm --no-deps
@@ -30,5 +35,13 @@ jobs:
           timeout 30s docker run --rm --network none --read-only \
             --tmpfs /downloads:uid=1000,gid=1000,mode=0700 \
             --tmpfs /state:uid=1000,gid=1000,mode=0700 \
+            -v "$PWD/src:/app/src:ro" \
             -v "$RUNNER_TEMP/empty-wiki.json:/manifest/wiki.json:ro" \
-            zzz-downloader:local --manifest-file /manifest/wiki.json
+            downloader:runtime --manifest-file /manifest/wiki.json
+      - name: Verify a source update is visible without rebuilding the image
+        run: |
+          mkdir -p "$RUNNER_TEMP/live-source/src"
+          printf '%s\n' 'print("source-v1")' > "$RUNNER_TEMP/live-source/src/download.py"
+          docker run --rm --network none -v "$RUNNER_TEMP/live-source/src:/app/src:ro" downloader:runtime | grep -Fx source-v1
+          printf '%s\n' 'print("source-v2")' > "$RUNNER_TEMP/live-source/src/download.py"
+          docker run --rm --network none -v "$RUNNER_TEMP/live-source/src:/app/src:ro" downloader:runtime | grep -Fx source-v2

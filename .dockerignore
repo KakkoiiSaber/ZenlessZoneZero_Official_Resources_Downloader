@@ -1,5 +1,2 @@
 *
 !requirements-download.txt
-!src/
-src/*
-!src/download.py

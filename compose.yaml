@@ -1,7 +1,7 @@
 services:
   downloader:
     build: .
-    image: zzz-downloader:local
+    image: downloader:runtime
     user: "${NAS_UID:-1000}:${NAS_GID:-1000}"
     init: true
     restart: "no"
@@ -13,8 +13,14 @@ services:
       MANIFEST_URL: "${MANIFEST_URL:-https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/main/metafiles/wiki.json}"
       VERIFY_DAYS: "${VERIFY_DAYS:-7}"
     volumes:
-      - "${DOWNLOAD_PATH:-./nas-data/downloads}:/downloads"
-      - "${STATE_PATH:-./nas-data/state}:/state"
+      - type: bind
+        source: ./src
+        target: /app/src
+        read_only: true
+        bind:
+          create_host_path: false
+      - "${DOWNLOAD_PATH:-./downloads}:/downloads"
+      - "${STATE_PATH:-./state}:/state"
     stop_grace_period: 90s
     logging:
       driver: json-file

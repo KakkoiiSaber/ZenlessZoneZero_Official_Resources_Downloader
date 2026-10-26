@@ -7,13 +7,21 @@ GitHub Actions 继续生成三个 metafile；NAS 只读取 `wiki.json` 中已经
 ## 首次部署
 
 NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Container Manager 的“项目”）。
-镜像在 NAS 本机构建，没有预先发布到镜像仓库；Python 和依赖安装在镜像里，NAS 不用安装 Python。
+镜像在 NAS 本机构建，只安装 Python 和下载依赖，不包含项目 Python 源码。
+仓库的 `src/` 在运行时只读挂载进容器，NAS 不用安装 Python。
+个人 UID/GID、目录等只保存在本地 `.env`，已被 Git 忽略；GitHub 只保存通用模板。
 
-1. 把 **main 分支**的代码放到 NAS，例如 `/volume1/docker/zzz-downloader/app`。
-   可以在 GitHub 下载 main 的 ZIP、解压上传。
-   实际构建只用到 `Dockerfile`、`requirements-download.txt` 和 `src/download.py`，
-   部署还需要 `compose.yaml` 和 `.env.example`。
-2. 建立下载目录和状态目录，例如：
+1. 确认 NAS 的 `git --version` 可用，在选好的项目父目录 clone main：
+
+   ```sh
+   git clone --depth 1 --branch main https://github.com/KakkoiiSaber/zzz_scraper.git downloader
+   cd downloader
+   ```
+
+   目标目录须不存在或为空。已有手动上传目录的迁移见后文，不要直接覆盖。
+   浅克隆仅获取当前版本，避免下载旧媒体历史；代码更新无需 SSH 密钥或 GitHub token。
+2. 默认使用仓库内 `downloads/` 和 `state/`，只提交 `.gitkeep` 占位；实际内容由 Git 忽略。
+   也可以在 `.env` 指向已有的 NAS 下载和状态目录，例如：
 
    ```text
    /volume1/Media/ZZZ
@@ -41,7 +49,7 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    # 先验证清单，显示资源数量，不下载媒体。
    docker compose run --rm downloader --dry-run
    # 首次执行：增量下载一轮，完成后退出并返回容器退出码。
-   docker compose up --no-build --abort-on-container-exit --exit-code-from downloader
+   sudo /bin/sh ./run-downloader.sh
    ```
 
    群晖可以在 Container Manager → 项目 → 新增，选择含 `compose.yaml` 和 `.env`
@@ -49,7 +57,8 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    部分群晖版本的路径选择器不显示 `home/homes`；项目放在个人目录时，
    可以通过 NAS 终端在该目录执行 Compose，之后到 Container Manager 的容器列表查看状态和日志。
    如界面没有终端入口，验证与日志也可以通过 SSH 执行上面的命令。
-   Compose 的 `build: .` 必须能访问同目录的代码，不能只粘贴 YAML 而缺少源文件。
+   `compose.yaml` 和 `run-downloader.sh` 保持仓库原样，个人参数全部放 `.env`；
+   不能只粘贴 YAML 而缺少 `src/` 和依赖文件。代码挂载是只读，容器不能修改仓库源码。
 
 首次会下载清单中的全部资源，可能占用较多容量。默认串行下载，避免大量并发。
 首次部署测试可在项目的 `command` 中加入重复的 `--resource-id 资源ID`，
@@ -57,7 +66,7 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
 配合 `--rate-limit 262144` 限速为每秒 256 KiB，方便在日志显示视频开始后手动停止、
 重新启动，核对 `validated HTTP 206; continuing at ...` 续传日志中的非零进度。
 测试和正式项目都使用 `restart: "no"`；每次完成后退出，由 NAS 任务计划决定下一次何时运行。
-容器无需特权模式，不挂载 Docker socket，仅挂载这两个目录；使用填写的普通用户权限，
+容器无需特权模式，不挂载 Docker socket，仅挂载只读源码和下载、状态目录；使用填写的普通用户权限，
 容器根文件系统只读。下载目录最好专门用于本项目，避免混入手工保存的同名文件。
 
 ## 增量、续传和本地记录
@@ -113,12 +122,18 @@ docker compose down
 # 只执行一轮（先停后台实例，避免锁冲突）
 docker compose up --no-build --abort-on-container-exit --exit-code-from downloader
 
-# 更新应用代码后重新构建；.env、下载与状态目录保留
+# 日常代码更新：等当前任务结束后同步，无需构建镜像
+git pull --ff-only origin main
+
+# 仅 requirements-download.txt 或 Dockerfile 变化时重建运行环境
 docker compose build --pull
-# 仅构建，不立即下载；之后手动运行或等 NAS 任务计划触发。
 ```
 
-更新代码需要重新下载 main 的代码或执行 `git pull`，但不要覆盖自己的 `.env`。
+日常只需 `git pull --ff-only origin main`；下一次任务启动新的 Python 进程时直接使用新代码。
+不需要传文件、不需要为源码变化重新 build，也不需要立即运行 Compose。
+`git pull` 不会覆盖被忽略的本地 `.env`。若修改了仓库跟踪文件导致无法快进，先检查本地改动，
+不要用 `reset --hard` 抹掉配置；个人参数应迁回 `.env`。
+依赖或 Dockerfile 改动时需要重新 build；Compose 配置变化会在下次任务时应用。
 更改 `.env` 后，下次 `docker compose up` 会应用配置变化；单纯 restart 不应用配置变化。
 不要删除状态目录，否则已有文件失去归属记录，程序会拒绝覆盖同名文件。
 备份时先停止容器，再一起备份下载目录和状态目录；迁移时保持这两者配套。
@@ -142,7 +157,7 @@ docker compose build --pull
 2. 正式 Compose 使用相同 UID/GID、相同下载及状态挂载路径，配置
    `restart: "no"`，去掉测试 `command` 和旧 `CHECK_INTERVAL`。
    不再传入 `--once`、`--resource-id`、`--rate-limit` 或 `--retries 1`；默认无资源筛选、
-   不限速、失败最多重试三次。更新 `src/download.py` 后重新构建镜像，才能应用新程序行为。
+   不限速、失败最多重试三次。
 3. 正式项目每次读取完整清单，跳过已经完成的小样资源，下载剩余资源，然后退出。
    不在容器内部等待，不配置何时启动；NAS 重启后也不会由 Docker 自动重新运行。
 4. `data` 内媒体、`.zzz-partials` 和 `state/downloads.sqlite3` 都应保留。
@@ -151,9 +166,15 @@ docker compose build --pull
 5. 旧测试配置如果仍读取 `/dev/metafiles/wiki.json`，将其改为 `/main/metafiles/wiki.json`。
    下次任务运行时 Compose 会应用环境变量变化；媒体目录和下载记录保持原样。
 
+旧版将代码打进镜像、使用个人 `docker-compose.yml` 的部署，需要一次性迁移：
+先停用任务计划并等当前任务完成，停止旧 Compose 项目；保留旧项目目录作备份，
+在新目录 clone main，将原 UID/GID、下载和状态绝对路径填写到新目录的 `.env`，
+首次 build 依赖镜像，并将任务计划指向新仓库的 `run-downloader.sh`。
+原下载目录、SQLite 记录均不迁移或清空；测试成功后再启用任务计划。
+
 ## 群晖每日任务计划
 
-先在 NAS 构建一次镜像：`sudo docker compose -p downloader -f /实际项目路径/docker-compose.yml build`。
+先在新仓库目录构建一次镜像：`sudo docker compose --env-file .env -p downloader -f compose.yaml build`。
 计划任务只运行现有镜像，不每天构建或自动升级程序。
 
 DSM 控制面板 → 任务计划 → 新增 → 计划的任务 → 用户定义的脚本：
@@ -163,10 +184,10 @@ DSM 控制面板 → 任务计划 → 新增 → 计划的任务 → 用户定�
 - 计划：每天一次，具体钟点由用户选择，按 DSM 时区执行。
 - 任务设置：运行 Compose，保持前台等待，以便 DSM 记录完成状态和退出码。
 
-脚本示例（Docker 路径可通过 NAS 的 `command -v docker` 核对，项目路径替换为实际值）：
+脚本示例（项目路径替换为实际值，脚本会定位 Docker，并显式读取同目录 `.env`）：
 
 ```sh
-/var/packages/ContainerManager/target/usr/bin/docker compose -p downloader -f '/实际项目路径/docker-compose.yml' up --no-build --abort-on-container-exit --exit-code-from downloader
+/bin/sh '/实际项目路径/run-downloader.sh'
 ```
 
 不要使用 `up -d` 或仅 `start` 作为计划任务：前者立即返回，后者不能直接反映本次下载结果。
