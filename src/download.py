@@ -127,7 +127,11 @@ def plan(document):
                 claims[key] = ident
                 if relative not in paths:
                     paths.append(relative)
-            result[ident] = {**resource, 'paths': paths, 'fingerprint': fingerprint(resource)}
+            directory = entry['folders'][positions[0]]
+            title = entry.get('title') or directory[min(1, len(directory) - 1)]
+            label = ' / '.join([title, *directory[2:], resource['filename']])
+            label = ' '.join(re.sub(r'[\x00-\x1f\x7f]', ' ', label).split())
+            result[ident] = {**resource, 'paths': paths, 'fingerprint': fingerprint(resource), 'label': label}
     return list(result.values())
 
 
@@ -217,11 +221,12 @@ class Downloader:
             if self.stop.is_set():
                 break
             ident = resource['id']
+            label = resource.get('label', ident)
             for attempt in range(self.retries):
                 try:
                     action = self.sync(resource)
                     counts[action] += 1
-                    LOG.info('%s %s', action, ident)
+                    LOG.info('%s %s', action, label)
                     break
                 except InterruptedError:
                     self.stop.set()
@@ -234,7 +239,7 @@ class Downloader:
                             detail += f' HTTP {error.response.status_code}'
                     elif isinstance(error, ValueError):
                         detail = str(error)
-                    LOG.warning('%s attempt %d/%d: %s', ident, attempt + 1, self.retries,
+                    LOG.warning('%s attempt %d/%d: %s', label, attempt + 1, self.retries,
                                 detail)
                     if attempt + 1 == self.retries:
                         counts['failed'] += 1
@@ -256,6 +261,7 @@ class Downloader:
 
     def sync(self, resource):
         ident = resource['id']
+        label = resource.get('label', ident)
         record = self.state.get(ident)
         source = self.existing(record, ident) if record.get('fingerprint') == resource['fingerprint'] else None
         if source and record.get('complete'):
@@ -267,7 +273,7 @@ class Downloader:
                     self.check_expiry(resource)
                     with self.http.head(resource['url'], timeout=(15, 60), allow_redirects=True) as response:
                         if response.status_code in {405, 501}:
-                            LOG.info('HEAD unavailable for %s; verified local SHA-256 only', ident)
+                            LOG.info('HEAD unavailable for %s; verified local SHA-256 only', label)
                         else:
                             response.raise_for_status()
                             remote_size = response.headers.get('Content-Length')
@@ -346,6 +352,7 @@ class Downloader:
         self.state.save(ident, record)
 
     def transfer(self, resource, record):
+        label = resource.get('label', resource['id'])
         part = self.partial(resource)
         part.parent.mkdir(parents=True, exist_ok=True)
         offset = part.stat().st_size if part.exists() else 0
@@ -355,14 +362,14 @@ class Downloader:
             part.unlink()
             offset = 0
         headers = {'Range': f'bytes={offset}-', 'If-Range': validator} if offset else {}
-        LOG.info('%s %s at %s', resource['id'], 'resume' if offset else 'start',
+        LOG.info('%s %s at %s', label, 'resume' if offset else 'start',
                  format_progress(offset, resource.get('size_bytes') or record.get('total')))
         with self.http.get(resource['url'], headers=headers, stream=True, timeout=(15, 60)) as response:
             if response.status_code == 416 and offset:
                 match = re.fullmatch(r'bytes \*/(\d+)', response.headers.get('Content-Range', ''))
                 if (match and int(match[1]) == offset and record.get('total') == offset
                         and response.headers.get('ETag') == validator):
-                    LOG.info('%s progress %s', resource['id'], format_progress(offset, offset))
+                    LOG.info('%s progress %s', label, format_progress(offset, offset))
                     return
                 part.unlink(missing_ok=True)
                 raise ValueError('Unsatisfied range; restarting download')
@@ -387,7 +394,7 @@ class Downloader:
                     raise ValueError('Range or validator mismatch; restarting download')
             elif response.status_code == 200:
                 if offset:
-                    LOG.info('%s server restarted body; writing from zero', resource['id'])
+                    LOG.info('%s server restarted body; writing from zero', label)
                 offset, total = 0, length  # Server ignored Range / If-Range detected a new version.
             else:
                 raise ValueError('Expected HTTP 200 or 206')
@@ -403,7 +410,7 @@ class Downloader:
                 record.update(etag=response.headers.get('ETag'), last_modified=response.headers.get('Last-Modified'), total=total)
                 self.state.save(resource['id'], record)
                 if offset:
-                    LOG.info('%s validated HTTP 206; continuing at %s', resource['id'],
+                    LOG.info('%s validated HTTP 206; continuing at %s', label,
                              format_progress(offset, total))
                 started, transferred, reported = time.monotonic(), 0, time.monotonic()
                 chunk_size = min(256 * 1024, self.rate_limit) if self.rate_limit else 256 * 1024
@@ -417,7 +424,7 @@ class Downloader:
                         if delay > 0 and self.stop.wait(delay):
                             raise InterruptedError()
                     if time.monotonic() - reported >= 5:
-                        LOG.info('%s progress %s', resource['id'],
+                        LOG.info('%s progress %s', label,
                                  format_progress(offset + transferred, total or expected))
                         reported = time.monotonic()
                 handle.flush()
@@ -425,7 +432,7 @@ class Downloader:
             size = part.stat().st_size
             if not size or (total is not None and size != total) or (expected and size != expected):
                 raise ValueError('Incomplete media body')
-            LOG.info('%s progress %s', resource['id'], format_progress(size, size))
+            LOG.info('%s progress %s', label, format_progress(size, size))
 
 
 def load_manifest(url, filename=None):

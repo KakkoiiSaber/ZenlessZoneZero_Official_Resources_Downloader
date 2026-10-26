@@ -162,6 +162,35 @@ class DownloadTests(unittest.TestCase):
         self.assertIn('validated HTTP 206; continuing at 262.14 KB / 1.28 MB (20.5%)', output)
         self.assertIn('progress 1.28 MB / 1.28 MB (100.0%)', output)
 
+    def test_logs_use_theme_section_and_filename_instead_of_resource_ids(self):
+        self.doc['entries']['1']['title'] = '3.2 剧情壁纸'
+        self.doc['entries']['1']['folders'][0].append('章节一')
+        resources = plan(self.doc)
+        with self.assertLogs('download', level='INFO') as logs:
+            self.assertEqual(self.worker.run(resources)['downloaded'], 1)
+        output = '\n'.join(logs.output)
+        self.assertIn('3.2 剧情壁纸 / 章节一 / 001.jpg start at', output)
+        self.assertIn('downloaded 3.2 剧情壁纸 / 章节一 / 001.jpg', output)
+        self.assertNotIn(self.r['id'], output)
+        # Failure/retry messages must identify the same readable theme too.
+        (self.root / resources[0]['paths'][0]).unlink()
+        self.server.content_type = 'text/html'
+        with self.assertLogs('download', level='INFO') as errors:
+            self.assertEqual(self.worker.run(resources)['failed'], 1)
+        self.assertIn('3.2 剧情壁纸 / 章节一 / 001.jpg attempt 1/1', '\n'.join(errors.output))
+
+    def test_display_title_changes_do_not_redownload_or_change_resource_identity(self):
+        self.worker.run(self.resources)
+        self.server.calls.clear()
+        self.doc['entries']['1']['title'] = '新的主题\n名称'
+        resources = plan(self.doc)
+        self.assertEqual(resources[0]['fingerprint'], self.r['fingerprint'])
+        self.assertEqual(resources[0]['id'], self.r['id'])
+        with self.assertLogs('download', level='INFO') as logs:
+            self.assertEqual(self.worker.run(resources)['skipped'], 1)
+        self.assertIn('skipped 新的主题 名称 / 001.jpg', '\n'.join(logs.output))
+        self.assertEqual(self.server.calls, [])
+
     def test_ignored_range_restarts_instead_of_appending(self):
         self.seed_partial(100)
         self.server.ignore_range = True
