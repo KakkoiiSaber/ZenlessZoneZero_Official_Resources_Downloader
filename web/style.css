@@ -9,10 +9,10 @@
 *{
   box-sizing:border-box
 }
-.nav-link,.pills button,.section-tabs button,.back-button,.icon-button,.load-more{
+.nav-link,.pills button,.section-tabs button,.back-button,.icon-button{
   transition:background-color 160ms ease,color 160ms ease,border-color 160ms ease,box-shadow 160ms ease,transform 160ms ease;
 }
-.nav-link:active,.pills button:active,.section-tabs button:active,.load-more:active{
+.nav-link:active,.pills button:active,.section-tabs button:active:active{
   transform:translateY(1px);
 }
 .entry-card:active{
@@ -273,14 +273,8 @@ h1{
   margin:4px 0 0;
   color:#919789
 }
-.load-more{
-  display:block;
-  background:#242721;
-  border:1px solid #4c5142;
-  border-radius:25px;
-  color:#d8ddcd;
-  padding:10px 32px;
-  margin:36px auto
+.load-sentinel{
+  height:1px;
 }
 .back-button{
   margin-bottom:12px;
