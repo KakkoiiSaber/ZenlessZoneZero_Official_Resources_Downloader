@@ -13,6 +13,7 @@ services:
     environment:
       MANIFEST_URL: "${MANIFEST_URL:-https://raw.githubusercontent.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader/main/metafiles/wiki.json}"
       VERIFY_DAYS: "${VERIFY_DAYS:-7}"
+      PROGRESS_INTERVAL: "${PROGRESS_INTERVAL:-60}"
     volumes:
       - type: bind
         source: ./src
