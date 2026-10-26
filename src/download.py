@@ -22,6 +22,23 @@ DEFAULT_MANIFEST = 'https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/m
 MAX_MANIFEST = 32 * 1024 * 1024
 
 
+def format_size(size):
+    value = float(size)
+    for unit in ('B', 'KB', 'MB', 'GB', 'TB'):
+        if round(value, 2) < 1000 or unit == 'TB':
+            return f'{int(value)} B' if unit == 'B' else f'{value:.2f} {unit}'
+        value /= 1000
+
+
+def format_progress(done, total=None):
+    if not total:
+        return f'{format_size(done)} (total unknown)'
+    percent = min(100.0, max(0.0, done * 100 / total))
+    if done < total:
+        percent = min(percent, 99.9)  # Rounding must not imply completion before the last byte.
+    return f'{format_size(done)} / {format_size(total)} ({percent:.1f}%)'
+
+
 def digest(value):
     return hashlib.sha256(value.encode()).hexdigest()
 
@@ -338,12 +355,14 @@ class Downloader:
             part.unlink()
             offset = 0
         headers = {'Range': f'bytes={offset}-', 'If-Range': validator} if offset else {}
-        LOG.info('%s %s at %d bytes', resource['id'], 'resume' if offset else 'start', offset)
+        LOG.info('%s %s at %s', resource['id'], 'resume' if offset else 'start',
+                 format_progress(offset, resource.get('size_bytes') or record.get('total')))
         with self.http.get(resource['url'], headers=headers, stream=True, timeout=(15, 60)) as response:
             if response.status_code == 416 and offset:
                 match = re.fullmatch(r'bytes \*/(\d+)', response.headers.get('Content-Range', ''))
                 if (match and int(match[1]) == offset and record.get('total') == offset
                         and response.headers.get('ETag') == validator):
+                    LOG.info('%s progress %s', resource['id'], format_progress(offset, offset))
                     return
                 part.unlink(missing_ok=True)
                 raise ValueError('Unsatisfied range; restarting download')
@@ -384,7 +403,8 @@ class Downloader:
                 record.update(etag=response.headers.get('ETag'), last_modified=response.headers.get('Last-Modified'), total=total)
                 self.state.save(resource['id'], record)
                 if offset:
-                    LOG.info('%s validated HTTP 206; continuing at %d bytes', resource['id'], offset)
+                    LOG.info('%s validated HTTP 206; continuing at %s', resource['id'],
+                             format_progress(offset, total))
                 started, transferred, reported = time.monotonic(), 0, time.monotonic()
                 chunk_size = min(256 * 1024, self.rate_limit) if self.rate_limit else 256 * 1024
                 for chunk in response.iter_content(chunk_size):
@@ -397,13 +417,15 @@ class Downloader:
                         if delay > 0 and self.stop.wait(delay):
                             raise InterruptedError()
                     if time.monotonic() - reported >= 5:
-                        LOG.info('%s progress %d/%s bytes', resource['id'], offset + transferred, total or '?')
+                        LOG.info('%s progress %s', resource['id'],
+                                 format_progress(offset + transferred, total or expected))
                         reported = time.monotonic()
                 handle.flush()
                 os.fsync(handle.fileno())
             size = part.stat().st_size
             if not size or (total is not None and size != total) or (expected and size != expected):
                 raise ValueError('Incomplete media body')
+            LOG.info('%s progress %s', resource['id'], format_progress(size, size))
 
 
 def load_manifest(url, filename=None):

@@ -11,7 +11,7 @@ import threading
 import unittest
 
 from src.download import (Downloader, State, canonical_url, exclusive_lock, fingerprint,
-                          load_manifest, plan, select_resources)
+                          load_manifest, plan, select_resources, format_size, format_progress)
 
 
 class MediaHandler(BaseHTTPRequestHandler):
@@ -76,6 +76,21 @@ def manifest(url):
         ]}}}
 
 
+class ProgressDisplayTests(unittest.TestCase):
+    def test_sizes_use_automatic_decimal_units(self):
+        for size, expected in [(0, '0 B'), (999, '999 B'), (1000, '1.00 KB'),
+                               (1_000_000, '1.00 MB'), (1_500_000_000, '1.50 GB'),
+                               (1_000_000_000_000, '1.00 TB')]:
+            with self.subTest(size=size):
+                self.assertEqual(format_size(size), expected)
+
+    def test_percent_unknown_total_and_rounding_before_completion(self):
+        self.assertEqual(format_progress(500_000, 2_000_000), '500.00 KB / 2.00 MB (25.0%)')
+        self.assertEqual(format_progress(500_000), '500.00 KB (total unknown)')
+        self.assertEqual(format_progress(999_999, 1_000_000), '1.00 MB / 1.00 MB (99.9%)')
+        self.assertEqual(format_progress(1_000_000, 1_000_000), '1.00 MB / 1.00 MB (100.0%)')
+
+
 class DownloadTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -138,6 +153,14 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
         self.assertIn(('GET', f'bytes={offset}-', '"version1"'), self.server.calls)
         self.assertEqual(self.target().read_bytes(), self.server.body)
+
+    def test_resume_and_completion_logs_show_size_and_percentage(self):
+        self.seed_partial(262144)
+        with self.assertLogs('download', level='INFO') as logs:
+            self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
+        output = '\n'.join(logs.output)
+        self.assertIn('validated HTTP 206; continuing at 262.14 KB / 1.28 MB (20.5%)', output)
+        self.assertIn('progress 1.28 MB / 1.28 MB (100.0%)', output)
 
     def test_ignored_range_restarts_instead_of_appending(self):
         self.seed_partial(100)
