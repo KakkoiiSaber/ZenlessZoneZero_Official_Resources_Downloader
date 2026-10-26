@@ -10,7 +10,7 @@ services:
     security_opt:
       - no-new-privileges:true
     environment:
-      MANIFEST_URL: "${MANIFEST_URL:-https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/main/metafiles/wiki.json}"
+      MANIFEST_URL: "${MANIFEST_URL:-https://raw.githubusercontent.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader/main/metafiles/wiki.json}"
       VERIFY_DAYS: "${VERIFY_DAYS:-7}"
     volumes:
       - type: bind

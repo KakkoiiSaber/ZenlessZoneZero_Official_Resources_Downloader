@@ -14,7 +14,7 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
 1. 确认 NAS 的 `git --version` 可用，在选好的项目父目录 clone main：
 
    ```sh
-   git clone --depth 1 --branch main https://github.com/KakkoiiSaber/zzz_scraper.git downloader
+   git clone --depth 1 --branch main https://github.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader.git downloader
    cd downloader
    ```
 
@@ -39,7 +39,7 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    DOWNLOAD_PATH=/volume1/Media/ZZZ
    STATE_PATH=/volume1/docker/zzz-downloader/state
    VERIFY_DAYS=7
-   MANIFEST_URL=https://raw.githubusercontent.com/KakkoiiSaber/zzz_scraper/main/metafiles/wiki.json
+   MANIFEST_URL=https://raw.githubusercontent.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader/main/metafiles/wiki.json
    ```
 
 4. 在项目目录执行：
