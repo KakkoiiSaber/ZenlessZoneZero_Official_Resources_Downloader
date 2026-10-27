@@ -59,6 +59,14 @@ class WikiTests(unittest.TestCase):
         second = requests.get(self.url + '/api/catalog', timeout=5).json()
         self.assertTrue(second['entries'][0]['groups'][0]['resources'][0]['available'])
 
+    def test_debug_mode_is_opt_in_and_preserves_browsing_data(self):
+        normal = requests.get(self.url + '/api/catalog', timeout=5).json()
+        self.assertIs(normal['debug'], False)
+        debug_catalog = Catalog(self.manifest, self.media, debug=True)
+        debug, _ = debug_catalog.read()
+        self.assertIs(debug['debug'], True)
+        self.assertEqual(normal['entries'], debug['entries'])
+
     def test_preview_dimensions_follow_local_image_ratio_and_file_updates(self):
         path = self.finish_file()
         Image.new('RGB', (30, 90)).save(path, format='PNG')

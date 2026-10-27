@@ -113,7 +113,8 @@ function renderNavigation() {
     if (state.category === id) link.setAttribute('aria-current', 'page');
     const params = new URLSearchParams(id ? {category: id} : {});
     link.href = `#${params}`;
-    link.append(element('span', 'nav-symbol', symbols[id] || '◈'), element('span', '', name), element('small', '', String(entries.length)));
+    link.append(element('span', 'nav-symbol', symbols[id] || '◈'), element('span', '', name));
+    if (state.data.debug) link.append(element('small', '', String(entries.length)));
     nav.append(link);
   }
 }
@@ -174,7 +175,8 @@ function renderContent() {
         preview.append(element('span', 'preview-glyph', items[0]?.kind === 'video' ? '▷' : '▧'));
       }
       const text = element('div', 'entry-text');
-      text.append(element('h2', '', entry.title), element('p', '', `${items.length} 个资源 · ${items.filter(r => r.available).length} 已下载`));
+      text.append(element('h2', '', entry.title));
+      if (state.data.debug) text.append(element('p', '', `${items.length} 个资源 · ${items.filter(r => r.available).length} 已下载`));
       button.append(preview, text);
       button.onclick = () => setRoute(state.category, entry.id);
       fragment.append(button);
@@ -211,7 +213,8 @@ function renderDetail(entry, content) {
 function renderGroup(entry, group, preparedImage) {
   const section = element('section', 'group-panel'); section.id = `group-${group.index}`;
   const heading = element('div', 'group-heading');
-  heading.append(element('h2', '', group.name), element('small', '', `${group.resources.length} 个资源`));
+  heading.append(element('h2', '', group.name));
+  if (state.data.debug) heading.append(element('small', '', `${group.resources.length} 个资源`));
   section.append(heading);
   const selectionKey = `${entry.id}:${group.index}`;
   const selected = state.groups.get(selectionKey) || 0;
