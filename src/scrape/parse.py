@@ -327,12 +327,15 @@ def wiki_media(page):
         def group_path(group):
             path = []
             visited = set()
+            repeated = group.get('repeated') is True
             while group:
                 ident = str(group['module_group_id'])
                 if ident in visited:
                     raise ValueError('Cyclic Wiki module group')
                 visited.add(ident)
-                if group.get('name'):
+                # Repeated groups reference their template's original group.
+                # That reference is not a content parent (e.g. Vol.06 -> Vol.07).
+                if group.get('name') and not (path and repeated and group.get('repeated') is True):
                     path.insert(0, group['name'])
                 group = groups.get(str(group.get('parent_group_id')))
             return path
