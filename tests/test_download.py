@@ -174,6 +174,27 @@ class DownloadTests(unittest.TestCase):
         self.assertIn(('GET', f'bytes={offset}-', '"version1"'), self.server.calls)
         self.assertEqual(self.target().read_bytes(), self.server.body)
 
+    def test_unchanged_records_skip_without_media_access_or_database_writes(self):
+        from unittest.mock import patch
+        self.worker.run(self.resources)
+        writes = self.state.db.total_changes
+        with patch('src.download.safe_path', side_effect=AssertionError('media path inspected')), \
+                patch('src.download.file_hash', side_effect=AssertionError('media read')), \
+                patch.object(self.state, 'get', side_effect=AssertionError('per-file database query')), \
+                patch.object(self.worker, 'sync', side_effect=AssertionError('unchanged resource processed')):
+            self.assertEqual(self.worker.run(self.resources), {'downloaded':0,'skipped':1,'failed':0})
+        self.assertEqual(self.state.db.total_changes, writes)
+
+    def test_manifest_delta_only_processes_changed_content(self):
+        from unittest.mock import patch
+        other = {**self.r, 'id':'another', 'paths':['another.jpg']}
+        self.worker.run([self.r, other])
+        changed = {**other, 'url':self.url+'?version=2'}
+        changed['fingerprint'] = fingerprint(changed)
+        with patch.object(self.worker, 'sync', wraps=self.worker.sync) as sync:
+            self.assertEqual(self.worker.run([self.r, changed]), {'downloaded':1,'skipped':1,'failed':0})
+        self.assertEqual([call.args[0]['id'] for call in sync.call_args_list], ['another'])
+
     def test_resume_and_completion_logs_show_size_and_percentage(self):
         self.seed_partial(262144)
         with self.assertLogs('download', level='INFO') as logs:
@@ -195,6 +216,7 @@ class DownloadTests(unittest.TestCase):
         # Failure/retry messages must identify the same readable theme too.
         (self.root / resources[0]['paths'][0]).unlink()
         self.server.content_type = 'text/html'
+        self.worker.verify_files = True
         with self.assertLogs('download', level='INFO') as errors:
             self.assertEqual(self.worker.run(resources)['failed'], 1)
         self.assertIn('3.2 剧情壁纸 / 章节一 / 001.jpg attempt 1/1', '\n'.join(errors.output))
@@ -208,7 +230,7 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(resources[0]['id'], self.r['id'])
         with self.assertLogs('download', level='INFO') as logs:
             self.assertEqual(self.worker.run(resources)['skipped'], 1)
-        self.assertIn('skipped 新的主题 名称 / 001.jpg', '\n'.join(logs.output))
+        self.assertIn('Incremental plan: 1 unchanged, 0 to process', '\n'.join(logs.output))
         self.assertEqual(self.server.calls, [])
 
     def test_ignored_range_restarts_instead_of_appending(self):
@@ -270,6 +292,8 @@ class DownloadTests(unittest.TestCase):
     def test_missing_file_downloads_again(self):
         self.worker.run(self.resources)
         self.target().unlink()
+        self.assertEqual(self.worker.run(self.resources)['skipped'], 1)
+        self.worker.verify_files = True
         self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
 
     def test_signature_rotation_is_not_new_content(self):
@@ -318,17 +342,18 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
         second = self.root / self.r['paths'][1]
         second.unlink()
+        self.worker.verify_files = True
         self.server.calls.clear()
         self.assertEqual(self.worker.run(self.resources)['skipped'], 1)
         self.assertEqual(second.read_bytes(), self.server.body)
-        self.assertEqual(self.server.calls, [])
+        self.assertEqual(self.server.calls, [('HEAD', None, None)])
 
-    def test_periodic_check_repairs_corrupt_secondary_placement(self):
+    def test_manual_check_repairs_corrupt_secondary_placement(self):
         self.r['paths'].append('其他目录/001.jpg')
         self.worker.run(self.resources)
         second = self.root / self.r['paths'][1]
         second.write_bytes(b'x' * len(self.server.body))
-        self.worker.verify_seconds = 0
+        self.worker.verify_files = True
         self.assertEqual(self.worker.run(self.resources)['skipped'], 1)
         self.assertEqual(second.read_bytes(), self.server.body)
         self.assertFalse(any(method == 'GET' for method, _, _ in self.server.calls[1:]))
@@ -356,9 +381,9 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(self.target().read_bytes(), self.server.body)
         self.assertEqual(self.state.owner(self.r['paths'][0]), self.r['id'])
 
-    def test_periodic_check_detects_remote_change(self):
+    def test_manual_check_detects_remote_change(self):
         self.worker.run(self.resources)
-        self.worker.verify_seconds = 0
+        self.worker.verify_files = True
         self.server.etag = '"changed"'
         self.server.body = b'new bytes'
         self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
@@ -367,16 +392,16 @@ class DownloadTests(unittest.TestCase):
 
     def test_same_size_remote_update_replaces_existing_bytes(self):
         self.worker.run(self.resources)
-        self.worker.verify_seconds = 0
+        self.worker.verify_files = True
         self.server.etag = '"changed"'
         self.server.body = b'n' * len(self.server.body)
         self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
         self.assertEqual(self.target().read_bytes(), self.server.body)
 
-    def test_periodic_hash_detects_same_size_corruption(self):
+    def test_manual_hash_detects_same_size_corruption(self):
         self.worker.run(self.resources)
         self.target().write_bytes(b'x' * len(self.server.body))
-        self.worker.verify_seconds = 0
+        self.worker.verify_files = True
         self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
         self.assertEqual(self.target().read_bytes(), self.server.body)
 
@@ -429,7 +454,7 @@ class DownloadTests(unittest.TestCase):
         saved_log = (self.state_dir / 'logs/downloader.log').read_text(encoding='utf8')
         self.assertIn('Download run started; persistent log enabled', saved_log)
         self.assertIn('downloaded 测试 / 001.jpg', saved_log)
-        self.assertIn('skipped 测试 / 001.jpg', saved_log)
+        self.assertIn('Incremental plan: 1 unchanged, 0 to process', saved_log)
         self.assertEqual(saved_log.count('Download run started; persistent log enabled'), 2)
 
     def test_progress_interval_reduces_intermediate_logs_and_zero_keeps_completion(self):
@@ -443,6 +468,7 @@ class DownloadTests(unittest.TestCase):
             self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
         self.assertEqual(sum(' progress ' in line for line in logs.output), 1)
         self.target().unlink()
+        self.worker.verify_files = True
         self.worker.progress_interval = 0
         self.worker.rate_limit = 0
         with self.assertLogs('download', level='INFO') as quiet:

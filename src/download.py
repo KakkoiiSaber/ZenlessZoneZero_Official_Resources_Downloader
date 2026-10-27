@@ -80,11 +80,16 @@ def select_resources(resources, ids):
     return [indexed[ident] for ident in dict.fromkeys(ids)]
 
 
-def safe_path(root, relative):
-    """Reject traversal and symlink escapes, including paths loaded from local state."""
+def path_parts(relative):
     parts = relative.split('/')
     if any(not part or part in {'.', '..'} or re.search(r'[\\:\x00-\x1f]', part) for part in parts):
         raise ValueError('Unsafe download path')
+    return parts
+
+
+def safe_path(root, relative):
+    """Reject traversal and symlink escapes, including paths loaded from local state."""
+    parts = path_parts(relative)
     target = root.joinpath(*parts)
     current = root
     for part in parts:
@@ -134,7 +139,7 @@ def plan(document):
                 if not all(isinstance(s, str) and s and '/' not in s for s in segments):
                     raise ValueError('Invalid directory segments')
                 relative = '/'.join(segments)
-                safe_path(Path.cwd(), relative)
+                path_parts(relative)
                 # Reserve internal storage and reject case-insensitive collisions for NAS shares.
                 key = relative.casefold()
                 if key.split('/')[0] == '.zzz-partials' or (key in claims and claims[key] != ident):
@@ -170,7 +175,7 @@ def cover_plan(document, resource_ids=None):
     return result
 
 
-def update_preview_sizes(document, resources, covers, media_root, state_root, stop):
+def update_preview_sizes(document, resources, covers, media_root, state_root, stop, *, verify_files=False):
     """Persist dimensions of one local preview per theme, only rereading changed files."""
     path = state_root / 'image-sizes.json'
     sizes = load_size_index(path)
@@ -186,19 +191,23 @@ def update_preview_sizes(document, resources, covers, media_root, state_root, st
             candidates.append((cover_map[cover_id], state_root / 'covers'))
         candidates.extend((media[r['id']], media_root) for r in entry['resources'] if r['id'] in media)
         for resource, root in candidates:
+            old = sizes.get(resource['id'], {})
+            source = digest(json.dumps([resource['fingerprint'], resource['paths'], str(root),
+                                        resource.get('width'), resource.get('height')]))
+            if not verify_files and old.get('source') == source and old.get('size'):
+                break
             target = next((safe_path(root, relative) for relative in resource['paths']
                            if safe_path(root, relative).is_file()), None)
             if target is None:
                 continue
             facts = target.stat()
             signature = [facts.st_mtime_ns, facts.st_size]
-            old = sizes.get(resource['id'], {})
-            if old.get('signature') != signature:
+            if old.get('signature') != signature or old.get('source') != source:
                 dimensions = [resource.get('width'), resource.get('height')]
                 if not all(type(value) is int and value > 0 for value in dimensions):
                     dimensions = read_image_size(target)
                 if dimensions:
-                    sizes[resource['id']] = {'signature': signature, 'size': dimensions}
+                    sizes[resource['id']] = {'signature': signature, 'size': dimensions, 'source': source}
                     changed += 1
             break
     if changed:
@@ -242,6 +251,9 @@ class State:
         row = self.db.execute('SELECT data FROM resources WHERE id=?', (ident,)).fetchone()
         return json.loads(row[0]) if row else {}
 
+    def records(self):
+        return {ident: json.loads(data) for ident, data in self.db.execute('SELECT id, data FROM resources')}
+
     def save(self, ident, data):
         with self.db:
             self.db.execute('INSERT OR REPLACE INTO resources VALUES (?,?)',
@@ -272,10 +284,10 @@ def file_hash(path):
 
 
 class Downloader:
-    def __init__(self, root, state, *, retries=3, verify_days=7, rate_limit=0, progress_interval=60, stop=None):
+    def __init__(self, root, state, *, retries=3, verify_files=False, rate_limit=0, progress_interval=60, stop=None):
         self.root, self.state = root.resolve(), state
         self.root.mkdir(parents=True, exist_ok=True)
-        self.retries, self.verify_seconds = retries, verify_days * 86400
+        self.retries, self.verify_files = retries, verify_files
         self.rate_limit = rate_limit
         self.progress_interval = progress_interval
         self.stop = stop or threading.Event()
@@ -287,9 +299,20 @@ class Downloader:
         self.active_paths = {p.casefold(): r['id'] for r in resources for p in r['paths']}
         for resource in resources:
             for relative in resource['paths']:
-                safe_path(self.root, relative)
+                path_parts(relative)
         counts = {'downloaded': 0, 'skipped': 0, 'failed': 0}
+        records = self.state.records()
+        pending = []
         for resource in resources:
+            record = records.get(resource['id'], {})
+            if (not self.verify_files and record.get('complete')
+                    and record.get('fingerprint') == resource['fingerprint']
+                    and record.get('paths') == resource['paths']):
+                counts['skipped'] += 1
+            else:
+                pending.append(resource)
+        LOG.info('Incremental plan: %d unchanged, %d to process', counts['skipped'], len(pending))
+        for resource in pending:
             if self.stop.is_set():
                 break
             ident = resource['id']
@@ -341,7 +364,7 @@ class Downloader:
         record = self.state.get(ident)
         source = self.existing(record, ident) if record.get('fingerprint') == resource['fingerprint'] else None
         if source and record.get('complete'):
-            if time.time() - record.get('checked_at', 0) >= self.verify_seconds:
+            if self.verify_files:
                 if file_hash(source) != record['sha256']:
                     source = None
                 else:
@@ -364,7 +387,7 @@ class Downloader:
                                 record['last_modified'] = response.headers.get('Last-Modified') or record.get('last_modified')
                     record['checked_at'] = time.time()
             if source:
-                self.place(source, resource, record, verify_copies=time.time() - record.get('copies_checked_at', 0) >= self.verify_seconds)
+                self.place(source, resource, record, verify_copies=self.verify_files)
                 return 'skipped'
         self.check_expiry(resource)
         if record.get('fingerprint') != resource['fingerprint'] or record.get('complete'):
@@ -540,7 +563,7 @@ def main():
     parser.add_argument('--manifest-file', type=Path)
     parser.add_argument('--download-dir', type=Path, default=Path(os.getenv('DOWNLOAD_DIR', '/downloads')))
     parser.add_argument('--state-dir', type=Path, default=Path(os.getenv('STATE_DIR', '/state')))
-    parser.add_argument('--verify-days', type=float, default=float(os.getenv('VERIFY_DAYS', '7')))
+    parser.add_argument('--verify-files', action='store_true', help='Audit local files and remote validators; repair missing or corrupt downloads')
     parser.add_argument('--retries', type=int, default=3)
     parser.add_argument('--resource-id', action='append', help='Only download these exact IDs (repeat for a small deployment test)')
     parser.add_argument('--rate-limit', type=int, default=0, help='Maximum streamed media bytes/second per transfer; 0 disables throttling')
@@ -549,8 +572,8 @@ def main():
     parser.add_argument('--once', action='store_true', help=argparse.SUPPRESS)  # Older deployment commands remain valid.
     parser.add_argument('--dry-run', action='store_true', help='Validate and count manifest resources without downloading')
     args = parser.parse_args()
-    if args.verify_days < 0 or args.retries < 1 or args.rate_limit < 0 or args.progress_interval < 0:
-        parser.error('retries must be positive; verify-days, rate-limit and progress-interval must be nonnegative')
+    if args.retries < 1 or args.rate_limit < 0 or args.progress_interval < 0:
+        parser.error('retries must be positive; rate-limit and progress-interval must be nonnegative')
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, datefmt=LOG_DATE_FORMAT)
     stop = threading.Event()
     for signum in (signal.SIGINT, signal.SIGTERM):
@@ -571,7 +594,7 @@ def main():
             logging.getLogger().addHandler(file_handler)
             LOG.info('Download run started; persistent log enabled')
             state = State(args.state_dir)
-            worker = Downloader(args.download_dir, state, retries=args.retries, verify_days=args.verify_days,
+            worker = Downloader(args.download_dir, state, retries=args.retries, verify_files=args.verify_files,
                                 rate_limit=args.rate_limit, progress_interval=args.progress_interval, stop=stop)
             try:
                 LOG.info('Local download state ready')
@@ -587,7 +610,7 @@ def main():
                     cover_root = args.state_dir / 'covers'
                     cover_state = State(cover_root)
                     cover_worker = Downloader(cover_root, cover_state, retries=args.retries,
-                        verify_days=args.verify_days, rate_limit=args.rate_limit,
+                        verify_files=args.verify_files, rate_limit=args.rate_limit,
                         progress_interval=args.progress_interval, stop=stop)
                     try:
                         LOG.info('Updating local cover cache: %d covers', len(covers))
@@ -595,9 +618,9 @@ def main():
                     finally:
                         cover_worker.http.close()
                         cover_state.close()
-                update_preview_sizes(document, resources, covers, args.download_dir, args.state_dir, stop)
+                update_preview_sizes(document, resources, covers, args.download_dir, args.state_dir, stop, verify_files=args.verify_files)
                 failed += worker.run(resources)['failed']
-                update_preview_sizes(document, resources, covers, args.download_dir, args.state_dir, stop)
+                update_preview_sizes(document, resources, covers, args.download_dir, args.state_dir, stop, verify_files=args.verify_files)
                 return int(bool(failed or stop.is_set()))
             except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as error:
                 LOG.error('Download run failed: %s', type(error).__name__)

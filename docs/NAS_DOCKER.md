@@ -38,7 +38,6 @@ NAS 需要支持 Linux 容器，并安装 Docker Compose（群晖对应 Containe
    NAS_GID=你的用户数字GID
    DOWNLOAD_PATH=/volume1/Media/ZZZ
    STATE_PATH=/volume1/docker/zzz-downloader/state
-   VERIFY_DAYS=7
    PROGRESS_INTERVAL=60
    MANIFEST_URL=https://raw.githubusercontent.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader/main/metafiles/wiki.json
    ```
@@ -81,9 +80,9 @@ SQLite 和下载目录应位于 NAS 本机存储，不要通过 SMB/NFS 挂载�
 | 情况 | 行为 |
 | --- | --- |
 | 新资源或最终 URL、已知大小、ETag 变化 | 下载新版本，通过校验后替换本程序管理的文件 |
-| 已完成且本地文件存在、大小一致 | 跳过，不请求媒体；到复查周期再检查 |
+| 本地记录已完成，内容指纹及归档路径未变 | 直接跳过；不检查媒体文件、不请求远端、不重写该记录 |
 | 米游社签名 CDN 只有 `auth_key` 续期 | 不改变版本指纹，不重复下载；请求时仍使用完整链接 |
-| 本地文件缺失或大小错误 | 重新下载；多目录资源优先用已有完整副本修复 |
+| 手动核验发现本地文件缺失或损坏 | 重新下载；多目录资源优先用已有完整副本修复 |
 | 只改目录或文件名 | 使用已有文件归档，完成后清理该资源的旧位置，不重新请求媒体 |
 | 清单不再列出某项 | 保留本地文件，不自动删除 |
 | 同名文件不是本程序管理的 | 报错并保留原文件，不覆盖 |
@@ -95,10 +94,15 @@ ETag 和总大小。服务器忽略 Range 或文件版本改变时，从头写�
 下载完成后计算 SHA-256，再将临时文件原子改名为正式文件。
 SHA-256 用于后续本地完整性复查，并不是上游提供的可信校验和。
 
-默认每七天对已完成资源复查本地 SHA-256，并通过 HEAD 比较远端大小、ETag 或 Last-Modified。
-HEAD 不支持时只检查本地完整性；远端缺少校验值时，无法保证发现同大小的内容替换。
-复查会读取本地文件，大视频较多时可适当增大 `VERIFY_DAYS`。
-`VERIFY_DAYS=0` 表示每轮复查，不是关闭复查。
+日常启动批量读取本地记录，与 GitHub 清单做差量比较，仅处理新增、变化或未完成的项目。不生成额外的差量 JSON；不逐条输出未变化项目的 `skipped` 日志，只输出汇总。预览尺寸索引也会按内容及路径标记复用，不反复检查已缓存的图片。
+
+手动移动、删除或修改文件后，在没有下载任务运行时执行一次完整核验：
+
+```sh
+sudo docker compose --env-file .env -f compose.yaml run --rm --no-deps downloader --verify-files
+```
+
+核验会读取本地文件、检查 SHA-256，并通过 HEAD 比较远端大小、ETag 或 Last-Modified；发现问题会修复或重新下载。HEAD 不支持时只检查本地完整性；远端缺少校验值时，无法保证发现同大小的内容替换。日常增量模式信任下载记录，因此不会自动发现手动改动或上游未更新清单的资源替换。旧版 `.env` 中的 `VERIFY_DAYS` 可以删除，新版不再使用它，也不自动定期扫描全部文件。
 
 过期视频链接不会盲目下载；日志提示刷新 GitHub 清单。下载器下一轮会重新读取清单，
 下次任务使用新链接继续。NAS 不解析网页，也不会自行运行抓取程序。
