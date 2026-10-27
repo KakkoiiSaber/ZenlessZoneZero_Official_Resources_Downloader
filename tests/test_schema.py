@@ -37,6 +37,14 @@ def selected_files(value):
 
 
 class MinimalSchemaTests(unittest.TestCase):
+    def test_source_image_dimensions_survive_compact_round_trip(self):
+        original = bundle()
+        original['wiki']['entries']['1']['resources'][0].update(width=1200, height=2400)
+        compact = pack_bundle(original)
+        resource = compact['wiki']['entries']['1']['resources'][0]
+        self.assertEqual([resource['width'], resource['height']], [1200, 2400])
+        self.assertEqual(compact, pack_bundle(expand_bundle(compact)))
+
     def test_official_video_caption_survives_incremental_round_trip(self):
         original = bundle()
         original['official']['posts']['1']['videos'][0]['caption'] = '结局：谨慎观望'

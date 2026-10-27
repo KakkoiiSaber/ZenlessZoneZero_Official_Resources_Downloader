@@ -11,6 +11,8 @@ import re
 import threading
 from urllib.parse import urlsplit
 
+from src.image_info import load_size_index, read_image_size
+
 from src.download import LOG_DATE_FORMAT, LOG_FORMAT, cover_plan, digest, plan, safe_path
 
 WEB = Path(__file__).resolve().parent.parent / 'web'
@@ -31,6 +33,31 @@ class Catalog:
         self.snapshot = Path(snapshot) if snapshot else None
         self.cover_root = Path(covers).resolve()
         self.cover_paths = {}
+        self.image_sizes = {}
+        self.sizes_file = self.cover_root.parent / 'image-sizes.json'
+        self.persisted_sizes = {}
+
+    def image_size(self, path, resource_id=None):
+        """Read only the local image header; cache until the file changes."""
+        if path is None:
+            return None
+        try:
+            facts = path.stat()
+            signature = (facts.st_mtime_ns, facts.st_size)
+            key = str(path)
+            with self.lock:
+                cached = self.image_sizes.get(key)
+                if cached and cached[0] == signature:
+                    return cached[1]
+            saved = self.persisted_sizes.get(resource_id, {})
+            result = saved.get('size') if saved.get('signature') == list(signature) else None
+            if not result:
+                result = read_image_size(path)
+            with self.lock:
+                self.image_sizes[key] = (signature, result)
+            return result
+        except OSError:
+            return None
 
     def index(self):
         with self.lock:
@@ -65,9 +92,12 @@ class Catalog:
     def read(self):
         # Read each time so Git updates and newly finished downloads appear on refresh.
         document, resources, _ = self.index()
+        self.persisted_sizes = load_size_index(self.sizes_file)
         if document is not None:
             media, entries = {}, []
             for ident, entry in document['entries'].items():
+                preview_path = None
+                preview_id = None
                 groups = [{'name': ' / '.join(folder[2:]) or entry['title'], 'resources': []}
                           for folder in entry['folders']]
                 for raw in entry['resources']:
@@ -79,6 +109,9 @@ class Catalog:
                         if path.is_file() and path.stat().st_size > 0:
                             media[key] = relative
                             available = True
+                            if raw['kind'] == 'image' and preview_path is None:
+                                preview_path = path
+                                preview_id = raw['id']
                             break
                     value = {'id': key, 'kind': raw['kind'], 'filename': raw['filename'],
                              'available': available, 'url': '/media/' + key,
@@ -91,8 +124,16 @@ class Catalog:
                 value = {'id': ident, 'title': entry['title'],
                          'categories': [str(c) for c in entry['category_ids']], 'groups': groups}
                 cover_key = digest(f'wiki:{ident}:cover')
-                if self.locate_cover(cover_key):
+                cover_path = self.locate_cover(cover_key)
+                if cover_path:
                     value['cover'] = '/covers/' + cover_key
+                original = resources.get(preview_id, {}) if not cover_path else {}
+                preview_size = [original.get('width'), original.get('height')]
+                if not all(type(value) is int and value > 0 for value in preview_size):
+                    preview_size = self.image_size(cover_path or preview_path,
+                                                   f'wiki:{ident}:cover' if cover_path else preview_id)
+                if preview_size:
+                    value['preview_size'] = preview_size
                 entries.append(value)
             return {'generated_at': document.get('generated_at'), 'categories': document['categories'],
                     'entries': entries}, media

@@ -19,6 +19,7 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 import requests
 
 from src.scrape.http import atomic_json
+from src.image_info import load_size_index, read_image_size
 
 LOG = logging.getLogger('download')
 DEFAULT_MANIFEST = 'https://raw.githubusercontent.com/KakkoiiSaber/ZenlessZoneZero_Official_Resources_Downloader/main/metafiles/wiki.json'
@@ -167,6 +168,42 @@ def cover_plan(document, resource_ids=None):
                     'paths': [filename], 'label': entry['title'] + ' / 封面'}
         result.append({**resource, 'fingerprint': fingerprint(resource)})
     return result
+
+
+def update_preview_sizes(document, resources, covers, media_root, state_root, stop):
+    """Persist dimensions of one local preview per theme, only rereading changed files."""
+    path = state_root / 'image-sizes.json'
+    sizes = load_size_index(path)
+    media = {r['id']: r for r in resources if r['kind'] == 'image'}
+    cover_map = {r['id']: r for r in covers}
+    changed = 0
+    for ident, entry in document['entries'].items():
+        if stop.is_set():
+            break
+        candidates = []
+        cover_id = f'wiki:{ident}:cover'
+        if cover_id in cover_map:
+            candidates.append((cover_map[cover_id], state_root / 'covers'))
+        candidates.extend((media[r['id']], media_root) for r in entry['resources'] if r['id'] in media)
+        for resource, root in candidates:
+            target = next((safe_path(root, relative) for relative in resource['paths']
+                           if safe_path(root, relative).is_file()), None)
+            if target is None:
+                continue
+            facts = target.stat()
+            signature = [facts.st_mtime_ns, facts.st_size]
+            old = sizes.get(resource['id'], {})
+            if old.get('signature') != signature:
+                dimensions = [resource.get('width'), resource.get('height')]
+                if not all(type(value) is int and value > 0 for value in dimensions):
+                    dimensions = read_image_size(target)
+                if dimensions:
+                    sizes[resource['id']] = {'signature': signature, 'size': dimensions}
+                    changed += 1
+            break
+    if changed:
+        atomic_json(path, sizes)
+        LOG.info('Updated preview dimensions: %d images', changed)
 
 
 @contextmanager
@@ -558,7 +595,9 @@ def main():
                     finally:
                         cover_worker.http.close()
                         cover_state.close()
+                update_preview_sizes(document, resources, covers, args.download_dir, args.state_dir, stop)
                 failed += worker.run(resources)['failed']
+                update_preview_sizes(document, resources, covers, args.download_dir, args.state_dir, stop)
                 return int(bool(failed or stop.is_set()))
             except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as error:
                 LOG.error('Download run failed: %s', type(error).__name__)

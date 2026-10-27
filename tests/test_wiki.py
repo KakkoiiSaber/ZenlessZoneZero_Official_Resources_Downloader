@@ -8,10 +8,13 @@ import threading
 import unittest
 import subprocess
 import sys
+from unittest.mock import patch
 
 import requests
+from PIL import Image
 
-from src.download import cover_plan, digest
+from src.download import cover_plan, digest, plan, update_preview_sizes
+from src.image_info import read_image_size
 from src.wiki import Catalog, Handler
 
 
@@ -55,6 +58,50 @@ class WikiTests(unittest.TestCase):
         self.finish_file()
         second = requests.get(self.url + '/api/catalog', timeout=5).json()
         self.assertTrue(second['entries'][0]['groups'][0]['resources'][0]['available'])
+
+    def test_preview_dimensions_follow_local_image_ratio_and_file_updates(self):
+        path = self.finish_file()
+        Image.new('RGB', (30, 90)).save(path, format='PNG')
+        first = requests.get(self.url + '/api/catalog', timeout=5).json()
+        self.assertEqual(first['entries'][0]['preview_size'], [30, 90])
+        Image.new('RGB', (90, 30)).save(path, format='PNG')
+        second = requests.get(self.url + '/api/catalog', timeout=5).json()
+        self.assertEqual(second['entries'][0]['preview_size'], [90, 30])
+
+    def test_exif_rotation_and_invalid_images_do_not_break_catalog(self):
+        path = self.finish_file()
+        self.assertIsNone(self.catalog.image_size(path))
+        exif = Image.Exif()
+        exif[274] = 6
+        Image.new('RGB', (30, 90)).save(path, format='JPEG', exif=exif)
+        self.assertEqual(self.catalog.image_size(path), [90, 30])
+
+    def test_png_dimensions_do_not_decode_pixel_data(self):
+        path = self.finish_file()
+        Image.new('RGB', (30, 90)).save(path, format='PNG')
+        with patch.object(Image.Image, 'load', side_effect=AssertionError('pixel decoding forbidden')):
+            self.assertEqual(read_image_size(path), [30, 90])
+
+    def test_persisted_sizes_skip_reopening_images_after_server_restart(self):
+        path = self.finish_file()
+        Image.new('RGB', (30, 90)).save(path, format='PNG')
+        state = self.root / 'state'
+        resources = plan(self.document)
+        update_preview_sizes(self.document, resources, [], self.media, state, threading.Event())
+        before = (state / 'image-sizes.json').read_bytes()
+        with patch('src.download.read_image_size', side_effect=AssertionError('unchanged image reopened')):
+            update_preview_sizes(self.document, resources, [], self.media, state, threading.Event())
+        self.assertEqual(before, (state / 'image-sizes.json').read_bytes())
+        fresh = Catalog(self.manifest, self.media, covers=state / 'covers')
+        with patch('src.wiki.read_image_size', side_effect=AssertionError('cache not reused')):
+            self.assertEqual(fresh.read()[0]['entries'][0]['preview_size'], [30, 90])
+
+    def test_source_dimensions_are_used_without_reading_image(self):
+        self.finish_file()
+        self.document['entries']['1']['resources'][0].update(width=30, height=90)
+        self.manifest.write_text(json.dumps(self.document), encoding='utf-8')
+        with patch('src.wiki.read_image_size', side_effect=AssertionError('source size ignored')):
+            self.assertEqual(self.catalog.read()[0]['entries'][0]['preview_size'], [30, 90])
 
     def test_video_style_ranges_and_head(self):
         self.finish_file()
