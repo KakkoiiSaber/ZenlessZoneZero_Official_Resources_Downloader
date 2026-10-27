@@ -107,9 +107,11 @@ exit 0
         self.assertEqual(self.run_task()[0].returncode, 0)
         self.update('requirements-download.txt', 'requests>=2.32,<3\n# changed\n')
         old_marker = self.image_signature.read_text()
+        self.log.write_text('')
         result, _ = self.run_task(FAIL_BUILD='1')
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.image_signature.read_text(), old_marker)
+        self.assertNotIn('--exit-code-from', self.log.read_text())
         self.log.write_text('')
         result, log = self.run_task()
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -122,7 +124,8 @@ exit 0
     def test_unlabelled_image_is_not_adopted_from_a_host_marker(self):
         marker = self.work / '.cache/runtime-signature'
         marker.parent.mkdir(exist_ok=True)
-        marker.write_text('previously adopted image')
+        marker.write_text(self.git(self.work, 'rev-parse', 'HEAD:Dockerfile',
+                                  'HEAD:requirements-download.txt', 'HEAD:.dockerignore') + '\n')
         result, log = self.run_task(RUNNING_WIKI='1')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('build --build-arg', log)
