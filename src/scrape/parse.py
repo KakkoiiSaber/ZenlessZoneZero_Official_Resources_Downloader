@@ -350,7 +350,7 @@ def wiki_media(page):
         if module.get('is_hidden'):
             continue
         ordinal = 0
-        def add(raw, kind, caption='', subpath=None):
+        def add(raw, kind, caption='', subpath=None, dimensions=None):
             nonlocal ordinal
             url = media_url(raw, kind)
             if not url:
@@ -359,7 +359,8 @@ def wiki_media(page):
             result.append({'id': f"wiki:{page['id']}:module:{module['id']}:{ordinal}",
                 'kind': kind, 'url': url, 'observed_url': raw, 'caption': caption,
                 'module_id': str(module['id']), 'order': ordinal, 'section_path': subpath or path,
-                'filename': f'{ordinal:03d}' + extension(url), 'selected_source': 'wiki'})
+                'filename': f'{ordinal:03d}' + extension(url), 'selected_source': 'wiki',
+                **{k:v for k,v in (dimensions or {}).items() if k in ('width','height') and type(v) is int and v > 0}})
         for component in module.get('components', []):
             data = component.get('data') or {}
             data = json.loads(data) if isinstance(data, str) else data
@@ -367,7 +368,7 @@ def wiki_media(page):
                 raise ValueError('Invalid Wiki component')
             if component.get('component_id') == 'map_desc':
                 for row in data.get('list', []):
-                    add(row.get('image'), 'image', row.get('tab_name') or '')
+                    add(row.get('image'), 'image', row.get('tab_name') or '', dimensions=row)
             if isinstance(data.get('rich_text'), str):
                 soup = BeautifulSoup(data['rich_text'], 'html.parser')
                 heading = path

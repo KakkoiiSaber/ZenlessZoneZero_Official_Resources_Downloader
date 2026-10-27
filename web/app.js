@@ -6,6 +6,37 @@ let gallery = [], position = 0, previousFocus, viewerPoster;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 let closingViewer = false;
 let listObserver;
+let listLayout;
+let viewerMode = 'auto';
+
+function masonryLayout(grid) {
+  let frame = 0;
+  const layout = () => {
+    frame = 0;
+    if (!grid.isConnected) return;
+    const style = getComputedStyle(grid);
+    const columns = Number(style.getPropertyValue('--columns')) || 3;
+    const gap = Number.parseFloat(style.getPropertyValue('--gap')) || 18;
+    const width = (grid.clientWidth - gap * (columns - 1)) / columns;
+    const heights = Array(columns).fill(0);
+    for (const card of grid.children) card.style.width = `${width}px`;
+    for (const card of grid.children) {
+      const column = heights.indexOf(Math.min(...heights));
+      card.style.left = `${column * (width + gap)}px`;
+      card.style.top = `${heights[column]}px`;
+      heights[column] += card.getBoundingClientRect().height + gap;
+    }
+    grid.style.height = `${Math.max(0, ...heights) - (grid.children.length ? gap : 0)}px`;
+  };
+  const resize = new ResizeObserver(() => {
+    if (!frame) frame = requestAnimationFrame(layout);
+  });
+  resize.observe(grid);
+  return {
+    append(cards) { cards.forEach(card => resize.observe(card)); layout(); },
+    destroy() { resize.disconnect(); cancelAnimationFrame(frame); }
+  };
+}
 
 function transition(node, frames, duration = 180) {
   if (reducedMotion.matches || !node.animate) return null;
@@ -93,6 +124,7 @@ function render() {
 }
 function renderContent() {
   listObserver?.disconnect();
+  listLayout?.destroy();
   if (!state.data) return;
   renderNavigation();
   const all = state.data.entries.filter(e => !state.category || e.categories.includes(state.category));
@@ -115,6 +147,7 @@ function renderContent() {
   const sentinel = element('div', 'load-sentinel');
   sentinel.setAttribute('aria-hidden', 'true');
   content.append(grid, sentinel);
+  listLayout = masonryLayout(grid);
   let loaded = 0;
   const appendBatch = () => {
     if (!grid.isConnected) return;
@@ -128,7 +161,9 @@ function renderContent() {
       const image = items.find(r => r.available && r.kind === 'image');
       const preview = element('div', 'entry-preview');
       if (entry.cover || image) {
-        const img = element('img'); img.src = entry.cover || image.url; img.loading = 'lazy'; img.alt = ''; preview.append(img);
+        const img = element('img'); img.src = entry.cover || image.url; img.loading = 'lazy'; img.alt = '';
+        if (entry.preview_size) [img.width, img.height] = entry.preview_size;
+        preview.append(img);
         if (items.some(r => r.kind === 'video')) preview.append(element('span', 'preview-play', '▷'));
       } else {
         preview.classList.add(items[0]?.kind === 'video' ? 'video-placeholder' : 'image-placeholder');
@@ -142,6 +177,7 @@ function renderContent() {
     }
     const added = [...fragment.children];
     grid.append(fragment);
+    listLayout.append(added);
     if (start) added.forEach(card => transition(card, [{opacity: .4}, {opacity: 1}]));
     if (loaded < matching.length) observer.observe(sentinel);
     else { observer.disconnect(); sentinel.remove(); }
@@ -226,6 +262,7 @@ function openViewer(entry, group, index) {
   position = gallery.findIndex(r => r.id === group.resources[index].id);
   previousFocus = document.activeElement;
   viewerPoster = entry.cover;
+  viewerMode = 'auto';
   $('#viewer-title').textContent = entry.title;
   $('#viewer-caption').textContent = group.name;
   drawViewer(); $('#viewer').showModal();
@@ -241,11 +278,26 @@ function drawViewer() {
     if (viewerPoster) media.poster = viewerPoster;
   } else media.alt = item.caption || item.filename;
   $('#player').append(media);
+  if (item.kind === 'image') media.addEventListener('load', applyViewerMode, {once: true});
+  applyViewerMode();
   revealMedia($('#player'));
   $('#counter').textContent = `${position + 1} / ${gallery.length} · ${item.caption || item.filename}${item.size ? ` · ${size(item.size)}` : ''}`;
   $('#save').href = item.url; $('#save').download = item.filename;
   $('#previous').disabled = position === 0; $('#next').disabled = position === gallery.length - 1;
 }
+function applyViewerMode() {
+  const image = $('#player img');
+  const wide = Boolean(image && (viewerMode === 'width' || (viewerMode === 'auto' && image.naturalHeight > image.naturalWidth * 1.3)));
+  $('#viewer').classList.toggle('read-wide', wide);
+  $('#view-mode').hidden = !image;
+  $('#view-mode').textContent = wide ? '整图适屏' : '适宽阅读';
+  $('#view-mode').setAttribute('aria-pressed', String(wide));
+  $('.viewer-stage').scrollTo({top: 0, left: 0, behavior: 'instant'});
+}
+$('#view-mode').onclick = () => {
+  viewerMode = $('#viewer').classList.contains('read-wide') ? 'fit' : 'width';
+  applyViewerMode();
+};
 async function closeViewer() {
   if (closingViewer || !$('#viewer').open) return;
   closingViewer = true;

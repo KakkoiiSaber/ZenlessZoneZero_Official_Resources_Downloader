@@ -200,11 +200,13 @@ h1{
   margin-bottom:16px
 }
 .entry-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:18px
+  position:relative;
+  --columns:3;
+  --gap:18px;
 }
 .entry-card{
+  position:absolute;
+  width:100%;
   padding:0;
   text-align:left;
   overflow:hidden;
@@ -220,16 +222,14 @@ h1{
   border-color:var(--yellow)
 }
 .entry-preview{
-  aspect-ratio:16/9;
   background:#242721;
   position:relative;
   overflow:hidden
 }
 .entry-preview img{
+  display:block;
   width:100%;
-  height:100%;
-  object-fit:cover;
-  transition:transform .3s
+  height:auto;
 }
 .preview-play{
   position:absolute;
@@ -241,10 +241,8 @@ h1{
   text-shadow:0 2px 12px #000;
   pointer-events:none;
 }
-.entry-card:hover img{
-  transform:scale(1.04)
-}
 .video-placeholder,.image-placeholder{
+  aspect-ratio:16/9;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -364,8 +362,6 @@ h1{
   display:block;
   width:100%;
   height:auto;
-  max-height:690px;
-  object-fit:contain
 }
 .resource-stage video{
   display:block;
@@ -436,11 +432,16 @@ dialog{
   width:min(1300px,96vw);
   max-height:96dvh
 }
+dialog[open]{
+  display:flex;
+  flex-direction:column;
+}
 dialog::backdrop{
   background:#000d;
   backdrop-filter:blur(8px)
 }
 .viewer-header{
+  flex-shrink:0;
   padding:18px 24px;
   display:flex;
   align-items:center;
@@ -466,7 +467,9 @@ dialog::backdrop{
 .viewer-stage{
   display:flex;
   align-items:center;
-  min-height:200px;
+  flex:1;
+  min-height:0;
+  overflow:auto;
   background:#070806
 }
 #player{
@@ -474,6 +477,20 @@ dialog::backdrop{
   min-width:0;
   display:flex;
   justify-content:center
+}
+.read-wide .viewer-stage{
+  align-items:flex-start;
+  max-height:76dvh;
+}
+.read-wide #player img{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:none;
+}
+.read-wide .arrow{
+  position:sticky;
+  top:30dvh;
 }
 #player img,#player video{
   max-width:100%;
@@ -488,6 +505,9 @@ dialog::backdrop{
   padding:15px
 }
 .viewer-footer{
+  flex-shrink:0;
+  gap:12px;
+  align-items:center;
   display:flex;
   justify-content:space-between;
   padding:16px 24px;
@@ -497,17 +517,32 @@ dialog::backdrop{
 .viewer-footer a{
   color:var(--yellow)
 }
+.viewer-actions{
+  display:flex;
+  align-items:center;
+  gap:16px;
+  flex-shrink:0;
+}
+#view-mode{
+  border:1px solid #555d49;
+  border-radius:18px;
+  background:transparent;
+  color:var(--yellow);
+  padding:4px 10px;
+  font-size:11px;
+}
+#view-mode[hidden]{display:none}
 #menu{
   display:none
 }
 @media(min-width:1750px){
   .entry-grid{
-    grid-template-columns:repeat(4,minmax(0,1fr))
+    --columns:4;
   }
 }
 @media(max-width:1150px){
   .entry-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr))
+    --columns:2;
   }
   .workspace{
     padding:25px
@@ -574,7 +609,7 @@ h1{
     font-size:26px
   }
 .entry-grid{
-    gap:13px
+    --gap:13px;
   }
   .entry-text{
     padding:8px 10px
