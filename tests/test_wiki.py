@@ -15,10 +15,38 @@ from PIL import Image
 
 from src.download import cover_plan, digest, plan, update_preview_sizes
 from src.image_info import read_image_size
-from src.wiki import Catalog, Handler
+from src.wiki import Catalog, Handler, wallpaper_variants
 
 
 class WikiTests(unittest.TestCase):
+    def test_wallpaper_ratios_merge_only_matching_image_themes(self):
+        def group(name, ident, kind='image'):
+            return {'name':name, 'resources':[{'id':ident,'kind':kind,'url':'/media/'+ident}]}
+        original = [group('Roxy (2560x1080)','wide'), group('Roxy（3840×2160）','normal'),
+                    group('Roxy EP (3840x2160)','ep'), group('Roxy EP (2560x1080)','ep-wide'),
+                    group('Another theme','other'), group('Film (3840x2160)','video','video')]
+        before = json.dumps(original)
+        merged = wallpaper_variants(original)
+        self.assertEqual(['Roxy','Roxy EP','Another theme','Film (3840x2160)'], [g['name'] for g in merged])
+        self.assertEqual(['16:9','21:9'], [v['label'] for v in merged[0]['variants']])
+        self.assertEqual(['3840x2160','2560x1080'], [v['id'] for v in merged[0]['variants']])
+        self.assertEqual(['wide','normal'], [r['id'] for r in merged[0]['resources']])
+        self.assertEqual(before, json.dumps(original))
+        self.assertEqual(original[2:3], wallpaper_variants(original[2:3]))
+
+    def test_catalog_groups_ratios_without_changing_download_paths(self):
+        document = json.loads(self.manifest.read_text(encoding='utf8'))
+        entry = document['entries']['1']
+        entry['folders'] = [['wallpapers','theme','Roxy (3840x2160)'], ['wallpapers','theme','Roxy (2560x1080)']]
+        entry['resources'] = [{**entry['resources'][0], 'id':f'image-{i}', 'folder':i} for i in range(2)]
+        self.manifest.write_text(json.dumps(document),encoding='utf8')
+        catalog = requests.get(self.url+'/api/catalog',timeout=5).json()
+        groups = catalog['entries'][0]['groups']
+        self.assertEqual(['Roxy'], [g['name'] for g in groups])
+        self.assertEqual(2,len(groups[0]['variants']))
+        self.assertEqual(['3840x2160','2560x1080'],[r['variant'] for r in groups[0]['resources']])
+        self.assertEqual(document,json.loads(self.manifest.read_text(encoding='utf8')))
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)
