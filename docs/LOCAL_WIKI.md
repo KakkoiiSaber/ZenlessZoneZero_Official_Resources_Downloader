@@ -63,6 +63,18 @@ sudo docker compose --env-file .env -f compose.wiki.yaml up -d --no-build --forc
 
 源代码、前端和 metafiles 都从 Git 项目只读挂载。每日下载脚本会同步 main，必要时重启网站；普通代码更新不构建镜像，依赖变化时才自动构建。
 
+## 调试模式
+
+默认隐藏侧栏主题数量、主题卡片的资源/已下载数量，以及分组资源数量。图片切换序号和未下载提示保留，方便正常浏览。
+
+需要核对数据时，在 NAS 本地 `.env` 中设置 `WIKI_DEBUG=true`，然后执行：
+
+```sh
+sudo docker compose --env-file .env -f compose.wiki.yaml up -d --no-build --force-recreate wiki
+```
+
+改回 `WIKI_DEBUG=false` 并执行同一命令即可恢复正常模式。本机启动可使用 `python -m src.wiki --debug`。此选项只控制页面核对信息，不开启开发调试服务器。
+
 ## Windows 本机预览
 
 在项目根目录执行：

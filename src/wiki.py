@@ -22,7 +22,8 @@ STATIC = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js',
 
 
 class Catalog:
-    def __init__(self, manifest, media_root, snapshot=None, covers='state/covers'):
+    def __init__(self, manifest, media_root, snapshot=None, covers='state/covers', *, debug=False):
+        self.debug = debug
         self.manifest = Path(manifest)
         self.media_root = Path(media_root).resolve()
         self.lock = threading.Lock()
@@ -136,7 +137,7 @@ class Catalog:
                     value['preview_size'] = preview_size
                 entries.append(value)
             return {'generated_at': document.get('generated_at'), 'categories': document['categories'],
-                    'entries': entries}, media
+                    'debug': self.debug, 'entries': entries}, media
 
 
 def byte_range(value, size):
@@ -258,9 +259,12 @@ def main():
     parser.add_argument('--snapshot', default='state/wiki.json', help='Prefer the downloader local manifest snapshot')
     parser.add_argument('--covers', default='state/covers', help='Read-only local cover cache directory')
     parser.add_argument('--downloads', default=os.environ.get('DOWNLOAD_PATH', 'downloads'))
+    parser.add_argument('--debug', action='store_true',
+                        default=os.environ.get('WIKI_DEBUG', '').lower() in ('1', 'true', 'yes'),
+                        help='Show resource and download counts in the Wiki interface')
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO, format=LOG_FORMAT, datefmt=LOG_DATE_FORMAT)
-    catalog = Catalog(args.manifest, args.downloads, args.snapshot, args.covers)
+    catalog = Catalog(args.manifest, args.downloads, args.snapshot, args.covers, debug=args.debug)
     document, _ = catalog.read()
     server = ThreadingHTTPServer((args.host, args.port), partial(Handler, catalog=catalog))
     logging.info('Local media Wiki: http://%s:%s (%s entries)', args.host, args.port, len(document['entries']))
