@@ -20,11 +20,15 @@ jobs:
       - run: sh -n run-downloader.sh
       - run: docker compose config --quiet
       - run: docker compose -f compose.wiki.yaml config --quiet
-      - run: docker compose build
+      - name: Build the dependency runtime with its input signature
+        run: |
+          runtime_signature=$(git hash-object Dockerfile requirements-download.txt .dockerignore | git hash-object --stdin)
+          docker compose build --build-arg "RUNTIME_SIGNATURE=$runtime_signature"
+          test "$(docker image inspect --format '{{index .Config.Labels "io.github.kakkoiisaber.zzz.runtime-signature"}}' downloader:runtime)" = "$runtime_signature"
       - name: Verify the runtime image contains dependencies but no application code
         run: >-
           docker run --rm --network none --entrypoint python downloader:runtime
-          -c "import pathlib, requests; assert not pathlib.Path('/app/src').exists()"
+          -c "import pathlib, requests; from PIL import Image; assert not pathlib.Path('/app/src').exists()"
       - name: Validate the real manifest inside the non-root container
         run: >-
           docker compose run --rm --no-deps

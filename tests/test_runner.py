@@ -40,13 +40,19 @@ class RunnerTests(unittest.TestCase):
         self.bin = self.root / 'bin'
         self.bin.mkdir()
         self.log = self.root / 'docker.log'
+        self.image_signature = self.root / 'image-signature'
         docker = self.bin / 'docker'
         docker.write_text('''#!/bin/sh
 printf '%s\n' "$*" >> "$DOCKER_TEST_LOG"
 case "$*" in
   *"ps --status running -q downloader") [ "${RUNNING_DOWNLOAD:-0}" = 1 ] && echo active; exit 0 ;;
   *"ps --status running -q wiki") [ "${RUNNING_WIKI:-0}" = 1 ] && echo active; exit 0 ;;
-  *"build downloader") [ "${FAIL_BUILD:-0}" = 1 ] && exit 8 ;;
+  *"image inspect --format "*) cat "$DOCKER_TEST_SIGNATURE" 2>/dev/null || true; exit 0 ;;
+  *"build --build-arg "*)
+    [ "${FAIL_BUILD:-0}" = 1 ] && exit 8
+    for argument in "$@"; do
+      case "$argument" in RUNTIME_SIGNATURE=*) printf '%s' "${argument#RUNTIME_SIGNATURE=}" > "$DOCKER_TEST_SIGNATURE" ;; esac
+    done ;;
 esac
 exit 0
 ''')
@@ -64,7 +70,7 @@ exit 0
 
     def run_task(self, **extra):
         env = {**os.environ, 'PATH': str(self.bin) + os.pathsep + os.environ['PATH'],
-               'DOCKER_TEST_LOG': str(self.log), **extra}
+               'DOCKER_TEST_LOG': str(self.log), 'DOCKER_TEST_SIGNATURE': str(self.image_signature), **extra}
         result = subprocess.run(['/bin/sh', str(self.work / 'run-downloader.sh')],
                                 env=env, capture_output=True, text=True, timeout=15)
         return result, self.log.read_text() if self.log.exists() else ''
@@ -79,7 +85,7 @@ exit 0
         self.assertEqual((self.work / 'state/keep').read_text(), 'download journal')
         self.assertIn('/private/media', (self.work / '.env').read_text())
         self.assertIn('up -d --no-build --force-recreate wiki', log)
-        self.assertNotIn('build downloader', log)
+        self.assertNotIn('build --build-arg', log)
         self.assertFalse((self.work / '.cache/runner.lock').exists())
 
     def test_offline_keeps_running_local_code(self):
@@ -100,18 +106,43 @@ exit 0
     def test_dependency_changes_rebuild_once_and_retry_after_failure(self):
         self.assertEqual(self.run_task()[0].returncode, 0)
         self.update('requirements-download.txt', 'requests>=2.32,<3\n# changed\n')
-        old_marker = (self.work / '.cache/runtime-signature').read_text()
+        old_marker = self.image_signature.read_text()
         result, _ = self.run_task(FAIL_BUILD='1')
         self.assertNotEqual(result.returncode, 0)
-        self.assertEqual((self.work / '.cache/runtime-signature').read_text(), old_marker)
+        self.assertEqual(self.image_signature.read_text(), old_marker)
         self.log.write_text('')
         result, log = self.run_task()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn('build downloader', log)
+        self.assertIn('build --build-arg', log)
         self.log.write_text('')
         result, log = self.run_task()
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertNotIn('build downloader', log)
+        self.assertNotIn('build --build-arg', log)
+
+    def test_unlabelled_image_is_not_adopted_from_a_host_marker(self):
+        marker = self.work / '.cache/runtime-signature'
+        marker.parent.mkdir(exist_ok=True)
+        marker.write_text('previously adopted image')
+        result, log = self.run_task(RUNNING_WIKI='1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('build --build-arg', log)
+        self.assertIn('up -d --no-build --force-recreate wiki', log)
+        self.assertTrue(self.image_signature.read_text())
+        self.log.write_text('')
+        self.assertEqual(self.run_task()[0].returncode, 0)
+        self.assertNotIn('build --build-arg', self.log.read_text())
+
+    def test_manual_git_pull_still_rebuilds_the_old_image(self):
+        self.assertEqual(self.run_task()[0].returncode, 0)
+        old_signature = self.image_signature.read_text()
+        self.update('requirements-download.txt', 'requests>=2.32,<3\nPillow>=12,<14\n# manual update\n')
+        self.git(self.work, 'pull', '--ff-only', 'origin', 'main')
+        self.log.write_text('')
+        result, log = self.run_task(RUNNING_WIKI='1')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('build --build-arg', log)
+        self.assertIn('up -d --no-build --force-recreate wiki', log)
+        self.assertNotEqual(self.image_signature.read_text(), old_signature)
 
     def test_running_downloader_defers_update_and_duplicate_download(self):
         self.update()
