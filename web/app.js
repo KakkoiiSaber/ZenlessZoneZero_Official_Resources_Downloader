@@ -8,6 +8,19 @@ let closingViewer = false;
 let listObserver;
 let listLayout;
 let viewerMode = 'auto';
+let viewerRequest = 0;
+
+async function readyImage(url) {
+  const image = new Image();
+  image.src = url;
+  await image.decode();
+  return image;
+}
+function warmNeighbours(resources, index) {
+  for (const neighbour of [resources[index - 1], resources[index + 1]]) {
+    if (neighbour?.available && neighbour.kind === 'image') readyImage(neighbour.url).catch(() => {});
+  }
+}
 
 function masonryLayout(grid) {
   let frame = 0;
@@ -43,15 +56,6 @@ function transition(node, frames, duration = 180) {
   node.getAnimations().forEach(animation => animation.cancel());
   return node.animate(frames, {duration, easing: 'cubic-bezier(.2,.7,.2,1)'});
 }
-function revealMedia(node) {
-  const reveal = () => {
-    if (node.isConnected) transition(node, [{opacity: .35}, {opacity: 1}], 180);
-  };
-  const image = node.querySelector('img');
-  if (image && !image.complete) image.addEventListener('load', reveal, {once: true});
-  else reveal();
-}
-
 function element(tag, className, text) {
   const node = document.createElement(tag);
   if (className) node.className = className;
@@ -204,7 +208,7 @@ function renderDetail(entry, content) {
   }
   for (const group of groups) content.append(renderGroup(entry, group));
 }
-function renderGroup(entry, group) {
+function renderGroup(entry, group, preparedImage) {
   const section = element('section', 'group-panel'); section.id = `group-${group.index}`;
   const heading = element('div', 'group-heading');
   heading.append(element('h2', '', group.name), element('small', '', `${group.resources.length} 个资源`));
@@ -213,17 +217,32 @@ function renderGroup(entry, group) {
   const selected = state.groups.get(selectionKey) || 0;
   const index = Math.min(selected, group.resources.length - 1);
   const pills = element('div', 'pills');
+  let request = 0;
   group.resources.forEach((resource, i) => {
     const pill = element('button', i === index ? 'selected' : '', resource.caption || String(Number.parseInt(resource.filename, 10) || i + 1));
     pill.title = (resource.caption || resource.filename) + (resource.available ? '' : ' · 尚未下载');
     pill.setAttribute('aria-pressed', String(i === index));
-    pill.onclick = () => {
+    pill.onclick = async () => {
+      const currentRequest = ++request;
+      section.removeAttribute('aria-busy');
       if (i === index) return;
+      let image;
+      if (resource.available && resource.kind === 'image') {
+        section.setAttribute('aria-busy', 'true');
+        try { image = await readyImage(resource.url); }
+        catch {
+          if (currentRequest === request && section.isConnected) {
+            section.removeAttribute('aria-busy');
+            pill.title = '图片加载失败，点击重试';
+          }
+          return;
+        }
+      }
+      if (currentRequest !== request || !section.isConnected) return;
       state.groups.set(selectionKey, i);
-      const replacement = renderGroup(entry, group);
+      const replacement = renderGroup(entry, group, image);
       section.replaceWith(replacement);
       replacement.querySelectorAll('.pills button')[i]?.focus({preventScroll: true});
-      revealMedia(replacement.querySelector('.resource-stage'));
     };
     pills.append(pill);
   });
@@ -234,7 +253,13 @@ function renderGroup(entry, group) {
     if (resource.kind === 'image') {
       const trigger = element('button', 'image-trigger');
       trigger.setAttribute('aria-label', `放大 ${group.name} ${resource.caption || resource.filename}`);
-      const img = element('img'); img.src = resource.url; img.alt = `${group.name} ${resource.caption || resource.filename}`; img.loading = 'lazy';
+      const img = preparedImage || element('img');
+      if (!preparedImage) img.src = resource.url;
+      img.alt = `${group.name} ${resource.caption || resource.filename}`; img.loading = 'lazy';
+      if (img.complete && img.naturalWidth) warmNeighbours(group.resources, index);
+      else img.addEventListener('load', () => {
+        if (section.isConnected) warmNeighbours(group.resources, index);
+      }, {once: true});
       trigger.append(img);
       trigger.onclick = () => openViewer(entry, group, index);
       stage.append(trigger);
@@ -268,19 +293,30 @@ function openViewer(entry, group, index) {
   drawViewer(); $('#viewer').showModal();
   transition($('#viewer'), [{opacity: 0, transform: 'translateY(10px) scale(.98)'}, {opacity: 1, transform: 'translateY(0) scale(1)'}], 200);
 }
-function drawViewer() {
+async function drawViewer() {
+  const request = ++viewerRequest;
   const item = gallery[position];
-  $('#player').replaceChildren();
-  const media = element(item.kind === 'video' ? 'video' : 'img');
-  media.src = item.url;
+  let media;
+  if (item.kind === 'image') {
+    $('#player').setAttribute('aria-busy', 'true');
+    try { media = await readyImage(item.url); }
+    catch {
+      if (request === viewerRequest) {
+        $('#player').removeAttribute('aria-busy');
+        $('#counter').textContent = '图片加载失败，请切换后重试';
+      }
+      return;
+    }
+  } else { media = element('video'); media.src = item.url; }
+  if (request !== viewerRequest) return;
+  $('#player').removeAttribute('aria-busy');
   if (item.kind === 'video') {
     media.controls = true;
     if (viewerPoster) media.poster = viewerPoster;
   } else media.alt = item.caption || item.filename;
-  $('#player').append(media);
-  if (item.kind === 'image') media.addEventListener('load', applyViewerMode, {once: true});
+  $('#player').replaceChildren(media);
   applyViewerMode();
-  revealMedia($('#player'));
+  warmNeighbours(gallery, position);
   $('#counter').textContent = `${position + 1} / ${gallery.length} · ${item.caption || item.filename}${item.size ? ` · ${size(item.size)}` : ''}`;
   $('#save').href = item.url; $('#save').download = item.filename;
   $('#previous').disabled = position === 0; $('#next').disabled = position === gallery.length - 1;
@@ -308,7 +344,7 @@ async function closeViewer() {
 }
 $('#close').onclick = closeViewer;
 $('#viewer').addEventListener('cancel', event => {event.preventDefault(); closeViewer();});
-$('#viewer').addEventListener('close', () => { $('#player').replaceChildren(); previousFocus?.focus(); });
+$('#viewer').addEventListener('close', () => { viewerRequest++; $('#player').replaceChildren(); $('#player').removeAttribute('aria-busy'); previousFocus?.focus(); });
 $('#previous').onclick = () => {if (position > 0) {position--; drawViewer();}};
 $('#next').onclick = () => {if (position < gallery.length - 1) {position++; drawViewer();}};
 $('#viewer').addEventListener('keydown', event => {
