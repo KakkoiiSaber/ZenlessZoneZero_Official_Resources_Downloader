@@ -1,6 +1,6 @@
 'use strict';
 const $ = selector => document.querySelector(selector);
-const state = {data: null, category: '', query: '', entry: null, groups: new Map()};
+const state = {data: null, category: '', query: '', entry: null, groups: new Map(), variants: new Map()};
 const symbols = {'73': '▷', '72': '▶', '98': '▧', '99': '♡'};
 let gallery = [], position = 0, previousFocus, viewerPoster;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -92,7 +92,7 @@ function readRoute() {
 function filteredGroups(entry) {
   const titleMatch = entry.title.toLocaleLowerCase().includes(state.query);
   return entry.groups.map((group, index) => ({...group, index,
-    resources: group.resources.filter(r => !state.query || titleMatch || `${group.name} ${r.caption || ''} ${r.filename}`.toLocaleLowerCase().includes(state.query))}))
+    resources: group.resources.filter(r => !state.query || titleMatch || `${group.name} ${r.caption || ''} ${r.filename} ${r.variant || ''}`.toLocaleLowerCase().includes(state.query))}))
     .filter(group => group.resources.length);
 }
 function renderNavigation() {
@@ -217,11 +217,49 @@ function renderGroup(entry, group, preparedImage) {
   if (state.data.debug) heading.append(element('small', '', `${group.resources.length} 个资源`));
   section.append(heading);
   const selectionKey = `${entry.id}:${group.index}`;
+  const variants = (group.variants || []).filter(v => group.resources.some(r => r.variant === v.id));
+  const variant = variants.find(v => v.id === state.variants.get(selectionKey)) || variants[0];
+  const resources = variant ? group.resources.filter(r => r.variant === variant.id) : group.resources;
   const selected = state.groups.get(selectionKey) || 0;
-  const index = Math.min(selected, group.resources.length - 1);
-  const pills = element('div', 'pills');
+  const index = Math.min(selected, resources.length - 1);
+  const pills = element('div', 'pills resource-pills');
   let request = 0;
-  group.resources.forEach((resource, i) => {
+  if (variants.length > 1) {
+    const choices = element('div', 'pills variant-pills');
+    choices.setAttribute('aria-label', '图片比例');
+    for (const choice of variants) {
+      const label = variants.filter(v => v.label === choice.label).length > 1 ? `${choice.label} · ${choice.dimensions}` : choice.label;
+      const button = element('button', choice.id === variant.id ? 'selected' : '', label);
+      button.title = choice.dimensions;
+      button.setAttribute('aria-pressed', String(choice.id === variant.id));
+      button.onclick = async () => {
+        const currentRequest = ++request;
+        section.removeAttribute('aria-busy');
+        if (choice.id === variant.id) return;
+        const targets = group.resources.filter(r => r.variant === choice.id);
+        const target = targets[Math.min(index, targets.length - 1)];
+        let image;
+        if (target.available) {
+          section.setAttribute('aria-busy', 'true');
+          try { image = await readyImage(target.url); }
+          catch {
+            if (currentRequest === request && section.isConnected) {
+              section.removeAttribute('aria-busy'); button.title = '图片加载失败，点击重试';
+            }
+            return;
+          }
+        }
+        if (currentRequest !== request || !section.isConnected) return;
+        state.variants.set(selectionKey, choice.id);
+        const replacement = renderGroup(entry, group, image);
+        section.replaceWith(replacement);
+        replacement.querySelectorAll('.variant-pills button')[variants.indexOf(choice)]?.focus({preventScroll: true});
+      };
+      choices.append(button);
+    }
+    section.append(choices);
+  }
+  resources.forEach((resource, i) => {
     const pill = element('button', i === index ? 'selected' : '', resource.caption || String(Number.parseInt(resource.filename, 10) || i + 1));
     pill.title = (resource.caption || resource.filename) + (resource.available ? '' : ' · 尚未下载');
     pill.setAttribute('aria-pressed', String(i === index));
@@ -245,12 +283,12 @@ function renderGroup(entry, group, preparedImage) {
       state.groups.set(selectionKey, i);
       const replacement = renderGroup(entry, group, image);
       section.replaceWith(replacement);
-      replacement.querySelectorAll('.pills button')[i]?.focus({preventScroll: true});
+      replacement.querySelectorAll('.resource-pills button')[i]?.focus({preventScroll: true});
     };
     pills.append(pill);
   });
-  if (group.resources.length > 1) section.append(pills);
-  const resource = group.resources[index];
+  if (resources.length > 1) section.append(pills);
+  const resource = resources[index];
   const stage = element('div', 'resource-stage');
   if (resource.available) {
     if (resource.kind === 'image') {
@@ -259,12 +297,13 @@ function renderGroup(entry, group, preparedImage) {
       const img = preparedImage || element('img');
       if (!preparedImage) img.src = resource.url;
       img.alt = `${group.name} ${resource.caption || resource.filename}`; img.loading = 'lazy';
-      if (img.complete && img.naturalWidth) warmNeighbours(group.resources, index);
+      if (img.complete && img.naturalWidth) warmNeighbours(resources, index);
       else img.addEventListener('load', () => {
-        if (section.isConnected) warmNeighbours(group.resources, index);
+        if (section.isConnected) warmNeighbours(resources, index);
       }, {once: true});
       trigger.append(img);
-      trigger.onclick = () => openViewer(entry, group, index);
+      trigger.onclick = () => openViewer(entry, {...group, resources,
+        name: variant ? `${group.name} · ${variant.label} · ${variant.dimensions}` : group.name}, index);
       stage.append(trigger);
     } else {
       const video = element('video'); video.src = resource.url; video.controls = true; video.preload = 'metadata'; video.playsInline = true;
@@ -278,7 +317,7 @@ function renderGroup(entry, group, preparedImage) {
   }
   section.append(stage);
   const caption = element('div', 'resource-caption');
-  caption.append(element('span', '', `${resource.caption || (resource.kind === 'video' ? entry.title : resource.filename)}${resource.size ? ` · ${size(resource.size)}` : ''}`));
+  caption.append(element('span', '', `${resource.caption || (resource.kind === 'video' ? entry.title : resource.filename)}${variant ? ` · ${variant.dimensions}` : ''}${resource.size ? ` · ${size(resource.size)}` : ''}`));
   if (resource.available) {
     const save = element('a', '', '保存原文件 ↓'); save.href = resource.url; save.download = resource.filename; caption.append(save);
   } else caption.append(element('span', 'muted', '未下载'));

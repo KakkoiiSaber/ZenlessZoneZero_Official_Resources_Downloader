@@ -5,6 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import logging
 import mimetypes
+from math import gcd
 import os
 from pathlib import Path
 import re
@@ -19,6 +20,36 @@ WEB = Path(__file__).resolve().parent.parent / 'web'
 STATIC = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js',
           '/style.css': 'style.css', '/assets/background.png': 'assets/background.png',
           '/assets/zzz-logo.svg': 'assets/zzz-logo.svg'}
+
+
+def wallpaper_variants(groups):
+    """Combine display groups only; download folders and resource identities stay intact."""
+    candidates = {}
+    for index, group in enumerate(groups):
+        match = re.fullmatch(r'(.+?)[(（]\s*(\d{2,5})\s*[xX×]\s*(\d{2,5})\s*[)）]', group['name'])
+        if match and group['resources'] and all(r['kind'] == 'image' for r in group['resources']):
+            name, width, height = match[1].strip(), int(match[2]), int(match[3])
+            if width and height:
+                candidates.setdefault(name, []).append((index, width, height))
+    replacements, removed = {}, set()
+    for name, versions in candidates.items():
+        if len({(w, h) for _, w, h in versions}) < 2:
+            continue
+        combined = {'name': name, 'resources': [], 'variants': []}
+        for index, width, height in versions:
+            ident = f'{width}x{height}'
+            divisor = gcd(width, height)
+            ratio = '21:9' if abs(width / height - 21 / 9) < .05 else f'{width // divisor}:{height // divisor}'
+            variant = {'id': ident, 'label': ratio, 'dimensions': f'{width}×{height}'}
+            if not any(v['id'] == ident for v in combined['variants']):
+                combined['variants'].append(variant)
+            combined['resources'].extend({**r, 'variant': ident} for r in groups[index]['resources'])
+            removed.add(index)
+        # Prefer the larger pixel count, retaining every composition as an option.
+        combined['variants'].sort(key=lambda v: int(v['id'].split('x')[0]) * int(v['id'].split('x')[1]), reverse=True)
+        replacements[versions[0][0]] = combined
+    return [replacements.get(index, group) for index, group in enumerate(groups)
+            if index not in removed or index in replacements]
 
 
 class Catalog:
@@ -123,7 +154,7 @@ class Catalog:
                     for index in ([raw['folder']] if 'folder' in raw else raw['folders']):
                         groups[index]['resources'].append(value)
                 value = {'id': ident, 'title': entry['title'],
-                         'categories': [str(c) for c in entry['category_ids']], 'groups': groups}
+                         'categories': [str(c) for c in entry['category_ids']], 'groups': wallpaper_variants(groups)}
                 cover_key = digest(f'wiki:{ident}:cover')
                 cover_path = self.locate_cover(cover_key)
                 if cover_path:
