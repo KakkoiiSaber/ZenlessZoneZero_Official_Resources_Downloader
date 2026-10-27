@@ -116,17 +116,12 @@ run() {
         log INFO 'The downloader is already running; no second download is started.'
         exit 0
     fi
-    signature=$(repo_git rev-parse HEAD:Dockerfile HEAD:requirements-download.txt HEAD:.dockerignore)
-    previous=$(cat "$project_dir/.cache/runtime-signature" 2>/dev/null || true)
-    if [ "$dependencies_changed" = 1 ] || { [ -n "$previous" ] && [ "$signature" != "$previous" ]; } || ! "$docker_bin" image inspect downloader:runtime >/dev/null 2>&1; then
+    signature=$(repo_git hash-object Dockerfile requirements-download.txt .dockerignore | repo_git hash-object --stdin)
+    image_signature=$("$docker_bin" image inspect --format '{{index .Config.Labels "io.github.kakkoiisaber.zzz.runtime-signature"}}' downloader:runtime 2>/dev/null || true)
+    if [ "$dependencies_changed" = 1 ] || [ "$signature" != "$image_signature" ]; then
         log INFO 'Preparing the dependency runtime image.'
-        compose_download build downloader
-        printf '%s\n' "$signature" > "$project_dir/.cache/runtime-signature.tmp"
-        mv "$project_dir/.cache/runtime-signature.tmp" "$project_dir/.cache/runtime-signature"
+        compose_download build --build-arg "RUNTIME_SIGNATURE=$signature" downloader
         code_changed=1
-    elif [ -z "$previous" ]; then
-        # Adopt an existing runtime without rebuilding it for an ordinary code update.
-        printf '%s\n' "$signature" > "$project_dir/.cache/runtime-signature"
     fi
     if [ "$code_changed" = 1 ] && [ -n "$wiki_running" ]; then
         log INFO 'Reloading the Wiki with the updated code.'

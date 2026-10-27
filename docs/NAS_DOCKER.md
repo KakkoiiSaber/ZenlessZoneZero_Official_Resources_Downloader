@@ -193,7 +193,9 @@ docker compose build --pull
 ## 群晖每日任务计划
 
 计划任务通过 `run-downloader.sh` 启动：每次先快进同步 `origin/main`，再增量下载。
-首次运行会准备依赖镜像；之后普通代码更新不重建镜像，只有 Dockerfile、下载依赖或镜像构建规则变化时才自动构建。
+首次运行会准备依赖镜像；之后普通代码更新不重建镜像。脚本核对镜像自身记录的 Dockerfile、下载依赖和构建规则签名；镜像缺少标记或签名不匹配时自动构建。即使先手动 `git pull`，也能识别旧镜像，不能仅凭主机缓存文件认定依赖已安装。
+
+如果旧部署出现 `ModuleNotFoundError: No module named 'PIL'`，先在项目目录执行 `git pull --ff-only origin main`，再执行 `sudo /bin/sh ./run-downloader.sh`。更新后的脚本会补齐依赖镜像，并重建正在运行的 Wiki 容器；资源和下载记录保留。
 
 DSM 控制面板 → 任务计划 → 新增 → 计划的任务 → 用户定义的脚本：
 
