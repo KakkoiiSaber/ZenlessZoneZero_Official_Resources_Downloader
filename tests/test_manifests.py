@@ -108,6 +108,23 @@ class ParsingTests(unittest.TestCase):
         self.assertTrue(media[0]['url'].endswith('/z.jpg'))
         self.assertEqual(['001.jpg','002.jpg'], [m['filename'] for m in media])
 
+    def test_repeated_wiki_groups_do_not_inherit_the_template_title(self):
+        page = {'id':'1990', 'modules':[
+            {'id':str(i), 'components':[{'component_id':'map_desc', 'data':{'list':[
+                {'image':f'https://act-upload.mihoyo.com/{i}.png'}]}}]} for i in (1,2)],
+            'template_layout':{'tab':[{'module_group':[
+                {'module_group_id':'root', 'name':'Collection', 'module':[]},
+                {'module_group_id':'first', 'name':'Vol.07', 'repeated':True,
+                 'parent_group_id':'root', 'module':[{'id':'1'}]},
+                {'module_group_id':'copy', 'name':'Vol.06', 'repeated':True,
+                 'parent_group_id':'first', 'module':[{'id':'2'}]}]}]}}
+        media, _ = parse.wiki_media(page)
+        self.assertEqual([['Collection','Vol.07'], ['Collection','Vol.06']],
+                         [r['section_path'] for r in media])
+        page['template_layout']['tab'][0]['module_group'][2]['repeated'] = False
+        media, _ = parse.wiki_media(page)
+        self.assertEqual(['Collection','Vol.07','Vol.06'], media[1]['section_path'])
+
     def test_windows_names_and_colliding_module_filenames(self):
         self.assertEqual('a_b', parse.safe_name('a|b'))
         self.assertEqual('_CON', parse.safe_name('CON'))
