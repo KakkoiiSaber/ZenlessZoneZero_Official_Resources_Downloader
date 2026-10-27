@@ -125,7 +125,8 @@ class WikiTests(unittest.TestCase):
         resources = plan(self.document)
         update_preview_sizes(self.document, resources, [], self.media, state, threading.Event())
         before = (state / 'image-sizes.json').read_bytes()
-        with patch('src.download.read_image_size', side_effect=AssertionError('unchanged image reopened')):
+        with patch('src.download.read_image_size', side_effect=AssertionError('unchanged image reopened')), \
+                patch('src.download.safe_path', side_effect=AssertionError('unchanged preview inspected')):
             update_preview_sizes(self.document, resources, [], self.media, state, threading.Event())
         self.assertEqual(before, (state / 'image-sizes.json').read_bytes())
         fresh = Catalog(self.manifest, self.media, covers=state / 'covers')
