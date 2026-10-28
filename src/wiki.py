@@ -76,7 +76,7 @@ class Catalog:
         cached = load_size_index(self.thumbnail_root / 'index.json')
         return {ident: item for ident, item in cached.items()
                 if ident in resources and isinstance(item, dict) and item.get('fingerprint') == resources[ident]['fingerprint']
-                and re.fullmatch(r'[0-9a-f]{64}\.jpg', str(item.get('filename', '')))}
+                and re.fullmatch(r'[0-9a-f]{64}\.(?:png|jpg)', str(item.get('filename', '')))}
 
     def locate_thumbnail(self, filename):
         if not any(item['filename'] == filename for item in self.thumbnails().values()):
@@ -269,7 +269,7 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_error(404, 'Cover has not been downloaded')
                     return
                 self.serve_file(path, head)
-            elif re.fullmatch(r'/thumbnails/[0-9a-f]{64}\.jpg', route):
+            elif re.fullmatch(r'/thumbnails/[0-9a-f]{64}\.(?:png|jpg)', route):
                 path = self.catalog.locate_thumbnail(route.rsplit('/', 1)[1])
                 if path is None:
                     self.send_error(404, 'Thumbnail has not been generated')

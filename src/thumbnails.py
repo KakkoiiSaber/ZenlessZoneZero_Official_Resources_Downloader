@@ -10,7 +10,7 @@ from src.image_info import load_size_index, read_image_size
 from src.scrape.http import atomic_json
 
 LOG = logging.getLogger('download')
-RECIPE = 'first-frame-640-v1'
+RECIPE = 'first-frame-native-png-v2'
 
 
 def targets(document):
@@ -46,7 +46,7 @@ def update_thumbnails(document, resources, state_root, records, locate, stop, *,
         if not record.get('complete') or record.get('fingerprint') != resource['fingerprint']:
             continue
         source = hashlib.sha256((RECIPE + resource['fingerprint'] + record['sha256']).encode()).hexdigest()
-        filename = hashlib.sha256((ident + source).encode()).hexdigest() + '.jpg'
+        filename = hashlib.sha256((ident + source).encode()).hexdigest() + '.png'
         old = index.get(ident, {})
         if (old.get('source') == source and old.get('filename') == filename and old.get('size')
                 and (not verify_files or (root / filename).is_file())):
@@ -59,13 +59,12 @@ def update_thumbnails(document, resources, state_root, records, locate, stop, *,
             LOG.warning('Thumbnail generation requires FFmpeg; existing downloads are preserved')
             return {'generated': generated, 'failed': failed + 1}
         root.mkdir(parents=True, exist_ok=True)
-        output = root / (filename + '.tmp.jpg')
+        output = root / (filename + '.tmp.png')
         try:
             # One local first frame only; no seeking, sampling or network access.
             subprocess.run([executable, '-hide_banner', '-loglevel', 'error', '-nostdin', '-y',
                 '-threads', '1', '-protocol_whitelist', 'file,pipe', '-i', str(video), '-an', '-sn',
-                '-vf', "scale='min(640,iw)':-2", '-frames:v', '1',
-                '-threads', '1', '-q:v', '3', str(output)],
+                '-frames:v', '1', '-c:v', 'png', '-threads', '1', str(output)],
                 check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=60)
             size = read_image_size(output)
             if not size:
