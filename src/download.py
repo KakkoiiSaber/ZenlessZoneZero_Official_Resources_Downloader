@@ -620,6 +620,12 @@ def main():
                         cover_state.close()
                 update_preview_sizes(document, resources, covers, args.download_dir, args.state_dir, stop, verify_files=args.verify_files)
                 failed += worker.run(resources)['failed']
+                from src.thumbnails import update_thumbnails
+                records = state.records()
+                thumbnails = update_thumbnails(document, resources, args.state_dir, records,
+                    lambda resource: worker.existing(records.get(resource['id'], {}), resource['id']),
+                    stop, verify_files=args.verify_files)
+                failed += thumbnails['failed']
                 update_preview_sizes(document, resources, covers, args.download_dir, args.state_dir, stop, verify_files=args.verify_files)
                 return int(bool(failed or stop.is_set()))
             except (OSError, ValueError, KeyError, TypeError, requests.RequestException) as error:

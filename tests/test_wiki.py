@@ -19,6 +19,38 @@ from src.wiki import Catalog, Handler, wallpaper_variants
 
 
 class WikiTests(unittest.TestCase):
+    def test_local_thumbnails_refresh_latest_preview_and_player_posters(self):
+        import hashlib
+        document = json.loads(self.manifest.read_text(encoding='utf8'))
+        entry = document['entries']['1']
+        entry.update(title='动态壁纸合集', category_ids=[98])
+        entry['resources'] = [{**entry['resources'][0], 'id':ident, 'kind':'video',
+            'filename':ident+'.mp4','url':url} for ident,url in [
+                ('older','https://example.invalid/2025/01/01/old.mp4'),
+                ('newer','https://example.invalid/2026/10/01/new.mp4')]]
+        self.manifest.write_text(json.dumps(document),encoding='utf8')
+        self.catalog.thumbnail_root = self.root/'thumbnails'
+        self.catalog.thumbnail_root.mkdir()
+        resources = {r['id']:r for r in plan(document)}
+        index = {}
+        for ident in ('older','newer'):
+            filename = hashlib.sha256(ident.encode()).hexdigest()+'.jpg'
+            Image.new('RGB',(320,180),'red').save(self.catalog.thumbnail_root/filename)
+            index[ident] = {'fingerprint':resources[ident]['fingerprint'],'filename':filename,'size':[320,180]}
+        (self.catalog.thumbnail_root/'index.json').write_text(json.dumps(index),encoding='utf8')
+        with patch('src.thumbnails.subprocess.run',side_effect=AssertionError('Wiki decoded video')):
+            response = requests.get(self.url+'/api/catalog',timeout=5).json()['entries'][0]
+        self.assertEqual(response['cover'],'/thumbnails/'+index['newer']['filename'])
+        self.assertEqual(response['preview_size'],[320,180])
+        self.assertTrue(all(r.get('poster') for g in response['groups'] for r in g['resources']))
+        self.assertEqual(requests.get(self.url+response['cover'],timeout=5).status_code,200)
+        self.assertEqual(requests.get(self.url+'/thumbnails/index.json',timeout=5).status_code,404)
+        self.assertEqual(requests.get(self.url+'/thumbnails/'+'0'*64+'.jpg',timeout=5).status_code,404)
+        index['newer']['fingerprint'] = 'outdated version'
+        (self.catalog.thumbnail_root/'index.json').write_text(json.dumps(index),encoding='utf8')
+        response = requests.get(self.url+'/api/catalog',timeout=5).json()['entries'][0]
+        self.assertEqual(response['cover'],'/thumbnails/'+index['older']['filename'])
+
     def test_wallpaper_ratios_merge_only_matching_image_themes(self):
         def group(name, ident, kind='image'):
             return {'name':name, 'resources':[{'id':ident,'kind':kind,'url':'/media/'+ident}]}

@@ -13,6 +13,7 @@ import threading
 from urllib.parse import urlsplit
 
 from src.image_info import load_size_index, read_image_size
+from src.thumbnails import preview_order
 
 from src.download import LOG_DATE_FORMAT, LOG_FORMAT, cover_plan, digest, plan, safe_path
 
@@ -68,6 +69,23 @@ class Catalog:
         self.image_sizes = {}
         self.sizes_file = self.cover_root.parent / 'image-sizes.json'
         self.persisted_sizes = {}
+        self.thumbnail_root = self.cover_root.parent / 'thumbnails'
+
+    def thumbnails(self):
+        _, resources, _ = self.index()
+        cached = load_size_index(self.thumbnail_root / 'index.json')
+        return {ident: item for ident, item in cached.items()
+                if ident in resources and isinstance(item, dict) and item.get('fingerprint') == resources[ident]['fingerprint']
+                and re.fullmatch(r'[0-9a-f]{64}\.jpg', str(item.get('filename', '')))}
+
+    def locate_thumbnail(self, filename):
+        if not any(item['filename'] == filename for item in self.thumbnails().values()):
+            return None
+        return self.thumbnail_file(filename)
+
+    def thumbnail_file(self, filename):
+        path = safe_path(self.thumbnail_root, filename)
+        return path if path.is_file() and path.stat().st_size > 0 else None
 
     def image_size(self, path, resource_id=None):
         """Read only the local image header; cache until the file changes."""
@@ -125,6 +143,7 @@ class Catalog:
         # Read each time so Git updates and newly finished downloads appear on refresh.
         document, resources, _ = self.index()
         self.persisted_sizes = load_size_index(self.sizes_file)
+        thumbnails = self.thumbnails()
         if document is not None:
             media, entries = {}, []
             for ident, entry in document['entries'].items():
@@ -151,6 +170,9 @@ class Catalog:
                              'source': raw.get('source', 'wiki')}
                     if raw.get('caption'):
                         value['caption'] = raw['caption']
+                    thumbnail = thumbnails.get(raw['id'])
+                    if thumbnail and self.thumbnail_file(thumbnail['filename']):
+                        value['poster'] = '/thumbnails/' + thumbnail['filename']
                     for index in ([raw['folder']] if 'folder' in raw else raw['folders']):
                         groups[index]['resources'].append(value)
                 value = {'id': ident, 'title': entry['title'],
@@ -159,8 +181,16 @@ class Catalog:
                 cover_path = self.locate_cover(cover_key)
                 if cover_path:
                     value['cover'] = '/covers/' + cover_key
+                thumbnail_size = None
+                if not cover_path and preview_path is None:
+                    for video in preview_order(entry):
+                        thumbnail = thumbnails.get(video['id'])
+                        if thumbnail and self.thumbnail_file(thumbnail['filename']):
+                            value['cover'] = '/thumbnails/' + thumbnail['filename']
+                            thumbnail_size = thumbnail.get('size')
+                            break
                 original = resources.get(preview_id, {}) if not cover_path else {}
-                preview_size = [original.get('width'), original.get('height')]
+                preview_size = thumbnail_size or [original.get('width'), original.get('height')]
                 if not all(type(value) is int and value > 0 for value in preview_size):
                     preview_size = self.image_size(cover_path or preview_path,
                                                    f'wiki:{ident}:cover' if cover_path else preview_id)
@@ -237,6 +267,12 @@ class Handler(BaseHTTPRequestHandler):
                 path = self.catalog.locate_cover(route.rsplit('/', 1)[1])
                 if path is None:
                     self.send_error(404, 'Cover has not been downloaded')
+                    return
+                self.serve_file(path, head)
+            elif re.fullmatch(r'/thumbnails/[0-9a-f]{64}\.jpg', route):
+                path = self.catalog.locate_thumbnail(route.rsplit('/', 1)[1])
+                if path is None:
+                    self.send_error(404, 'Thumbnail has not been generated')
                     return
                 self.serve_file(path, head)
             else:

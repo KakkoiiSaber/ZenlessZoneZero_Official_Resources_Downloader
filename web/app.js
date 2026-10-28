@@ -307,7 +307,7 @@ function renderGroup(entry, group, preparedImage) {
       stage.append(trigger);
     } else {
       const video = element('video'); video.src = resource.url; video.controls = true; video.preload = 'metadata'; video.playsInline = true;
-      if (entry.cover) video.poster = entry.cover;
+      if (resource.poster || entry.cover) video.poster = resource.poster || entry.cover;
       stage.append(video);
     }
   } else {
@@ -354,7 +354,7 @@ async function drawViewer() {
   $('#player').removeAttribute('aria-busy');
   if (item.kind === 'video') {
     media.controls = true;
-    if (viewerPoster) media.poster = viewerPoster;
+    if (item.poster || viewerPoster) media.poster = item.poster || viewerPoster;
   } else media.alt = item.caption || item.filename;
   $('#player').replaceChildren(media);
   applyViewerMode();
