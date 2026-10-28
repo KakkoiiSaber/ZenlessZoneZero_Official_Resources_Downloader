@@ -29,9 +29,10 @@ class ThumbnailTests(unittest.TestCase):
 
     def extract(self, command, **kwargs):
         self.assertNotIn('-ss', command)
+        self.assertNotIn('-vf', command)
         self.assertNotIn('thumbnail=', ' '.join(command))
         self.assertEqual(command[command.index('-frames:v')+1], '1')
-        Image.new('RGB',(320,180),'red').save(command[-1],format='JPEG')
+        Image.new('RGB',(320,180),'red').save(command[-1],format='PNG')
 
     def run_update(self, locate=None, **kwargs):
         return update_thumbnails(self.document,[self.resource],self.root,self.records,
@@ -67,7 +68,7 @@ class ThumbnailTests(unittest.TestCase):
                 patch('src.thumbnails.subprocess.run',side_effect=subprocess.TimeoutExpired('ffmpeg',60)):
             self.assertEqual(self.run_update()['failed'],1)
         self.assertFalse((self.root/'thumbnails/index.json').exists())
-        self.assertEqual(list((self.root/'thumbnails').glob('*.jpg')),[])
+        self.assertEqual(list((self.root/'thumbnails').glob('*.png')),[])
 
     def test_latest_upload_wins_with_source_order_as_tie_breaker(self):
         entry = {'resources':[{'id':'older','kind':'video','url':'https://example.invalid/2025/01/01/v.mp4'},
@@ -79,13 +80,14 @@ class ThumbnailTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which('ffmpeg'),'Real extraction requires FFmpeg')
     def test_real_first_frame_extraction_including_short_clips(self):
-        for duration in ('4','0.5'):
+        for duration, dimensions in [('2',(960,540)),('0.5',(320,180))]:
             with self.subTest(duration=duration):
                 subprocess.run(['ffmpeg','-hide_banner','-loglevel','error','-y','-f','lavfi',
-                    '-i','testsrc2=size=320x180:rate=10','-t',duration,'-c:v','libx264',
+                    '-i',f'testsrc2=size={dimensions[0]}x{dimensions[1]}:rate=10','-t',duration,'-c:v','libx264',
                     '-pix_fmt','yuv420p',str(self.video)],check=True,timeout=20)
                 self.records['video-1']['sha256'] = hashlib.sha256(self.video.read_bytes()).hexdigest()
                 self.assertEqual(self.run_update()['generated'],1)
                 item = json.loads((self.root/'thumbnails/index.json').read_text())['video-1']
                 with Image.open(self.root/'thumbnails'/item['filename']) as image:
-                    self.assertEqual(image.size,(320,180))
+                    self.assertEqual(image.size,dimensions)
+                    self.assertEqual(image.format,'PNG')

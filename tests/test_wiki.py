@@ -34,7 +34,7 @@ class WikiTests(unittest.TestCase):
         resources = {r['id']:r for r in plan(document)}
         index = {}
         for ident in ('older','newer'):
-            filename = hashlib.sha256(ident.encode()).hexdigest()+'.jpg'
+            filename = hashlib.sha256(ident.encode()).hexdigest()+'.png'
             Image.new('RGB',(320,180),'red').save(self.catalog.thumbnail_root/filename)
             index[ident] = {'fingerprint':resources[ident]['fingerprint'],'filename':filename,'size':[320,180]}
         (self.catalog.thumbnail_root/'index.json').write_text(json.dumps(index),encoding='utf8')
