@@ -128,7 +128,7 @@ Minas 分享可能需要认证或临时下载令牌，因此只保存分享地�
 ## GitHub Actions
 
 `.github/workflows/update_metadata.yml`（Actions 名称：`Update metadata - incremental source crawl`）
-每日 UTC 08:17（北京时间 16:17）增量更新，跳过旧正文，
+每周一 UTC 08:17（芝加哥夏令时 03:17、冬令时 02:17）增量更新，跳过旧正文，
 也可手动触发并勾选 `full_scan` 核对全量历史索引。
 运行离线测试后生成三份清单，校验成功才提交当前分支；失败保留上一批文件，
 并上传中断进度。工作流进入默认分支后才会按计划运行。
