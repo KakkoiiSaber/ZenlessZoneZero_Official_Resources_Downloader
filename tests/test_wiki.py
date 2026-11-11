@@ -1,4 +1,5 @@
 """Offline HTTP checks for playback, local catalog refresh and media isolation."""
+from contextlib import closing
 from functools import partial
 from http.server import ThreadingHTTPServer
 import json
@@ -13,9 +14,9 @@ from unittest.mock import patch
 import requests
 from PIL import Image
 
-from src.download import cover_plan, digest, plan, update_preview_sizes
+from src.download import State, cover_plan, digest, plan, update_preview_sizes
 from src.image_info import read_image_size
-from src.wiki import Catalog, Handler, wallpaper_variants
+from src.wiki import Catalog, Handler, media_key, wallpaper_variants
 
 
 class WikiTests(unittest.TestCase):
@@ -119,6 +120,41 @@ class WikiTests(unittest.TestCase):
         second = requests.get(self.url + '/api/catalog', timeout=5).json()
         self.assertTrue(second['entries'][0]['groups'][0]['resources'][0]['available'])
 
+    def test_managed_media_waits_for_the_current_download_at_a_reused_filename(self):
+        path = self.finish_file()
+        state_dir = self.root / 'state'
+        old = plan(self.document)[0]
+        relative = old['paths'][0]
+        record = {'complete': True, 'fingerprint': old['fingerprint'], 'paths': [relative], 'size': 10}
+        with closing(State(state_dir)) as state:
+            state.claim(relative, old['id'])
+            state.save(old['id'], record)
+
+            snapshot = state_dir / 'wiki.json'
+            raw = self.document['entries']['1']['resources'][0]
+            raw.update(caption='New birthday artwork', url='https://example.invalid/new.jpg')
+            snapshot.write_text(json.dumps(self.document), encoding='utf-8')
+            catalog = Catalog(self.manifest, self.media, snapshot)
+            current = plan(self.document)[0]
+            key = media_key(current)
+            self.assertNotEqual(key, media_key(old))
+            display = catalog.read()[0]['entries'][0]['groups'][0]['resources'][0]
+            self.assertEqual(display['caption'], 'New birthday artwork')
+            self.assertFalse(display['available'])
+            self.assertIsNone(catalog.locate(key))
+
+            record['fingerprint'] = current['fingerprint']
+            state.save(old['id'], {**record, 'complete': False})
+            self.assertIsNone(catalog.locate(key))
+            path.write_bytes(b'abcdefghij')
+            state.save(old['id'], record)
+            self.assertTrue(catalog.read()[0]['entries'][0]['groups'][0]['resources'][0]['available'])
+            self.assertEqual(catalog.locate(key).read_bytes(), b'abcdefghij')
+            self.assertIsNone(catalog.locate(media_key(old)))
+
+            state.claim(relative, 'different-resource')
+            self.assertIsNone(catalog.locate(key))
+
     def test_debug_mode_is_opt_in_and_preserves_browsing_data(self):
         normal = requests.get(self.url + '/api/catalog', timeout=5).json()
         self.assertIs(normal['debug'], False)
@@ -174,7 +210,7 @@ class WikiTests(unittest.TestCase):
 
     def test_video_style_ranges_and_head(self):
         self.finish_file()
-        url = self.url + '/media/' + digest('image-1')
+        url = self.url + '/media/' + media_key(plan(self.document)[0])
         for value, body, expected in [('bytes=2-5', b'2345', 'bytes 2-5/10'),
                                       ('bytes=7-', b'789', 'bytes 7-9/10'),
                                       ('bytes=-3', b'789', 'bytes 7-9/10')]:
@@ -201,7 +237,7 @@ class WikiTests(unittest.TestCase):
         partials = self.media / '.zzz-partials'
         partials.mkdir()
         (partials / (digest('image-1') + '.part')).write_bytes(b'partial')
-        response = requests.get(self.url + '/media/' + digest('image-1'), timeout=5)
+        response = requests.get(self.url + '/media/' + media_key(plan(self.document)[0]), timeout=5)
         self.assertEqual(response.status_code, 404)
 
     def test_local_cover_is_served_without_exposing_cache_database_or_remote_url(self):

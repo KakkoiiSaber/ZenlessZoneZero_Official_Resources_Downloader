@@ -1,5 +1,6 @@
 """Offline, read-only media Wiki. Never fetches media or metadata from the Internet."""
 import argparse
+from contextlib import closing
 from functools import partial
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -9,6 +10,7 @@ from math import gcd
 import os
 from pathlib import Path
 import re
+import sqlite3
 import threading
 from urllib.parse import urlsplit
 
@@ -21,6 +23,10 @@ WEB = Path(__file__).resolve().parent.parent / 'web'
 STATIC = {'/': 'index.html', '/index.html': 'index.html', '/app.js': 'app.js',
           '/style.css': 'style.css', '/assets/background.png': 'assets/background.png',
           '/assets/zzz-logo.svg': 'assets/zzz-logo.svg'}
+
+
+def media_key(resource):
+    return digest(resource['id'] + ':' + resource['fingerprint'])
 
 
 def wallpaper_variants(groups):
@@ -62,8 +68,9 @@ class Catalog:
         self.signature = None
         self.document = None
         self.resources = None
-        self.paths = None
+        self.media_ids = None
         self.snapshot = Path(snapshot) if snapshot else None
+        self.download_db = self.snapshot.resolve().with_name('downloads.sqlite3') if self.snapshot else None
         self.cover_root = Path(covers).resolve()
         self.cover_paths = {}
         self.image_sizes = {}
@@ -118,17 +125,40 @@ class Catalog:
                 document = json.loads(manifest.read_text(encoding='utf-8'))
                 resources = {r['id']: r for r in plan(document)}
                 self.cover_paths = {digest(r['id']): r['paths'][0] for r in cover_plan(document)}
-                self.paths = {digest(r['id']): r['paths'] for r in resources.values()}
+                self.media_ids = {media_key(resource): ident for ident, resource in resources.items()}
                 self.document, self.resources, self.signature = document, resources, signature
-            return self.document, self.resources, self.paths
+            return self.document, self.resources, self.media_ids
+
+    def download_records(self, ident=None):
+        if self.download_db is None or not self.download_db.is_file():
+            return None
+        query = 'SELECT paths.path, resources.id, resources.data FROM paths JOIN resources USING (id)'
+        with closing(sqlite3.connect(self.download_db.as_uri() + '?mode=ro', uri=True)) as db:
+            rows = db.execute(query if ident is None else query + ' WHERE resources.id = ?',
+                              () if ident is None else (ident,))
+            return {relative: (owner, json.loads(record)) for relative, owner, record in rows}
+
+    def local_media(self, resource, downloads):
+        for relative in resource['paths']:
+            path = safe_path(self.media_root, relative)
+            if downloads is not None:
+                owner, record = downloads.get(relative.casefold(), (None, {}))
+                if (owner != resource['id'] or not record.get('complete')
+                        or record.get('fingerprint') != resource['fingerprint']
+                        or relative not in record.get('paths', [])):
+                    continue
+            try:
+                size = path.stat().st_size if path.is_file() else 0
+            except FileNotFoundError:
+                continue
+            if size > 0 and (downloads is None or size == record.get('size')):
+                return path, relative, size
+        return None, None, None
 
     def locate(self, key):
-        _, _, paths = self.index()
-        for relative in paths.get(key, []):
-            path = safe_path(self.media_root, relative)
-            if path.is_file() and path.stat().st_size > 0:
-                return path
-        return None
+        _, resources, media_ids = self.index()
+        ident = media_ids.get(key)
+        return self.local_media(resources[ident], self.download_records(ident))[0] if ident else None
 
     def locate_cover(self, key):
         self.index()
@@ -142,6 +172,7 @@ class Catalog:
     def read(self):
         # Read each time so Git updates and newly finished downloads appear on refresh.
         document, resources, _ = self.index()
+        downloads = self.download_records()
         self.persisted_sizes = load_size_index(self.sizes_file)
         thumbnails = self.thumbnails()
         if document is not None:
@@ -153,20 +184,16 @@ class Catalog:
                           for folder in entry['folders']]
                 for raw in entry['resources']:
                     resource = resources[raw['id']]
-                    key = digest(raw['id'])
-                    available = False
-                    for relative in resource['paths']:
-                        path = safe_path(self.media_root, relative)
-                        if path.is_file() and path.stat().st_size > 0:
-                            media[key] = relative
-                            available = True
-                            if raw['kind'] == 'image' and preview_path is None:
-                                preview_path = path
-                                preview_id = raw['id']
-                            break
+                    key = media_key(resource)
+                    path, relative, size = self.local_media(resource, downloads)
+                    if path is not None:
+                        media[key] = relative
+                        if raw['kind'] == 'image' and preview_path is None:
+                            preview_path = path
+                            preview_id = raw['id']
                     value = {'id': key, 'kind': raw['kind'], 'filename': raw['filename'],
-                             'available': available, 'url': '/media/' + key,
-                             'size': path.stat().st_size if available else raw.get('size_bytes'),
+                             'available': path is not None, 'url': '/media/' + key,
+                             'size': size if path is not None else raw.get('size_bytes'),
                              'source': raw.get('source', 'wiki')}
                     if raw.get('caption'):
                         value['caption'] = raw['caption']
@@ -281,7 +308,7 @@ class Handler(BaseHTTPRequestHandler):
             pass
         except FileNotFoundError:
             self.send_error(404, 'Local file not found')
-        except (ValueError, KeyError, OSError):
+        except (ValueError, KeyError, OSError, sqlite3.Error):
             logging.exception('Cannot read local Wiki data')
             self.send_error(503, 'Local Wiki data is unavailable')
 

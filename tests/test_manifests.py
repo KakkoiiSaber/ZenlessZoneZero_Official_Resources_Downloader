@@ -135,6 +135,37 @@ class ParsingTests(unittest.TestCase):
         self.assertNotEqual(entry['resources'][0]['filename'],entry['resources'][1]['filename'])
         self.assertEqual(2,len(tree[0]['children'][0]['children'][0]['resources']))
 
+    def test_birthday_artwork_names_use_wiki_titles_after_insertion(self):
+        page = {'id': '775', 'modules': [{'id': '1561', 'components': [
+            {'component_id': 'map_desc', 'data': {'list': [
+                {'image': IMAGE, 'tab_name': '照丨根本没有这种蛋糕'},
+            ]}}]}]}
+        entry = {'id': '775', 'title': '生日贺图壁纸合集', 'category_ids': [98]}
+        entries = {'775': entry}
+        categories = {'98': {'name': '壁纸收录'}}
+        birthday = {**post(title='生日快乐照丨根本没有这种蛋糕'),
+                    'published_at': '2026-10-14T12:00:00+08:00'}
+        orphie = {**post('2', title='生日快乐奥菲丝&「鬼火」丨特批', provider='miyoushe'),
+                  'published_at': '2026-11-02T20:00:00+00:00'}
+
+        def name_pictures():
+            entry['resources'], _ = parse.wiki_media(page)
+            for resource in entry['resources']:
+                resource['section_path'] = ['2026年生日贺图']
+            parse.name_wiki_resources(entries, {'1': birthday}, {'2': orphie})
+            parse.directory_tree(entries, categories)
+
+        name_pictures()
+        self.assertEqual(entry['resources'][0]['filename'], '2026-10-14 照丨根本没有这种蛋糕.jpg')
+
+        rows = page['modules'][0]['components'][0]['data']['list']
+        rows.insert(0, {'image': IMAGE.replace('image.jpg', 'new.png'), 'tab_name': '奥菲丝&「鬼火」丨特批'})
+        rows.append({'image': IMAGE.replace('image.jpg', 'extra.jpg'), 'tab_name': '照丨根本没有这种蛋糕'})
+        name_pictures()
+        filenames = [resource['filename'] for resource in entry['resources']]
+        self.assertEqual(filenames[:2], ['2026-11-03 奥菲丝&「鬼火」丨特批.png', '2026-10-14 照丨根本没有这种蛋糕.jpg'])
+        self.assertRegex(filenames[2], r'^2026-10-14 照丨根本没有这种蛋糕-[0-9a-f]{8}\.jpg$')
+
 
 class MatchingTests(unittest.TestCase):
     def setUp(self):
@@ -355,6 +386,8 @@ class FullPipelineTests(unittest.TestCase):
             self.assertEqual(0,collect.run(args))
             wiki=json.loads((Path(args.output)/'wiki.json').read_text(encoding='utf8'))
             self.assertEqual(OFFICIAL_VIDEO,wiki['entries']['72']['resources'][-1]['url'])
+            self.assertEqual('2026-10-25 首曝PV _ 世界全剧终.mp4',
+                             wiki['entries']['72']['resources'][-1]['filename'])
             mi=json.loads((Path(args.output)/'miyoushe.json').read_text(encoding='utf8'))
             self.assertEqual('abcd',mi['posts']['2']['minas_links'][0]['password'])
             args.fresh=False

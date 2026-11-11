@@ -10,7 +10,7 @@ from pathlib import Path
 import time
 
 from src.scrape.http import Client, FetchError, atomic_json, digest, now
-from src.scrape.parse import article, directory_tree, official_index
+from src.scrape.parse import article, directory_tree, name_wiki_resources, official_index
 
 OFFICIAL = 'https://api-takumi.mihoyo.com/content_v2_user/app/706fd13a87294881/'
 MIYOUSHE = 'https://bbs-api.mihoyo.com/post/wapi/'
@@ -410,6 +410,7 @@ def run(args):
         # Matching stays offline; project the renewed URLs into the final Wiki resources.
         for ident, entry in list(wiki.items()):
             wiki[ident] = resolve_parsed_wiki(entry, mi, official, index)
+    name_wiki_resources(wiki, official, mi)
     tree = directory_tree(wiki, categories)
     stamp = now()
     snapshot = digest({'generated_at': stamp, 'official': official, 'miyoushe': mi, 'wiki': wiki})
@@ -455,6 +456,7 @@ def resolve_only(args):
     wiki = {ident: resolve_parsed_wiki(entry, mi, official, index)
             for ident, entry in bundle['wiki']['entries'].items()}
     bundle['wiki']['entries'] = wiki
+    name_wiki_resources(wiki, official, mi)
     bundle['wiki']['directory_tree'] = directory_tree(wiki, bundle['wiki']['categories'])
     statistics = bundle['wiki'].setdefault('statistics', {'entries':len(wiki),'failures':0})
     statistics['resources'] = sum(len(entry.get('resources', [])) for entry in wiki.values())

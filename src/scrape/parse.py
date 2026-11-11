@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 import json
 import re
@@ -428,22 +428,102 @@ def resolve_parsed_wiki(entry, miyoushe, official, index):
     return result
 
 
+# These Wiki collections label individual pictures with meaningful titles.
+ORDERED_IMAGE_COLLECTIONS = {
+    '2215', '1989', '1988', '1987',  # 剧目单、丽都有丽事、六分街街头异闻、邦布们的说明书
+    '1084', '718', '717', '689', '688',  # 影像档案、手账、放大镜、阵营、节日
+}
+
+
+def publication_date(post):
+    try:
+        timestamp = datetime.fromisoformat(post.get('published_at') or '')
+    except ValueError:
+        return ''
+    if timestamp.tzinfo is None:
+        return ''
+    return timestamp.astimezone(timezone(timedelta(hours=8))).date().isoformat()
+
+
+def name_wiki_resources(entries, official, miyoushe):
+    sources = {'official': official, 'miyoushe': miyoushe}
+    birthday_dates = defaultdict(set)
+    for posts in sources.values():
+        for post in posts.values():
+            if post.get('status') != 'ok' or not post['title'].startswith('生日快乐'):
+                continue
+            day = publication_date(post)
+            if day:
+                title = signature(post['title'].removeprefix('生日快乐'))
+                birthday_dates[(day[:4], title)].add(day)
+
+    for ident, entry in entries.items():
+        video_entry = any(cid in (72, 73) for cid in entry['category_ids'])
+        videos = [r for r in entry['resources'] if r['kind'] == 'video'] if video_entry else []
+        for position, resource in enumerate(videos, 1):
+            posts = sources.get(resource.get('selected_source'))
+            if posts is None:
+                continue
+            post_id = resource['id'].split(':', 4)[3]
+            day = publication_date(posts[post_id])
+            suffix = f' {position:02d}' if len(videos) > 1 else ''
+            title = f'{day} {entry["title"]}'.strip()
+            resource['filename'] = wiki_filename(title, resource['filename'], suffix)
+
+        if ident not in ORDERED_IMAGE_COLLECTIONS and ident not in ('684', '775'):
+            continue
+        for resource in entry['resources']:
+            caption = (resource.get('caption') or '').strip()
+            if resource['kind'] != 'image' or not caption or caption.isdecimal():
+                continue
+            section = next(iter(resource.get('section_path', [])), '')
+            if ident == '775':
+                # Some Wiki captions use short character names or number two versions of one post.
+                character, separator, title = caption.partition('丨')
+                alias = {'悠真': '浅羽悠真', '叶瞬光': '小光'}.get(character, character)
+                year = section[:4]
+                key = signature(caption)
+                alias_key = signature(alias + separator + title)
+                days = (birthday_dates.get((year, key))
+                        or birthday_dates.get((year, alias_key))
+                        or birthday_dates.get((year, key.rstrip('0123456789')), set()))
+                day = next(iter(days)) if len(days) == 1 else ''
+                name = f'{day} {caption}'.strip()
+            elif ident == '684':
+                month = re.fullmatch(r'(1[0-2]|[1-9])月', caption)
+                year = re.match(r'\d{4}', section)
+                if not month or not year:
+                    continue
+                name = f'{year[0]}-{int(month[1]):02d} {caption}'
+            else:
+                ordinal = int(resource['id'].rsplit(':', 1)[1])
+                name = f'{ordinal:03d} - {caption}'
+            resource['filename'] = wiki_filename(name, resource['filename'])
+
+
+def wiki_filename(name, previous_filename, suffix=''):
+    # Reserve bytes for the extension and a collision suffix on NAS filesystems.
+    stem = safe_name(name).encode('utf-8')[:220].decode('utf-8', errors='ignore').rstrip('. ')
+    return stem + suffix + extension(previous_filename)
+
+
 def directory_tree(entries, categories):
     roots = {}
     paths = {}
     for entry in entries.values():
         for resource in entry.get('resources', []):
+            filename = resource['filename']
+            directories = []
             for cid in entry['category_ids']:
                 raw_path = [categories[str(cid)]['name'], entry['title'], *resource.get('section_path', [])]
-                path = [safe_name(segment) for segment in raw_path if segment]
-                filename = resource['filename']
-                key = tuple(path + [filename])
-                if key in paths and paths[key] != resource['id']:
-                    stem, ext = filename.rsplit('.', 1)
-                    filename = stem + '-' + digest(resource['id'])[:8] + '.' + ext
-                    resource['filename'] = filename
-                    key = tuple(path + [filename])
-                paths[key] = resource['id']
+                directories.append([safe_name(segment) for segment in raw_path if segment])
+            if any(paths.get('/'.join([*path, filename]).casefold(), resource['id']) != resource['id']
+                   for path in directories):
+                stem, ext = filename.rsplit('.', 1)
+                filename = stem + '-' + digest(resource['id'])[:8] + '.' + ext
+            resource['filename'] = filename
+            for path in directories:
+                paths['/'.join([*path, filename]).casefold()] = resource['id']
                 resource.setdefault('directories', []).append(path)
                 cursor = roots
                 for segment in path:
