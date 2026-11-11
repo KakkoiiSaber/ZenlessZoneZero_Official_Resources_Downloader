@@ -363,6 +363,51 @@ class FullPipelineTests(unittest.TestCase):
             self.assertEqual(4,len(calls))
             self.assertFalse(any(url.endswith(('getContent','getPostFull','entry_page')) for url,_ in calls))
 
+    def test_failed_video_renewal_publishes_downloadable_updates_and_retries_next_run(self):
+        from src.download import Downloader, plan
+
+        timestamp = datetime.now(timezone.utc)
+        signed_url = 'https://prod-vod-sign.miyoushe.com/fixture/fallback.mp4'
+        expired_url = signed_url + f'?auth_key={int((timestamp - timedelta(days=1)).timestamp())}-0-0-test'
+        renewed_url = signed_url + f'?auth_key={int((timestamp + timedelta(days=3)).timestamp())}-0-0-test'
+
+        class RenewalAPI(self.API):
+            detail_requests = 0
+
+            def get(self, url, params=None, **kwargs):
+                data = super().get(url, params, **kwargs)
+                if url.endswith('getContent'):
+                    return {'sContent': '<p>Announcement without an official video</p>'}
+                if url.endswith('getPostFull'):
+                    RenewalAPI.detail_requests += 1
+                    if self.detail_requests == 2:
+                        raise FetchError('api_1034')
+                    resolution = data['post']['vod_list'][0]['resolutions'][0]
+                    resolution['url'] = expired_url if self.detail_requests == 1 else renewed_url
+                return data
+
+        with tempfile.TemporaryDirectory() as temp, patch.object(collect, 'Client', RenewalAPI):
+            args = SimpleNamespace(cache=str(Path(temp) / 'cache'), output=str(Path(temp) / 'metafiles'),
+                restart=False, fresh=True, interval=0, transport='auto', workers=2,
+                refresh_days=0, allow_partial=False)
+            self.assertEqual(0, collect.run(args))
+            wiki_path = Path(args.output) / 'wiki.json'
+            wiki = collect.read_json(wiki_path, {})
+            self.assertEqual(wiki['video_renewal_failures'], 1)
+            resources = plan(wiki)
+            self.assertTrue(any(resource['url'] == IMAGE for resource in resources))
+            video = next(resource for resource in resources if resource['kind'] == 'video')
+            self.assertEqual(video['url'], expired_url)
+            with self.assertRaisesRegex(ValueError, 'Expired media URL'):
+                Downloader.check_expiry(video)
+
+            args.fresh = False
+            self.assertEqual(0, collect.run(args))
+            wiki = collect.read_json(wiki_path, {})
+            self.assertNotIn('video_renewal_failures', wiki)
+            self.assertIn(renewed_url, {resource['url'] for resource in plan(wiki)})
+            self.assertEqual(RenewalAPI.detail_requests, 3)
+
 
 if __name__ == '__main__':
     unittest.main()

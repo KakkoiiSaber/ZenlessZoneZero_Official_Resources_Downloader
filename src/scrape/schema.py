@@ -109,6 +109,8 @@ def expand_posts(document, source):
 
 def pack_wiki(document):
     result = common(document, 'wiki', document['entries'])
+    if document.get('video_renewal_failures'):
+        result['video_renewal_failures'] = document['video_renewal_failures']
     result['categories'] = {ident:category['name'] for ident,category in document['categories'].items()}
     entries = {}
     for ident, entry in document['entries'].items():

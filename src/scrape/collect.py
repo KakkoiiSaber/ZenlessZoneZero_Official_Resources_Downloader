@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 import json
@@ -246,7 +247,13 @@ def renew_selected_videos(client, wiki, sources, cache, workers):
         entries = {ident: post_index_entry(previous[ident]) for ident in sorted(ids)}
         records, errors, _ = update_records(source + '_selected_renewal', entries, previous,
             cache/(source+'-renewal-progress.json'), lambda entry: fetch_post(client, source, entry), workers, 0)
-        previous.update(records)
+        # A failed renewal only affects the signed URL. Keep the validated source
+        # record so Wiki still lists the video and the next crawl can renew it.
+        previous.update((ident, record) for ident, record in records.items() if record['status'] == 'ok')
+        if errors:
+            emit(source + '_selected_renewal_deferred', failures=errors,
+                 reasons=dict(Counter(record['error'] for record in records.values()
+                                      if record['status'] == 'error')))
         failures += errors
     return failures, sum(map(len, required.values()))
 
@@ -414,14 +421,15 @@ def run(args):
                                'failures': failures}, 'posts': records}
     bundle = {'official': document('official', official, ofail, ochanged),
               'miyoushe': document('miyoushe', mi, mfail+extra_failures+extra2, mchanged+extra_changed+changed2),
-              'wiki': {**base, 'source': 'wiki', 'status': 'partial' if wfail or renewal_failures else 'complete',
+              'wiki': {**base, 'source': 'wiki', 'status': 'partial' if wfail else 'complete',
+                'video_renewal_failures': renewal_failures,
                 'statistics': {'entries': len(wiki), 'resources': sum(len(e.get('resources', [])) for e in wiki.values()),
-                    'refreshed': wchanged, 'failures': wfail + renewal_failures,
+                    'refreshed': wchanged, 'failures': wfail,
                     'video_selection': {key: sum(e.get('selection_status') == key for e in wiki.values())
                         for key in ('official','miyoushe_fallback','wiki_direct','unresolved')}},
                 'categories': categories, 'entries': wiki, 'directory_tree': tree}}
     validate_bundle(bundle)
-    failures = ofail + mfail + wfail + extra_failures + extra2 + renewal_failures
+    failures = ofail + mfail + wfail + extra_failures + extra2
     if failures and not args.allow_partial:
         emit('not_published', failures=failures, requests=client.requests,
              message='Progress saved; rerun to retry failures. Existing metafiles unchanged.')
@@ -429,7 +437,8 @@ def run(args):
     publish(output, bundle)
     state['complete'] = not failures
     atomic_json(run_file, state)
-    emit('published', snapshot_id=snapshot, failures=failures, requests=client.requests, cache_hits=client.cache_hits,
+    emit('published', snapshot_id=snapshot, failures=failures, video_renewal_failures=renewal_failures,
+         requests=client.requests, cache_hits=client.cache_hits,
          official=len(official), miyoushe=len(mi), wiki=len(wiki), wiki_statistics=bundle['wiki']['statistics'])
     return 1 if failures else 0
 
