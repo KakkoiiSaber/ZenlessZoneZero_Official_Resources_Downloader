@@ -1,8 +1,8 @@
 {
   "schema_version":2,
   "source":"official",
-  "snapshot_id":"4c4711533c0e5bb59217db327c062b63979b96f743d6ef2410fb79902cc5d911",
-  "generated_at":"2026-11-11T04:16:44.430969+00:00",
+  "snapshot_id":"354efdd4311a9ee2ae5f4085db75210ab8a44e105209b15df8350b0082cc9407",
+  "generated_at":"2026-11-11T20:05:47.788430+00:00",
   "parser_version":3,
   "url_template":"https://zzz.mihoyo.com/news/{id}",
   "posts":{
@@ -1729,6 +1729,9 @@
     "167144":{"title":"生日快乐菲欧妮丨否极泰来","published_at":"2026-10-31T12:15:00+08:00","index_signature":"ba693bea90e8b381b86763212c3643ce366d63a49eee866e2511faba6dbdeba5","checked_at":"2026-11-09T18:48:39.546750+00:00","images":["https://fastcdn.mihoyo.com/content-v2/nap/167144/b961f9d9a453136fa050c0ce76db4fcd_8692728639289664760.png"]},
     "167285":{"title":"《绝区零》赛维里安EP | Gambit","published_at":"2026-11-09T12:00:00+08:00","index_signature":"08fccf3fa684d7aa64a83591876e8b4cbb120f38020c0db687d6d003ecfe5e35","checked_at":"2026-11-09T18:48:39.687967+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/167285/8c08ace3443ac8b6f3e478ea1e24b640_3024674928912006939.mp4"}]},
     "167275":{"title":"《绝区零》未明通讯丨知更鸟&卡芙卡","published_at":"2026-11-07T12:00:00+08:00","index_signature":"a99b3e562566ee94f4854dc595fbb064bf03b0fd256a1c555d1a60707d084682","checked_at":"2026-11-09T18:48:39.841226+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/167275/6aaa3da814fc5e85badc38e2d22483a2_4845101941189210185.mp4"}]},
-    "167265":{"title":"《绝区零》赛维里安角色展示 | 督察是怎样练成的","published_at":"2026-11-06T12:00:00+08:00","index_signature":"4ba618cf6744c766ab5807e80a223e1cfff8f58df560f82bafab39fd73851551","checked_at":"2026-11-09T18:48:39.980551+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/167265/1f63c59affe7af82dca1e23070857161_4545341469449217295.mp4"}]}
+    "167265":{"title":"《绝区零》赛维里安角色展示 | 督察是怎样练成的","published_at":"2026-11-06T12:00:00+08:00","index_signature":"4ba618cf6744c766ab5807e80a223e1cfff8f58df560f82bafab39fd73851551","checked_at":"2026-11-09T18:48:39.980551+00:00","source_kind":"video","videos":[{"id":"0","url":"https://fastcdn.mihoyo.com/content-v2/nap/167265/1f63c59affe7af82dca1e23070857161_4545341469449217295.mp4"}]},
+    "167310":{"title":"生日快乐妮可丨家电回收去哪里","published_at":"2026-11-11T12:15:00+08:00","index_signature":"170dcda81e6366f8cac3bb5dfe58c2dca927ddb79fea0efedffc40d1d490188a","checked_at":"2026-11-11T20:05:41.787344+00:00","images":["https://fastcdn.mihoyo.com/content-v2/nap/167310/1fd335d9e3873b549ba97a6ac6d11b33_7358360879148992368.jpg"]},
+    "167308":{"title":"重返天空的旅程丨3.3版本内容一览（下期）","published_at":"2026-11-11T12:00:00+08:00","index_signature":"0e7daa807320872e46d8428ad0e272f65cdb96cdca36460dd5280363d48c5eb4","checked_at":"2026-11-11T20:05:41.866669+00:00","images":["https://fastcdn.mihoyo.com/content-v2/nap/167308/0aee17abff3d2f6f9f63325583c94a61_6469219560678883822.png"]},
+    "167302":{"title":"3.3版本「商城」上新说明","published_at":"2026-11-10T12:00:00+08:00","index_signature":"5dd05dcedad9950caaf2b4ecc011c2b2b7d9d133deccf62bd34c76844c1fafda","checked_at":"2026-11-11T20:05:42.232289+00:00","images":["https://fastcdn.mihoyo.com/content-v2/nap/167302/befc09b265a8dc0da2b233dbcbd5e7d6_8436583648550494815.jpg"]}
   }
 }
