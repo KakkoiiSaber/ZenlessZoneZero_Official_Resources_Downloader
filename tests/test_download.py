@@ -9,6 +9,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 
 from src.download import (Downloader, State, canonical_url, cover_plan, exclusive_lock, fingerprint,
                           load_manifest, plan, select_resources, format_size, format_progress)
@@ -405,6 +406,33 @@ class DownloadTests(unittest.TestCase):
         self.assertFalse((self.root / 'birthday/001.jpg').exists())
         self.assertFalse((self.root / 'birthday/002.jpg').exists())
         self.assertFalse(any(ident.startswith('reuse:') for ident in self.state.records()))
+
+    def test_shifted_picture_can_resume_after_its_old_id_is_replaced(self):
+        previous = {**self.r, 'id': 'wiki:775:module:1561:1'}
+        self.worker.run([previous])
+        original_body = self.server.body
+        inserted = {**previous, 'url': previous['url'] + '?inserted', 'paths': ['birthday/new.jpg']}
+        inserted['fingerprint'] = fingerprint(inserted)
+        shifted = {**previous, 'id': 'wiki:775:module:1561:2', 'paths': ['birthday/old.jpg']}
+        self.server.body = b'new inserted image'
+        sync = self.worker.sync
+
+        def interrupt(resource):
+            if resource['id'] == shifted['id']:
+                raise InterruptedError()
+            return sync(resource)
+
+        with patch.object(self.worker, 'sync', side_effect=interrupt):
+            self.worker.run([inserted, shifted])
+        self.worker.stop.clear()
+        self.server.calls.clear()
+        resumed = Downloader(self.root, self.state, retries=1)
+        try:
+            self.assertEqual(resumed.run([inserted, shifted]), {'downloaded': 0, 'skipped': 2, 'failed': 0})
+            self.assertEqual((self.root / 'birthday/old.jpg').read_bytes(), original_body)
+            self.assertFalse(self.server.calls)
+        finally:
+            resumed.http.close()
 
     def test_manual_check_detects_remote_change(self):
         self.worker.run(self.resources)
