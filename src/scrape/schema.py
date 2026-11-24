@@ -1,5 +1,6 @@
 """Minimal persisted manifests; parsing and matching use an expanded in-memory model."""
 from copy import deepcopy
+from datetime import datetime, timedelta, timezone
 import re
 
 from src.scrape.http import now
@@ -240,9 +241,34 @@ def expand_wiki(document, sources):
     return result
 
 
+def add_publication_dates(compact):
+    publication_zone = timezone(timedelta(hours=8))
+
+    def publication_day(source, post_id):
+        post = compact[source]['posts'].get(post_id, {})
+        try:
+            stamp = datetime.fromisoformat(post.get('published_at') or '')
+        except ValueError:
+            return ''
+        return stamp.astimezone(publication_zone).date().isoformat() if stamp.tzinfo else ''
+
+    for entry in compact['wiki']['entries'].values():
+        match = entry.get('match', {})
+        day = publication_day('official', match.get('official_id')) if match.get('status') == 'matched' else ''
+        if not day:
+            day = max((publication_day('miyoushe', ident) for ident in entry.get('miyoushe_ids', [])), default='')
+        if not day:
+            day = max((item['filename'][:10] for item in entry['resources']
+                       if re.match(r'^\d{4}-\d{2}-\d{2} ', item['filename'])), default='')
+        if day:
+            entry['publication_day'] = day
+
+
 def pack_bundle(bundle):
-    return {**{source:pack_posts(bundle[source],source) for source in ('official','miyoushe')},
-            'wiki':pack_wiki(bundle['wiki'])}
+    compact = {**{source:pack_posts(bundle[source],source) for source in ('official','miyoushe')},
+               'wiki':pack_wiki(bundle['wiki'])}
+    add_publication_dates(compact)
+    return compact
 
 
 def expand_bundle(bundle):

@@ -110,6 +110,17 @@ class WikiTests(unittest.TestCase):
         path.write_bytes(b'0123456789')
         return path
 
+    def test_catalog_dates_work_with_legacy_and_new_snapshots(self):
+        entry = self.document['entries']['1']
+        entry['resources'][0]['filename'] = '2026-11-21 New video.jpg'
+        self.manifest.write_text(json.dumps(self.document), encoding='utf-8')
+        catalog = requests.get(self.url + '/api/catalog', timeout=5).json()
+        self.assertEqual(catalog['entries'][0]['publication_day'], '2026-11-21')
+        entry['publication_day'] = '2026-11-20'
+        self.manifest.write_text(json.dumps(self.document), encoding='utf-8')
+        catalog = requests.get(self.url + '/api/catalog', timeout=5).json()
+        self.assertEqual(catalog['entries'][0]['publication_day'], '2026-11-20')
+
     def test_catalog_updates_when_file_finishes_and_omits_remote_urls(self):
         first = requests.get(self.url + '/api/catalog', timeout=5)
         self.assertNotIn('example.invalid', first.text)

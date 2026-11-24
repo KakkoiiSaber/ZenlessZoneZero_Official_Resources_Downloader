@@ -294,6 +294,39 @@ class Downloader:
         self.http = requests.Session()
         self.http.headers.update({'User-Agent': 'zzz-scraper-downloader/1', 'Accept-Encoding': 'identity'})
         self.active_paths = {}
+        self.reusable = {}
+
+    def stage_reusable_files(self, resources, records):
+        versions = {}
+        for ident, record in records.items():
+            if record.get('complete'):
+                versions.setdefault(record.get('fingerprint'), []).append((ident, record))
+        self.reusable = {}
+        for resource in resources:
+            if self.stop.is_set():
+                break
+            if ':module:' not in resource['id']:
+                continue
+            version = resource['fingerprint']
+            ident = 'reuse:' + version
+            relative = '.zzz-partials/' + version + '.reuse'
+            destination = safe_path(self.root, relative)
+            for owner, record in versions.get(version, []):
+                source = self.existing(record, owner)
+                if source is None or not record.get('sha256') or file_hash(source) != record['sha256']:
+                    continue
+                if source != destination:
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    temporary = destination.with_suffix('.reuse.tmp')
+                    shutil.copyfile(source, temporary)
+                    with temporary.open('r+b') as handle:
+                        os.fsync(handle.fileno())
+                    os.replace(temporary, destination)
+                saved = {**record, 'paths': [relative]}
+                self.state.claim(relative, ident)
+                self.state.save(ident, saved)
+                self.reusable[version] = (destination, saved)
+                break
 
     def run(self, resources, *, quiet_skips=False):
         self.active_paths = {p.casefold(): r['id'] for r in resources for p in r['paths']}
@@ -312,6 +345,8 @@ class Downloader:
             else:
                 pending.append(resource)
         LOG.info('Incremental plan: %d unchanged, %d to process', counts['skipped'], len(pending))
+        # Preserve source bytes before shifted IDs can replace each other's files.
+        self.stage_reusable_files(pending, records)
         for resource in pending:
             if self.stop.is_set():
                 break
@@ -345,6 +380,15 @@ class Downloader:
                     elif self.stop.wait(min(2 ** attempt, 30)):
                         break
         LOG.info('Cycle finished: %s', counts)
+        if not counts['failed'] and not self.stop.is_set():
+            for ident, record in self.state.records().items():
+                if ident.startswith('reuse:'):
+                    for relative in record['paths']:
+                        if self.state.owner(relative) == ident:
+                            safe_path(self.root, relative).unlink(missing_ok=True)
+                    with self.state.db:
+                        self.state.db.execute('DELETE FROM paths WHERE id=?', (ident,))
+                        self.state.db.execute('DELETE FROM resources WHERE id=?', (ident,))
         return counts
 
     def partial(self, resource):
@@ -363,6 +407,9 @@ class Downloader:
         label = resource.get('label', ident)
         record = self.state.get(ident)
         source = self.existing(record, ident) if record.get('fingerprint') == resource['fingerprint'] else None
+        if resource['fingerprint'] in self.reusable:
+            source, record = self.reusable[resource['fingerprint']]
+            record = dict(record)
         if source and record.get('complete'):
             if self.verify_files:
                 if file_hash(source) != record['sha256']:
