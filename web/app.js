@@ -147,6 +147,9 @@ function renderContent() {
     return;
   }
   const matching = all.filter(e => filteredGroups(e).length);
+  if (!state.category) {
+    matching.sort((a, b) => (b.publication_day || '').localeCompare(a.publication_day || ''));
+  }
   if (!matching.length) { content.append(empty('没有符合条件的资源')); return; }
   const grid = element('div', 'entry-grid');
   const sentinel = element('div', 'load-sentinel');

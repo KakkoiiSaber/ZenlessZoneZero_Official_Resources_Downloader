@@ -9,6 +9,7 @@ import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 
 from src.download import (Downloader, State, canonical_url, cover_plan, exclusive_lock, fingerprint,
                           load_manifest, plan, select_resources, format_size, format_progress)
@@ -380,6 +381,58 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(self.worker.run(self.resources)['downloaded'], 1)
         self.assertEqual(self.target().read_bytes(), self.server.body)
         self.assertEqual(self.state.owner(self.r['paths'][0]), self.r['id'])
+
+    def test_inserted_picture_reuses_shifted_ids_and_old_numbered_files(self):
+        first = {**self.r, 'id': 'wiki:775:module:1561:1',
+                 'url': self.r['url'] + '?picture=first', 'paths': ['birthday/001.jpg']}
+        second = {**self.r, 'id': 'wiki:775:module:1561:2',
+                  'url': self.r['url'] + '?picture=second', 'paths': ['birthday/002.jpg']}
+        for resource, body in [(first, b'first image'), (second, b'second image')]:
+            resource['fingerprint'] = fingerprint(resource)
+            self.server.body = body
+            self.assertEqual(self.worker.run([resource])['downloaded'], 1)
+
+        inserted = {**first, 'url': self.r['url'] + '?picture=new', 'paths': ['birthday/New.jpg']}
+        inserted['fingerprint'] = fingerprint(inserted)
+        shifted_first = {**first, 'id': second['id'], 'paths': ['birthday/First.jpg']}
+        shifted_second = {**second, 'id': 'wiki:775:module:1561:3', 'paths': ['birthday/Second.jpg']}
+        self.server.calls.clear()
+        self.server.body = b'new image'
+        counts = self.worker.run([inserted, shifted_first, shifted_second])
+        self.assertEqual(counts, {'downloaded': 1, 'skipped': 2, 'failed': 0})
+        self.assertEqual(sum(method == 'GET' for method, _, _ in self.server.calls), 1)
+        self.assertEqual((self.root / 'birthday/First.jpg').read_bytes(), b'first image')
+        self.assertEqual((self.root / 'birthday/Second.jpg').read_bytes(), b'second image')
+        self.assertFalse((self.root / 'birthday/001.jpg').exists())
+        self.assertFalse((self.root / 'birthday/002.jpg').exists())
+        self.assertFalse(any(ident.startswith('reuse:') for ident in self.state.records()))
+
+    def test_shifted_picture_can_resume_after_its_old_id_is_replaced(self):
+        previous = {**self.r, 'id': 'wiki:775:module:1561:1'}
+        self.worker.run([previous])
+        original_body = self.server.body
+        inserted = {**previous, 'url': previous['url'] + '?inserted', 'paths': ['birthday/new.jpg']}
+        inserted['fingerprint'] = fingerprint(inserted)
+        shifted = {**previous, 'id': 'wiki:775:module:1561:2', 'paths': ['birthday/old.jpg']}
+        self.server.body = b'new inserted image'
+        sync = self.worker.sync
+
+        def interrupt(resource):
+            if resource['id'] == shifted['id']:
+                raise InterruptedError()
+            return sync(resource)
+
+        with patch.object(self.worker, 'sync', side_effect=interrupt):
+            self.worker.run([inserted, shifted])
+        self.worker.stop.clear()
+        self.server.calls.clear()
+        resumed = Downloader(self.root, self.state, retries=1)
+        try:
+            self.assertEqual(resumed.run([inserted, shifted]), {'downloaded': 0, 'skipped': 2, 'failed': 0})
+            self.assertEqual((self.root / 'birthday/old.jpg').read_bytes(), original_body)
+            self.assertFalse(self.server.calls)
+        finally:
+            resumed.http.close()
 
     def test_manual_check_detects_remote_change(self):
         self.worker.run(self.resources)

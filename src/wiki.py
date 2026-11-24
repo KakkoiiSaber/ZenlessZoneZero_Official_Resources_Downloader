@@ -204,6 +204,14 @@ class Catalog:
                         groups[index]['resources'].append(value)
                 value = {'id': ident, 'title': entry['title'],
                          'categories': [str(c) for c in entry['category_ids']], 'groups': wallpaper_variants(groups)}
+                if entry.get('publication_day'):
+                    value['publication_day'] = entry['publication_day']
+                else:
+                    # Older NAS snapshots already encode publication dates in filenames.
+                    days = [raw['filename'][:10] for raw in entry['resources']
+                            if re.match(r'^\d{4}-\d{2}-\d{2} ', raw['filename'])]
+                    if days:
+                        value['publication_day'] = max(days)
                 cover_key = digest(f'wiki:{ident}:cover')
                 cover_path = self.locate_cover(cover_key)
                 if cover_path:

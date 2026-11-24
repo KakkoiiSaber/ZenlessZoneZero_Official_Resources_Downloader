@@ -37,6 +37,20 @@ def selected_files(value):
 
 
 class MinimalSchemaTests(unittest.TestCase):
+    def test_wiki_publication_day_uses_linked_posts_in_china_time(self):
+        original = bundle()
+        original['official']['posts']['1']['published_at'] = '2024-05-01T12:00:00+08:00'
+        original['miyoushe']['posts']['2']['published_at'] = '2024-05-02T18:00:00+00:00'
+
+        def day():
+            return pack_bundle(original)['wiki']['entries']['1'].get('publication_day')
+
+        self.assertEqual(day(), '2024-05-01')
+        original['official']['posts']['1']['published_at'] = ''
+        self.assertEqual(day(), '2024-05-03')
+        original['miyoushe']['posts']['2']['published_at'] = ''
+        self.assertIsNone(day())
+
     def test_source_image_dimensions_survive_compact_round_trip(self):
         original = bundle()
         original['wiki']['entries']['1']['resources'][0].update(width=1200, height=2400)
